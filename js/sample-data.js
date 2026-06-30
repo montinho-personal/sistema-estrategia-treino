@@ -14,6 +14,20 @@
       'primeiras fases e densidade/volume na fase final. Frequência de 5 ' +
       'treinos semanais, com ajuste nutricional progressivo e controle quinzenal ' +
       'de medidas. Expectativa: +3 a 4 kg de massa magra e -4% de gordura.',
+    anamnese: [
+      { pergunta: 'Objetivo principal', resposta: 'Ganhar massa muscular e reduzir percentual de gordura.' },
+      { pergunta: 'Histórico de lesões ou dores', resposta: 'Leve desconforto no ombro direito ao elevar carga acima da cabeça.' },
+      { pergunta: 'Doenças ou condições de saúde', resposta: 'Nenhuma relatada.' },
+      { pergunta: 'Uso de medicamentos', resposta: 'Não faz uso contínuo.' },
+      { pergunta: 'Cirurgias anteriores', resposta: 'Nenhuma.' },
+      { pergunta: 'Experiência com treino', resposta: 'Intermediário — treina há cerca de 3 anos.' },
+      { pergunta: 'Disponibilidade semanal (dias/horários)', resposta: 'Segunda a sexta, no período da noite.' },
+      { pergunta: 'Qualidade do sono', resposta: '6 a 7 horas por noite, sono regular.' },
+      { pergunta: 'Alimentação atual', resposta: 'Três refeições principais; pouca ingestão de proteína.' },
+      { pergunta: 'Tabagismo / consumo de álcool', resposta: 'Não fuma; bebe socialmente nos fins de semana.' },
+      { pergunta: 'Nível de estresse', resposta: 'Moderado, por conta do trabalho.' },
+      { pergunta: 'Observações adicionais', resposta: 'Prefere treinos objetivos, de até 60 minutos.' }
+    ],
     avaliacao: [
       { rotulo: 'Idade', valor: '28 anos' },
       { rotulo: 'Peso atual', valor: '82 kg' },

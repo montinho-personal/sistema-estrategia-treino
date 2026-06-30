@@ -47,6 +47,20 @@
     objetivo: '',
     dataElaboracao: '',        // ISO yyyy-mm-dd; vazio = hoje
     resumoExecutivo: '',
+    anamnese: [                // [{pergunta, resposta}] — ficha pronta
+      { pergunta: 'Objetivo principal', resposta: '' },
+      { pergunta: 'Histórico de lesões ou dores', resposta: '' },
+      { pergunta: 'Doenças ou condições de saúde', resposta: '' },
+      { pergunta: 'Uso de medicamentos', resposta: '' },
+      { pergunta: 'Cirurgias anteriores', resposta: '' },
+      { pergunta: 'Experiência com treino', resposta: '' },
+      { pergunta: 'Disponibilidade semanal (dias/horários)', resposta: '' },
+      { pergunta: 'Qualidade do sono', resposta: '' },
+      { pergunta: 'Alimentação atual', resposta: '' },
+      { pergunta: 'Tabagismo / consumo de álcool', resposta: '' },
+      { pergunta: 'Nível de estresse', resposta: '' },
+      { pergunta: 'Observações adicionais', resposta: '' }
+    ],
     avaliacao: [],             // [{rotulo, valor}]
     metas: [],                 // [{titulo, descricao}]
     periodizacao: [],          // [{fase, duracao, foco, descricao}]

@@ -10,6 +10,10 @@
 
   // Esquema das listas repetíveis: campos de cada linha.
   var LISTS = {
+    anamnese: { legend: 'Anamnese', add: 'Adicionar pergunta', cols: [
+      { name: 'pergunta', label: 'Pergunta', ph: 'Histórico de lesões' },
+      { name: 'resposta', label: 'Resposta', ph: 'Resposta do aluno', wide: true }
+    ]},
     avaliacao: { legend: 'Avaliação física', add: 'Adicionar item', cols: [
       { name: 'rotulo', label: 'Rótulo', ph: 'Peso atual' },
       { name: 'valor', label: 'Valor', ph: '82 kg' }
@@ -93,6 +97,7 @@
       '<fieldset class="form__section"><legend>Resumo executivo</legend><div class="form__grid">' +
         areaField('Resumo (primeira página do relatório)', 'resumoExecutivo', s.resumoExecutivo, 5) +
       '</div></fieldset>' +
+      listSection('anamnese', s) +
       listSection('avaliacao', s) +
       listSection('metas', s) +
       listSection('periodizacao', s) +

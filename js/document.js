@@ -41,6 +41,7 @@
   // Ícones SVG simples (herdam currentColor)
   var ICONS = {
     summary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>',
+    intake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3M9 11h6M9 15h4"/></svg>',
     assess: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="7"/><rect x="13" y="7" width="3" height="11"/></svg>',
     goal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.5" fill="currentColor"/></svg>',
     timeline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><circle cx="12" cy="7" r="2"/><circle cx="12" cy="17" r="2"/></svg>',
@@ -120,6 +121,9 @@
     html +=   '</div>';
     html += '</section>';
 
+    // Numeração automática das páginas (capa = 1).
+    var pg = 1;
+
     /* ---------- RESUMO EXECUTIVO ---------- */
     if (s.resumoExecutivo) {
       html += '<section class="doc-page">';
@@ -140,7 +144,26 @@
         });
         html += '</div>';
       }
-      html += pageFooter(b, 2);
+      html += pageFooter(b, ++pg);
+      html += '</section>';
+    }
+
+    /* ---------- ANAMNESE (somente perguntas respondidas) ---------- */
+    var anamneseResp = (s.anamnese || []).filter(function (a) {
+      return a && a.resposta && String(a.resposta).trim();
+    });
+    if (anamneseResp.length) {
+      html += '<section class="doc-page">';
+      html += sectionHead('intake', 'Anamnese');
+      html += '<div class="doc-anamnese">';
+      anamneseResp.forEach(function (a) {
+        html += '<div class="doc-anam">' +
+                  '<span class="doc-anam__q">' + esc(a.pergunta) + '</span>' +
+                  '<span class="doc-anam__a">' + esc(a.resposta) + '</span>' +
+                '</div>';
+      });
+      html += '</div>';
+      html += pageFooter(b, ++pg);
       html += '</section>';
     }
 
@@ -157,7 +180,7 @@
                 '</div>';
       });
       html += '</div>';
-      html += pageFooter(b, 3);
+      html += pageFooter(b, ++pg);
       html += '</section>';
     }
 
@@ -180,7 +203,7 @@
                 '</div>';
       });
       html += '</div>';
-      html += pageFooter(b, 4);
+      html += pageFooter(b, ++pg);
       html += '</section>';
     }
 
@@ -199,7 +222,7 @@
                 '</div>';
       });
       html += '</div>';
-      html += pageFooter(b, 5);
+      html += pageFooter(b, ++pg);
       html += '</section>';
     }
 
@@ -220,7 +243,7 @@
                   '<p>' + esc(s.observacoes) + '</p>' +
                 '</div>';
       }
-      html += pageFooter(b, 6);
+      html += pageFooter(b, ++pg);
       html += '</section>';
     }
 
@@ -252,7 +275,7 @@
     if (qr.ig) html += '<figure class="doc-qr"><img src="' + qr.ig + '" alt="QR Instagram" /><figcaption>Instagram</figcaption></figure>';
     html +=     '</div>';
     html +=   '</div>';
-    html += pageFooter(b, 7);
+    html += pageFooter(b, ++pg);
     html += '</section>';
 
     html += '</div>'; // .doc
