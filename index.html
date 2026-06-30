@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Estratégia de Treino · Entrega Final</title>
+  <meta name="description" content="Gere entregas premium da sua estratégia de treino: texto para WhatsApp, relatório em PDF e documento com identidade visual." />
+
+  <!-- Tipografia moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/document.css" />
+</head>
+<body>
+  <!-- ====================== APP SHELL ====================== -->
+  <div class="app" id="app">
+    <aside class="sidebar">
+      <div class="brand-mark">
+        <div class="brand-mark__logo" id="sidebarLogo">MP</div>
+        <div class="brand-mark__text">
+          <strong id="sidebarBrandName">Montinho Personal</strong>
+          <span>Estratégia de Treino</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav__item is-active" data-view="entrega">
+          <span class="nav__icon">🎯</span> Entrega Final
+        </button>
+        <button class="nav__item" data-view="estrategia">
+          <span class="nav__icon">📋</span> Estratégia / Aluno
+        </button>
+        <button class="nav__item" data-view="identidade">
+          <span class="nav__icon">🎨</span> Identidade Visual
+        </button>
+      </nav>
+
+      <div class="sidebar__foot">
+        <p class="sidebar__hint">Tudo é salvo automaticamente neste navegador.</p>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+
+      <!-- ====================== VIEW: ENTREGA FINAL ====================== -->
+      <section class="view is-active" data-view="entrega">
+        <header class="view__head">
+          <div>
+            <h1>Entrega Final</h1>
+            <p class="view__sub">Estratégia concluída. Em qual formato você deseja entregar para <strong id="entregaAlunoNome">o aluno</strong>?</p>
+          </div>
+        </header>
+
+        <div class="delivery-grid">
+          <article class="delivery-card" data-format="whatsapp">
+            <div class="delivery-card__icon">💬</div>
+            <h3>1 · Versão para WhatsApp</h3>
+            <p>Texto otimizado para o celular, humanizado, com títulos, separadores e emojis discretos. Pronto para copiar e colar.</p>
+            <button class="btn btn--primary" data-open="whatsapp">Gerar WhatsApp</button>
+          </article>
+
+          <article class="delivery-card" data-format="pdf">
+            <div class="delivery-card__icon">📄</div>
+            <h3>2 · Relatório Premium em PDF</h3>
+            <p>Documento profissional com capa, resumo executivo, ícones, QR Codes e rodapé. Alto valor percebido, ótimo no celular e na impressão.</p>
+            <button class="btn btn--primary" data-open="pdf">Gerar PDF Premium</button>
+          </article>
+
+          <article class="delivery-card" data-format="premium">
+            <div class="delivery-card__icon">✨</div>
+            <h3>3 · Documento com Identidade Visual</h3>
+            <p>Apresentação de alto padrão: caixas de destaque, cartões, timeline de periodização, blocos coloridos e infográficos.</p>
+            <button class="btn btn--primary" data-open="premium">Abrir Documento Premium</button>
+          </article>
+        </div>
+
+        <div class="callout" id="entregaCallout">
+          <span class="callout__icon">💡</span>
+          <p><strong>Dica:</strong> o relatório em PDF e o documento premium usam a mesma identidade visual. Configure-a uma vez em <em>Identidade Visual</em> e ela será reutilizada em todas as entregas futuras.</p>
+        </div>
+      </section>
+
+      <!-- ====================== VIEW: ESTRATÉGIA ====================== -->
+      <section class="view" data-view="estrategia">
+        <header class="view__head">
+          <div>
+            <h1>Estratégia / Aluno</h1>
+            <p class="view__sub">Dados que alimentam todas as entregas.</p>
+          </div>
+          <div class="view__actions">
+            <button class="btn btn--ghost" id="loadSampleBtn">Carregar exemplo</button>
+          </div>
+        </header>
+        <form id="strategyForm" class="form"></form>
+      </section>
+
+      <!-- ====================== VIEW: IDENTIDADE VISUAL ====================== -->
+      <section class="view" data-view="identidade">
+        <header class="view__head">
+          <div>
+            <h1>Identidade Visual</h1>
+            <p class="view__sub">Personalize sua marca uma única vez — reutilizada em todos os relatórios.</p>
+          </div>
+          <div class="view__actions">
+            <button class="btn btn--ghost" id="resetBrandBtn">Restaurar padrão</button>
+          </div>
+        </header>
+        <form id="brandForm" class="form"></form>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ====================== MODAL DE PREVIEW ====================== -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true">
+      <header class="modal__head">
+        <h2 id="modalTitle">Pré-visualização</h2>
+        <div class="modal__actions" id="modalActions"></div>
+        <button class="modal__close" data-close aria-label="Fechar">✕</button>
+      </header>
+      <div class="modal__body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <!-- Bibliotecas externas (PDF + QR Code) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+
+  <!-- App -->
+  <script src="js/store.js"></script>
+  <script src="js/sample-data.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/brand.js"></script>
+  <script src="js/strategy.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script src="js/document.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
