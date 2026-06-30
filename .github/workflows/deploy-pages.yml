@@ -1,0 +1,43 @@
+name: Deploy ao GitHub Pages
+
+# Publica o site automaticamente a cada atualização.
+on:
+  push:
+    branches:
+      - claude/delivery-format-options-ileveg
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Garante um deploy por vez.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Pages (habilita automaticamente)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Empacotar o site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
