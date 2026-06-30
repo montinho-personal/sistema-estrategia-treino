@@ -109,6 +109,16 @@
 .doc-card__value { font-family: var(--doc-font-title), sans-serif; font-weight: 700; font-size: 22px; color: var(--doc-primary); }
 .doc-card__label { font-size: 12.5px; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
 
+/* anamnese (pergunta / resposta) */
+.doc-anamnese { display: grid; gap: 10px; }
+.doc-anam {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 13px 18px; border: 1px solid #eef0f4; border-radius: 11px;
+  background: #fafbfc; border-left: 3px solid var(--doc-primary);
+}
+.doc-anam__q { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--doc-primary); }
+.doc-anam__a { font-size: 14.5px; color: #374151; line-height: 1.55; }
+
 /* metas (blocos coloridos) */
 .doc-goals { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .doc-goal {
