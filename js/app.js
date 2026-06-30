@@ -149,6 +149,14 @@
     toast('Estratégia de exemplo carregada.');
   });
 
+  document.getElementById('newStudentBtn').addEventListener('click', function () {
+    if (!confirm('Começar um aluno novo? Os dados do aluno atual serão apagados. Sua identidade visual (marca) será mantida.')) return;
+    strategy = Store.resetStrategy();
+    renderStrategy();
+    applyBrandToShell();
+    toast('Pronto! Pode preencher o novo aluno.');
+  });
+
   // ---------------------------------------------------------------- modal
   function openModal(title) {
     els.modalTitle.textContent = title;
