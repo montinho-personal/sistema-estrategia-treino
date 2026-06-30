@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Montinho Personal · Assistente de Estratégias de Treinamento</title>
+  <meta name="description" content="Assistente inteligente de estratégias de treinamento: transforma a anamnese em uma apresentação profissional da estratégia para o aluno." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/document.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- ====================== SIDEBAR ====================== -->
+    <aside class="sidebar">
+      <div class="brand-mark">
+        <div class="brand-mark__logo" id="sidebarLogo">MP</div>
+        <div class="brand-mark__text">
+          <strong id="sidebarBrandName">Montinho Personal</strong>
+          <span>Estratégias de Treinamento</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav__item is-active" data-view="wizard">
+          <span class="nav__icon">🪄</span> Nova Estratégia
+        </button>
+        <button class="nav__item" data-view="alunos">
+          <span class="nav__icon">👥</span> Alunos
+        </button>
+        <button class="nav__item" data-view="identidade">
+          <span class="nav__icon">🎨</span> Identidade Visual
+        </button>
+      </nav>
+
+      <div class="sidebar__foot">
+        <button class="btn btn--ghost btn--sm" id="restartWizardBtn" style="width:100%;margin-bottom:12px;">↺ Recomeçar do zero</button>
+        <p class="sidebar__hint">Tudo é salvo automaticamente neste navegador. A decisão final é sempre sua.</p>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+
+      <!-- ====================== VIEW: WIZARD ====================== -->
+      <section class="view is-active" data-view="wizard">
+        <header class="view__head">
+          <div>
+            <h1>Assistente de Estratégia</h1>
+            <p class="view__sub">Da anamnese à apresentação premium — passo a passo, no seu comando.</p>
+          </div>
+          <div class="view__actions">
+            <button class="btn btn--ghost" id="sampleBtn">Ver exemplo</button>
+          </div>
+        </header>
+
+        <!-- progresso -->
+        <ol class="stepper" id="stepper">
+          <li class="stepper__item" data-stage="upload"><span class="stepper__dot">1</span><span class="stepper__label">Anamnese</span></li>
+          <li class="stepper__item" data-stage="confirm"><span class="stepper__dot">2</span><span class="stepper__label">Análise</span></li>
+          <li class="stepper__item" data-stage="interview"><span class="stepper__dot">3</span><span class="stepper__label">Entrevista</span></li>
+          <li class="stepper__item" data-stage="validation"><span class="stepper__dot">4</span><span class="stepper__label">Validação</span></li>
+          <li class="stepper__item" data-stage="report"><span class="stepper__dot">5</span><span class="stepper__label">Entrega</span></li>
+        </ol>
+
+        <div class="wizard-stage" id="wizardStage"></div>
+      </section>
+
+      <!-- ====================== VIEW: ALUNOS ====================== -->
+      <section class="view" data-view="alunos">
+        <header class="view__head">
+          <div>
+            <h1>Alunos</h1>
+            <p class="view__sub">Seu banco de estratégias — pesquisável por tag.</p>
+          </div>
+          <div class="view__actions">
+            <button class="btn btn--primary" id="newFromStudentsBtn">➕ Nova estratégia</button>
+          </div>
+        </header>
+        <div id="studentsView"></div>
+      </section>
+
+      <!-- ====================== VIEW: IDENTIDADE ====================== -->
+      <section class="view" data-view="identidade">
+        <header class="view__head">
+          <div>
+            <h1>Identidade Visual</h1>
+            <p class="view__sub">Personalize sua marca uma única vez — reutilizada em todos os relatórios.</p>
+          </div>
+          <div class="view__actions">
+            <button class="btn btn--ghost" id="resetBrandBtn">Restaurar padrão</button>
+          </div>
+        </header>
+        <form id="brandForm" class="form"></form>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ====================== MODAL ====================== -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true">
+      <header class="modal__head">
+        <h2 id="modalTitle">Pré-visualização</h2>
+        <div class="modal__actions" id="modalActions"></div>
+        <button class="modal__close" data-close aria-label="Fechar">✕</button>
+      </header>
+      <div class="modal__body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <!-- Bibliotecas externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+
+  <!-- App -->
+  <script src="js/store.js"></script>
+  <script src="js/knowledge.js"></script>
+  <script src="js/anamnese.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/brand.js"></script>
+  <script src="js/interview.js"></script>
+  <script src="js/document.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/students.js"></script>
+  <script src="js/sample-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
