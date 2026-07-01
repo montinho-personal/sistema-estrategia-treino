@@ -47,6 +47,12 @@
       desc: "Justificativas automáticas com base científica, adaptadas ao perfil, nível de confiança e preferências do treinador.",
       status: "now",
     },
+    {
+      id: "06",
+      title: "DNA do Montinho",
+      desc: "A voz do Renato em cada relatório: linguagem simples, tom pessoal, revisão de voz e memória que aprende o seu jeito.",
+      status: "now",
+    },
   ];
 
   var CHECK =

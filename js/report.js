@@ -55,10 +55,11 @@ MTS.Report = (function () {
     var A = ans(state);
     var parts = [];
 
-    // 1) frase principal (lead + resposta principal)
+    // 1) frase principal (lead pessoal + resposta principal)
     var mainVal = topic.mainQ ? A[topic.mainQ] : '';
     if (has(mainVal)) {
-      var lead = clean(topic.lead);
+      var voiceLead = (MTS.Voice && MTS.Voice.personalLead(topic.id));
+      var lead = clean(voiceLead != null ? voiceLead : topic.lead);
       var main = clean(mainVal);
       parts.push(lead ? (lead + ' ' + main + (/[.!?:]$/.test(main) ? '' : '.')) : main);
     }
@@ -111,11 +112,11 @@ MTS.Report = (function () {
     var A = ans(state);
     var nome = firstName(a.nome);
     var obj = has(a.objetivo) ? a.objetivo.toLowerCase() : 'seus objetivos';
-    var base = 'Olá, ' + nome + '! Esta é a estratégia que preparei especialmente para você, ' +
-      'pensada a partir de tudo o que conversamos. A ideia não é só te entregar um treino, mas ' +
-      'te explicar o porquê de cada decisão — para você treinar com clareza e confiança rumo a ' + obj + '.';
+    var base = 'Olá, ' + nome + '! Preparei esta estratégia especialmente para você, a partir de ' +
+      'tudo o que conversamos. Aqui eu não quero só te passar um treino — quero te explicar o ' +
+      'porquê de cada escolha, para você treinar com clareza e confiança rumo a ' + obj + '.';
     if (has(A.filosofia_frase))
-      base += '\n\nEm uma frase: “' + clean(A.filosofia_frase) + '”.';
+      base += '\n\nEm uma frase, é isto: “' + clean(A.filosofia_frase) + '”.';
     return base;
   }
 

@@ -10,6 +10,7 @@ MTS.Store = (function () {
   var AI_KEY = 'mts.ai.v1';
   var HIST_KEY = 'mts.history.v1';
   var PREF_KEY = 'mts.prefs.v1';
+  var DNA_KEY = 'mts.dna.v1';
 
   var subs = [];
 
@@ -131,6 +132,18 @@ MTS.Store = (function () {
       return Object.keys(prefs).map(function (k) { return prefs[k]; })
         .sort(function (a, b) { return (b.count || 0) - (a.count || 0); });
     },
-    clearPreferences: function () { try { localStorage.removeItem(PREF_KEY); } catch (e) {} }
+    clearPreferences: function () { try { localStorage.removeItem(PREF_KEY); } catch (e) {} },
+
+    /* ---- DNA do Montinho: amostras do jeito de escrever (aprendizado) ---- */
+    learnStyle: function (sample) {
+      if (!sample || !String(sample).trim()) return;
+      try {
+        var arr = this.styleSamples();
+        arr.unshift({ t: String(sample).slice(0, 500), at: new Date().toISOString() });
+        localStorage.setItem(DNA_KEY, JSON.stringify(arr.slice(0, 20)));
+      } catch (e) {}
+    },
+    styleSamples: function () { try { return JSON.parse(localStorage.getItem(DNA_KEY)) || []; } catch (e) { return []; } },
+    clearStyle: function () { try { localStorage.removeItem(DNA_KEY); } catch (e) {} }
   };
 })();

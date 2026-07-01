@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview, Memory = MTS.Memory, KB = MTS.Knowledge;
+  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview, Memory = MTS.Memory, KB = MTS.Knowledge, Voice = MTS.Voice;
   var sideView = 'estrategia'; // painel lateral da entrevista: estrategia | relatorio
   var panel = document.getElementById('panel');
   var stepperEl = document.getElementById('stepper');
@@ -177,6 +177,22 @@
         ul.appendChild(li);
       });
       diag.appendChild(ul);
+    }
+
+    // DNA do Montinho (preferências aprendidas do treinador)
+    if (Voice) {
+      var d = Voice.dna(s);
+      if (d.prefs.length || d.cycles > 0) {
+        diag.appendChild(el('h4', null, 'DNA do Montinho'));
+        var dl2 = el('ul', 'notelist');
+        d.insights.slice(0, 4).forEach(function (t) {
+          var li = el('li', 'note');
+          li.appendChild(el('span', 'note__ico', ICON_GOOD));
+          li.appendChild(el('span', null, esc(t)));
+          dl2.appendChild(li);
+        });
+        diag.appendChild(dl2);
+      }
     }
 
     wrap.appendChild(diag);
@@ -487,6 +503,8 @@
     if (exp.profile) head.appendChild(el('span', 'kb__profile', 'adaptado · ' + esc(exp.profile)));
     card.appendChild(head);
     card.appendChild(el('p', 'kb__student', esc(exp.text)));
+    if ((Store.preferences() || {})[e.id])
+      card.appendChild(el('div', 'kb__pref', '✓ Faz parte do seu DNA — você costuma usar isto.'));
 
     var more = el('div', 'kb__more'); more.style.display = 'none';
     more.appendChild(kbRow('O que é', e.what));
@@ -692,6 +710,24 @@
     expCard.appendChild(waPrev);
     tools.appendChild(expCard);
 
+    // Revisão de voz (DNA do Montinho)
+    if (Voice && secs.length) {
+      var voiceCard = el('div', 'formcard');
+      voiceCard.appendChild(el('h3', null, 'Revisão de voz'));
+      voiceCard.appendChild(el('div', 'confirm-q', Voice.qualityQuestion)).style.marginBottom = '12px';
+      var fullText = Report.intro(s) + '\n\n' + secs.map(function (x) { return x.body; }).join('\n\n') + '\n\n' + Report.closing(s);
+      var issues = Voice.check(fullText);
+      if (!issues.length) {
+        voiceCard.appendChild(el('p', 'hint', '✓ O texto está no tom do Montinho: pessoal, simples e organizado.'));
+      } else {
+        voiceCard.appendChild(noteList(issues.map(function (i) { return i.text; }), 'warn', ''));
+        var simp = el('button', 'btn btn--ghost', 'Aplicar linguagem simples'); simp.style.cssText = 'width:100%;margin-top:12px';
+        simp.addEventListener('click', function () { applySimpleLanguage(); });
+        voiceCard.appendChild(simp);
+      }
+      tools.appendChild(voiceCard);
+    }
+
     var saveCard = el('div', 'formcard');
     saveCard.appendChild(el('h3', null, 'Estratégia'));
     var memBtn = el('button', 'btn btn--ghost', 'Ver estratégia completa'); memBtn.style.width = '100%';
@@ -724,10 +760,21 @@
     var bar = el('div', 'actions'); bar.style.marginTop = '10px';
     var saveB = el('button', 'btn btn--primary', 'Salvar');
     var cancelB = el('button', 'btn btn--ghost', 'Cancelar');
-    saveB.addEventListener('click', function () { Store.setOverride(id, ta.value); renderRelatorio(); toast('Seção atualizada.'); });
+    saveB.addEventListener('click', function () { Store.setOverride(id, ta.value); Store.learnStyle(ta.value); renderRelatorio(); toast('Seção atualizada.'); });
     cancelB.addEventListener('click', function () { renderRelatorio(); });
     bar.appendChild(cancelB); bar.appendChild(saveB);
     block.appendChild(ta); block.appendChild(bar); ta.focus();
+  }
+
+  function applySimpleLanguage() {
+    var s = state();
+    var n = 0;
+    Report.sections(s).forEach(function (sec) {
+      var simplified = Voice.simplify(sec.body);
+      if (simplified !== sec.body) { Store.setOverride(sec.id, simplified); n++; }
+    });
+    renderRelatorio();
+    toast(n ? ('Linguagem simplificada em ' + n + ' seção(ões).') : 'Nada a simplificar — texto já está simples.');
   }
 
   function aiRewrite(id, btn) {
@@ -909,6 +956,58 @@
   }
 
   /* =======================================================================
+     DNA do Montinho — memória viva do jeito de pensar e escrever
+     ======================================================================= */
+  function openDNAModal() {
+    var d = Voice.dna(state());
+    var back = el('div', 'modal-backdrop');
+    var m = el('div', 'modal modal--wide');
+    m.appendChild(el('h3', null, '🧬 DNA do Montinho'));
+    m.appendChild(el('p', null, 'Uma memória viva que aprende como o Renato pensa e escreve, para que todo relatório soe como ele. Personaliza a comunicação — nunca substitui a ciência.'));
+
+    var box = el('div'); box.style.marginTop = 'var(--s3)';
+    box.appendChild(el('h4', 'kb__sec', 'O jeito do Montinho')).style.cssText = 'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:10px';
+    var ul = el('ul', 'notelist');
+    d.insights.forEach(function (t) {
+      var li = el('li', 'note');
+      li.appendChild(el('span', 'note__ico', ICON_GOOD));
+      li.appendChild(el('span', null, esc(t)));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    m.appendChild(box);
+
+    if (d.prefs.length) {
+      var pb = el('div'); pb.style.marginTop = 'var(--s4)';
+      pb.appendChild(el('h4', null, 'Métodos preferidos')).style.cssText = 'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:10px';
+      var chips = el('div', 'topicnav');
+      d.prefs.slice(0, 12).forEach(function (p) { chips.appendChild(el('button', 'is-filled', esc(p.title) + ' · ' + p.count + 'x')); });
+      pb.appendChild(chips);
+      m.appendChild(pb);
+    }
+
+    var foot = el('p', 'hint');
+    foot.style.marginTop = 'var(--s4)';
+    foot.textContent = 'Aprendizado até aqui: ' + d.cycles + ' estratégia(s) no histórico · ' + d.styleSamples + ' edição(ões) de texto observada(s).';
+    m.appendChild(foot);
+
+    var actions = el('div', 'modal__actions');
+    if (d.styleSamples || d.prefs.length) {
+      var clr = el('button', 'btn btn--ghost', 'Limpar aprendizado');
+      clr.addEventListener('click', function () { if (confirm('Apagar as preferências e o aprendizado de escrita do DNA?')) { Store.clearPreferences(); Store.clearStyle(); close(); openDNAModal(); } });
+      actions.appendChild(clr);
+    }
+    var sp = el('span', 'spacer'); sp.style.flex = '1'; actions.appendChild(sp);
+    var closeB = el('button', 'btn btn--primary', 'Fechar'); closeB.addEventListener('click', function () { close(); });
+    actions.appendChild(closeB); m.appendChild(actions);
+
+    back.appendChild(m);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    modalRoot.appendChild(back);
+    function close() { modalRoot.innerHTML = ''; }
+  }
+
+  /* =======================================================================
      Modal de IA
      ======================================================================= */
   function openAIModal() {
@@ -965,6 +1064,7 @@
 
   document.getElementById('aiPill').addEventListener('click', openAIModal);
   document.getElementById('btnLibrary').addEventListener('click', openLibraryModal);
+  document.getElementById('btnDNA').addEventListener('click', openDNAModal);
   document.getElementById('btnMemory').addEventListener('click', openMemoryModal);
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnReset').addEventListener('click', function () {

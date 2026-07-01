@@ -127,6 +127,25 @@ treinador.
   treinador para personalizar as próximas entrevistas (sem substituir a ciência).
 - **Biblioteca navegável.** Botão **“Biblioteca”** com busca e todas as entradas.
 
+## Módulo 6 — DNA do Montinho
+
+Define como o sistema escreve e se comunica, para que todo relatório pareça
+escrito pelo próprio Renato — nunca por uma IA.
+
+- **Voz pessoal.** O relatório fala com o aluno como um Personal pelo WhatsApp:
+  tom em primeira pessoa (“Escolhi…”, “Neste ciclo, nosso foco será…”), leve,
+  organizado e fácil de entender.
+- **Linguagem simples.** Um glossário traduz o técnico (ex.: “densidade de
+  treino” → “diminuir os intervalos para aumentar o estímulo”), com um botão
+  **“Aplicar linguagem simples”**.
+- **Revisão de voz.** Antes de gerar, o sistema pergunta *“esse texto parece
+  realmente escrito pelo Montinho?”* e aponta parágrafos longos, jargão, frases
+  genéricas e falta de tom pessoal.
+- **DNA do Montinho.** Uma memória viva que aprende o jeito do treinador
+  (métodos preferidos, valoriza mobilidade, prioriza aderência, começa com
+  adaptação, explica cada decisão…) e personaliza a comunicação — acessível pelo
+  botão **“DNA”**. Nunca substitui a ciência.
+
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
 
@@ -155,6 +174,7 @@ js/
   interview.js        Motor da entrevista: plano adaptativo, progresso, inconsistências, checklist
   memory.js           Memória estratégica: estrutura por área, status do dashboard, sugestões
   knowledge.js        Knowledge Base: entradas, matcher, adaptação por perfil, confiança
+  voice.js            DNA do Montinho: voz pessoal, glossário, revisão de voz, insights
   report.js           Diagnóstico, relatório e versão WhatsApp (determinístico, com biblioteca)
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
@@ -181,6 +201,7 @@ python3 -m http.server 8000
 | 03 | Entrevista inteligente (adaptativa, auditoria, checklist) | ✅ Disponível |
 | 04 | Memória estratégica & dashboard (painel, sugestões, histórico) | ✅ Disponível |
 | 05 | Biblioteca inteligente (justificativas automáticas, confiança, preferências) | ✅ Disponível |
+| 06 | DNA do Montinho (voz pessoal, linguagem simples, revisão de voz, aprendizado) | ✅ Disponível |
 
 ---
 
