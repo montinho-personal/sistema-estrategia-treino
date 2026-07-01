@@ -180,6 +180,49 @@ export async function aiExtractAnamnese(
   return out;
 }
 
+/** Extrai um array de strings de uma resposta, tolerando cercas de código e texto ao redor. */
+function extractStringArray(text: string): string[] {
+  let t = text.trim();
+  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) t = fenced[1].trim();
+  const start = t.indexOf("[");
+  const end = t.lastIndexOf("]");
+  if (start !== -1 && end > start) t = t.slice(start, end + 1);
+  try {
+    const parsed = JSON.parse(t) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.map((x) => String(x).trim()).filter(Boolean).slice(0, 6);
+    }
+  } catch {
+    /* resposta fora do formato — devolve vazio */
+  }
+  return [];
+}
+
+/**
+ * Gera sugestões de resposta para uma pergunta aberta da entrevista (ex.: o
+ * "porquê" de uma decisão), no tom do Montinho e a partir do contexto do aluno.
+ * O treinador clica para inserir e continua livre para editar/acrescentar.
+ */
+export async function aiSuggestAnswers(
+  config: AiConfig,
+  question: string,
+  state: StrategyState,
+  extraContext?: string,
+): Promise<string[]> {
+  const context = anamneseText(state) + (extraContext ? `\n\n${extraContext}` : "");
+  const prompt =
+    "Você é o Personal Trainer preenchendo o seu planejamento. Para a pergunta abaixo, " +
+    "gere 4 sugestões de resposta curtas (1 a 2 frases cada), em primeira pessoa, na voz de " +
+    "um Personal falando direto com o aluno em linguagem simples (este texto será mostrado ao " +
+    "aluno no relatório). As sugestões devem ser variadas entre si, coerentes com o contexto e " +
+    "prontas para usar. Não invente dados específicos do aluno que não estejam no contexto. " +
+    "Responda APENAS com um array JSON de strings, sem comentários.\n\n" +
+    `PERGUNTA: ${question}\n\nCONTEXTO DO ALUNO:\n${context}`;
+  const raw = await call(config, prompt, 800);
+  return extractStringArray(raw);
+}
+
 /** Reescreve uma seção mantendo as decisões, melhorando a voz do Montinho. */
 export function aiRewriteText(
   config: AiConfig,
