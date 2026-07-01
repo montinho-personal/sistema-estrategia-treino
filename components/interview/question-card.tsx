@@ -21,6 +21,10 @@ import { AnswerControl } from "./answer-control";
 import { AnswerSuggestions } from "./answer-suggestions";
 import { ConsistencyNotes } from "./consistency-notes";
 import { KbEntryCard } from "@/components/knowledge/kb-entry-card";
+import { VolumeEditor } from "@/components/report/volume-editor";
+
+/** Pergunta cuja resposta é a tabela de volume semanal. */
+const VOLUME_QUESTION_ID = "adapt_hipertrofia";
 
 /** Converte o valor de uma resposta em texto legível para dar contexto à IA. */
 function answerToText(value: AnswerValue | undefined): string {
@@ -109,6 +113,11 @@ export function QuestionCard({
             value={answerToText(state.answers[question.id])}
             onInsert={onAnswer}
           />
+        )}
+        {question.id === VOLUME_QUESTION_ID && (
+          <div className="mt-4">
+            <VolumeEditor />
+          </div>
         )}
       </div>
 

@@ -327,6 +327,40 @@ export function volumeTotal(state: StrategyState): number | null {
   return any ? sum : null;
 }
 
+/** Lê uma tabela de volume colada como texto (grupo + séries, ignora %/totais). */
+export function parseVolumeText(text: string): VolumeRow[] {
+  const rows: VolumeRow[] = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^[─\-—_=|\s]+$/.test(line)) continue; // linhas separadoras
+    if (/grupo\s*muscular|s[ée]ries?\s*tota|%\s*do\s*total|^total\b/i.test(line)) continue; // cabeçalhos/totais
+    const cells = line.split(/\s*\|\s*|\t+|\s{2,}/).map((c) => c.trim()).filter(Boolean);
+    if (cells.length < 2) continue;
+    const grupo = cells[0];
+    let series = "";
+    for (let i = 1; i < cells.length; i++) {
+      if (/%/.test(cells[i])) continue; // ignora percentuais
+      const m = cells[i].match(/\d+/);
+      if (m) { series = m[0]; break; }
+    }
+    if (grupo && series) rows.push({ grupo, series });
+  }
+  return rows;
+}
+
+/** Mescla linhas importadas nas existentes (por grupo; atualiza séries se já existe). */
+export function mergeVolume(existing: VolumeRow[], incoming: VolumeRow[]): VolumeRow[] {
+  const out = existing.map((r) => ({ ...r }));
+  for (const inc of incoming) {
+    const key = inc.grupo.trim().toLowerCase();
+    const idx = out.findIndex((r) => r.grupo.trim().toLowerCase() === key);
+    if (idx >= 0) out[idx] = { ...out[idx], series: inc.series };
+    else out.push({ grupo: inc.grupo, series: inc.series });
+  }
+  return out;
+}
+
 export interface VolumeLine {
   grupo: string;
   series: string;
