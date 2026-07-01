@@ -9,6 +9,7 @@ MTS.Store = (function () {
   var KEY = 'mts.strategy.v2';
   var AI_KEY = 'mts.ai.v1';
   var HIST_KEY = 'mts.history.v1';
+  var PREF_KEY = 'mts.prefs.v1';
 
   var subs = [];
 
@@ -111,6 +112,25 @@ MTS.Store = (function () {
     deleteSnapshot: function (id) {
       var list = this.history().filter(function (s) { return s.id !== id; });
       try { localStorage.setItem(HIST_KEY, JSON.stringify(list)); } catch (e) {}
-    }
+    },
+
+    /* ---- Preferências do treinador (aprendidas, nunca substituem ciência) ---- */
+    preferences: function () { try { return JSON.parse(localStorage.getItem(PREF_KEY)) || {}; } catch (e) { return {}; } },
+    learnPreference: function (id, title, context) {
+      var prefs = this.preferences();
+      var p = prefs[id] || { id: id, title: title, count: 0, contexts: [] };
+      p.title = title || p.title;
+      p.count = (p.count || 0) + 1;
+      if (context && p.contexts.indexOf(context) === -1) p.contexts.push(context);
+      p.lastAt = new Date().toISOString();
+      prefs[id] = p;
+      try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch (e) {}
+    },
+    prefList: function () {
+      var prefs = this.preferences();
+      return Object.keys(prefs).map(function (k) { return prefs[k]; })
+        .sort(function (a, b) { return (b.count || 0) - (a.count || 0); });
+    },
+    clearPreferences: function () { try { localStorage.removeItem(PREF_KEY); } catch (e) {} }
   };
 })();

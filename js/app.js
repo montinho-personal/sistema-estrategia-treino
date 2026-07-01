@@ -43,9 +43,9 @@
     },
     {
       id: "05",
-      title: "Entrega premium",
-      desc: "Documento com identidade visual, PDF profissional e versão para WhatsApp.",
-      status: "next",
+      title: "Biblioteca inteligente",
+      desc: "Justificativas automáticas com base científica, adaptadas ao perfil, nível de confiança e preferências do treinador.",
+      status: "now",
     },
   ];
 

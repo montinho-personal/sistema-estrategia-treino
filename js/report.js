@@ -75,7 +75,21 @@ MTS.Report = (function () {
       parts.push(label + ': ' + clean(A[q.id]) + '.');
     });
 
+    // 4) justificativa técnica automática da biblioteca (Módulo 5)
+    var kb = kbEnrich(topic, state);
+    if (kb) parts.push(kb);
+
     return parts.join('\n\n');
+  }
+
+  /* Justificativa técnica automática a partir da Knowledge Base, em linguagem
+     para o aluno. Assim o treinador não precisa escrever isso manualmente. */
+  function kbEnrich(topic, state) {
+    if (!MTS.Knowledge) return '';
+    var entries = MTS.Knowledge.forTopic(state, topic.id).slice(0, 2);
+    if (!entries.length) return '';
+    var lines = entries.map(function (e) { return MTS.Knowledge.explain(e, state).text; });
+    return '💡 Por que isso funciona para você: ' + lines.join(' ');
   }
 
   function sections(state) {

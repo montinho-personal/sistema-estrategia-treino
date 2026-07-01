@@ -105,6 +105,28 @@ tempo real**, com uma memória viva de tudo que foi definido.
 - **Histórico de estratégias.** Snapshots salvos localmente — base para a visão
   de futuro (comparar ciclos, reutilizar planejamentos, banco por perfil).
 
+## Módulo 5 — Biblioteca inteligente (Knowledge Base)
+
+Uma biblioteca interna de conhecimento que fundamenta cada decisão durante a
+entrevista — sempre em linguagem simples para o aluno, nunca substituindo o
+treinador.
+
+- **Justificativas automáticas.** Ao escolher uma estratégia (Upper/Lower,
+  Pirâmide decrescente, Drop-set, Falha, etc.), a biblioteca responde sozinha:
+  o que é, por que usar, benefícios, riscos, quando usar, quando evitar e como
+  explicar ao aluno.
+- **Base científica.** Prioriza o consenso entre evidências atuais e experiência
+  prática; nunca copia nem defende opiniões isoladas.
+- **Adaptação por perfil.** A mesma estratégia é explicada de forma diferente
+  para atleta, idoso, emagrecimento, reabilitação, iniciante, etc.
+- **Nível de confiança.** Cada entrada carrega um nível (muito alto → baixo) e
+  avisa quando a evidência é limitada.
+- **Enriquecimento automático do relatório.** As justificativas técnicas entram
+  sozinhas no documento — o treinador não precisa escrevê-las.
+- **Aprendizado de preferências.** O sistema aprende as escolhas recorrentes do
+  treinador para personalizar as próximas entrevistas (sem substituir a ciência).
+- **Biblioteca navegável.** Botão **“Biblioteca”** com busca e todas as entradas.
+
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
 
@@ -129,10 +151,11 @@ css/
 js/
   app.js              Conteúdo e interações da landing
   config.js           SYSTEM_PROMPT, anamnese, 11 tópicos + perguntas, adaptativas, auditorias
-  store.js            Estado + persistência local (localStorage) + histórico de estratégias
+  store.js            Estado + persistência local + histórico + preferências do treinador
   interview.js        Motor da entrevista: plano adaptativo, progresso, inconsistências, checklist
   memory.js           Memória estratégica: estrutura por área, status do dashboard, sugestões
-  report.js           Diagnóstico, relatório e versão WhatsApp (determinístico)
+  knowledge.js        Knowledge Base: entradas, matcher, adaptação por perfil, confiança
+  report.js           Diagnóstico, relatório e versão WhatsApp (determinístico, com biblioteca)
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
 .nojekyll             Serve os arquivos como estão no GitHub Pages
@@ -157,7 +180,7 @@ python3 -m http.server 8000
 | 02 | O cérebro & o workspace (anamnese, diagnóstico, entrevista, relatório) | ✅ Disponível |
 | 03 | Entrevista inteligente (adaptativa, auditoria, checklist) | ✅ Disponível |
 | 04 | Memória estratégica & dashboard (painel, sugestões, histórico) | ✅ Disponível |
-| 05 | Entrega premium com identidade visual completa | Em breve |
+| 05 | Biblioteca inteligente (justificativas automáticas, confiança, preferências) | ✅ Disponível |
 
 ---
 

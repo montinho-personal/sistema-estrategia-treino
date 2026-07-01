@@ -7,7 +7,7 @@
 (function () {
   "use strict";
 
-  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview, Memory = MTS.Memory;
+  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview, Memory = MTS.Memory, KB = MTS.Knowledge;
   var sideView = 'estrategia'; // painel lateral da entrevista: estrategia | relatorio
   var panel = document.getElementById('panel');
   var stepperEl = document.getElementById('stepper');
@@ -272,10 +272,13 @@
 
     // auditoria de inconsistências
     var auditBox = el('div');
-    function refreshAudit() { renderConsistency(auditBox, IV.consistency(state())); }
+    // biblioteca: justificativas automáticas
+    var kbBox = el('div');
+    function refreshAudit() { renderConsistency(auditBox, IV.consistency(state())); renderKB(kbBox, topic.id); }
     control.onChange = function () { refreshAudit(); };
     refreshAudit();
     qcard.appendChild(auditBox);
+    qcard.appendChild(kbBox);
 
     // navegação
     var nav = el('div', 'actions');
@@ -289,11 +292,11 @@
     var nextId = IV.neighbor(s, curId, +1);
     if (nextId) {
       var nextBtn = el('button', 'btn btn--primary', 'Registrar e continuar →');
-      nextBtn.addEventListener('click', function () { Store.patch({ currentQ: nextId }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      nextBtn.addEventListener('click', function () { learnFromTopic(topic.id); Store.patch({ currentQ: nextId }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
       nav.appendChild(nextBtn);
     } else {
       var doneBtn = el('button', 'btn btn--primary', 'Concluir e revisar →');
-      doneBtn.addEventListener('click', function () { go('revisao'); });
+      doneBtn.addEventListener('click', function () { learnFromTopic(topic.id); go('revisao'); });
       nav.appendChild(doneBtn);
     }
     qcard.appendChild(nav);
@@ -460,6 +463,63 @@
       ul.appendChild(li);
     });
     box.appendChild(ul);
+  }
+
+  /* Cartão da biblioteca: justificativas automáticas das estratégias escolhidas. */
+  function renderKB(box, topicId) {
+    box.innerHTML = '';
+    if (!KB) return;
+    var s = state();
+    var entries = KB.forTopic(s, topicId);
+    if (!entries.length) return;
+    var h = el('h4', null, '📚 Biblioteca');
+    h.style.cssText = 'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin:22px 0 10px';
+    box.appendChild(h);
+    entries.slice(0, 3).forEach(function (e) { box.appendChild(kbEntryCard(e, s)); });
+  }
+
+  function kbEntryCard(e, s) {
+    var card = el('div', 'kb');
+    var exp = KB.explain(e, s);
+    var head = el('div', 'kb__head');
+    head.appendChild(el('span', 'kb__title', esc(e.title)));
+    head.appendChild(el('span', 'kb__conf kb__conf--' + KB.confidenceClass(e), 'Confiança: ' + e.conf));
+    if (exp.profile) head.appendChild(el('span', 'kb__profile', 'adaptado · ' + esc(exp.profile)));
+    card.appendChild(head);
+    card.appendChild(el('p', 'kb__student', esc(exp.text)));
+
+    var more = el('div', 'kb__more'); more.style.display = 'none';
+    more.appendChild(kbRow('O que é', e.what));
+    more.appendChild(kbRow('Por que usar', e.why));
+    more.appendChild(kbRow('Benefícios', e.benefits.join(' · ')));
+    more.appendChild(kbRow('Riscos / atenção', e.risks.join(' · ')));
+    more.appendChild(kbRow('Quando usar', e.whenUse));
+    more.appendChild(kbRow('Quando evitar', e.whenAvoid));
+    more.appendChild(kbRow('Evidência', KB.confidenceNote(e)));
+    card.appendChild(more);
+
+    var toggle = el('button', 'kb__toggle', 'Ver fundamentação técnica');
+    toggle.addEventListener('click', function () {
+      var open = more.style.display === 'none';
+      more.style.display = open ? 'block' : 'none';
+      toggle.textContent = open ? 'Ocultar fundamentação' : 'Ver fundamentação técnica';
+    });
+    card.appendChild(toggle);
+    return card;
+  }
+  function kbRow(label, val) {
+    var row = el('div', 'kb__row');
+    row.appendChild(el('span', 'kb__lbl', esc(label)));
+    row.appendChild(el('span', null, esc(val)));
+    return row;
+  }
+
+  /* Aprende as preferências do treinador a partir das escolhas de um tópico. */
+  function learnFromTopic(topicId) {
+    if (!KB) return;
+    var s = state();
+    var label = (s.anamnese && s.anamnese.experiencia) ? String(s.anamnese.experiencia).toLowerCase() : '';
+    KB.forTopic(s, topicId).forEach(function (e) { Store.learnPreference(e.id, e.title, label); });
   }
 
   function livePreview(s) {
@@ -794,6 +854,61 @@
   }
 
   /* =======================================================================
+     Biblioteca (Knowledge Base) — navegável + preferências aprendidas
+     ======================================================================= */
+  function openLibraryModal() {
+    var back = el('div', 'modal-backdrop');
+    var m = el('div', 'modal modal--wide');
+    m.appendChild(el('h3', null, '📚 Biblioteca'));
+    m.appendChild(el('p', null, 'Conhecimento organizado que fundamenta cada decisão — sempre em linguagem simples para o aluno. Nunca substitui o treinador.'));
+
+    // preferências aprendidas
+    var prefs = Store.prefList();
+    if (prefs.length) {
+      var pbox = el('div'); pbox.style.marginTop = 'var(--s3)';
+      pbox.appendChild(el('h4', 'kb__sec', 'Preferências do treinador')).style.cssText = 'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:10px';
+      var chips = el('div', 'topicnav');
+      prefs.slice(0, 12).forEach(function (p) {
+        chips.appendChild(el('button', 'is-filled', esc(p.title) + ' · ' + p.count + 'x'));
+      });
+      pbox.appendChild(chips);
+      var clear = el('button', 'kb__toggle', 'Limpar preferências');
+      clear.addEventListener('click', function () { if (confirm('Limpar as preferências aprendidas?')) { Store.clearPreferences(); close(); openLibraryModal(); } });
+      pbox.appendChild(clear);
+      m.appendChild(pbox);
+    }
+
+    // busca
+    var search = el('input'); search.type = 'search'; search.placeholder = 'Buscar na biblioteca (ex.: drop-set, upper lower, falha...)';
+    search.style.cssText = 'width:100%;margin:var(--s3) 0 var(--s2);font:inherit;font-size:15px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg)';
+    m.appendChild(search);
+
+    var listWrap = el('div'); m.appendChild(listWrap);
+    var s = state();
+    function draw(filter) {
+      listWrap.innerHTML = '';
+      var f = (filter || '').toLowerCase().trim();
+      var items = KB.all().filter(function (e) {
+        if (!f) return true;
+        return (e.title + ' ' + e.cat + ' ' + e.what).toLowerCase().indexOf(f) !== -1;
+      }).sort(function (a, b) { return KB.CONF_ORDER[b.conf] - KB.CONF_ORDER[a.conf]; });
+      if (!items.length) { listWrap.appendChild(el('p', 'hint', 'Nada encontrado para essa busca.')); return; }
+      items.forEach(function (e) { listWrap.appendChild(kbEntryCard(e, s)); });
+    }
+    draw('');
+    search.addEventListener('input', function () { draw(search.value); });
+
+    var actions = el('div', 'modal__actions');
+    var closeB = el('button', 'btn btn--primary', 'Fechar'); closeB.addEventListener('click', function () { close(); });
+    actions.appendChild(closeB); m.appendChild(actions);
+
+    back.appendChild(m);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    modalRoot.appendChild(back);
+    function close() { modalRoot.innerHTML = ''; }
+  }
+
+  /* =======================================================================
      Modal de IA
      ======================================================================= */
   function openAIModal() {
@@ -849,6 +964,7 @@
   }
 
   document.getElementById('aiPill').addEventListener('click', openAIModal);
+  document.getElementById('btnLibrary').addEventListener('click', openLibraryModal);
   document.getElementById('btnMemory').addEventListener('click', openMemoryModal);
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnReset').addEventListener('click', function () {
