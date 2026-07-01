@@ -70,7 +70,7 @@ npm run lint
 2. **Domínio** — Zod + lógica portada (`lib/domain`) + 26 testes. ✅
 3. **Dados** — Zustand + persistência (`lib/store`) + 7 testes. ✅
 4. **Fluxo** — Nav, Stepper, rotas, Anamnese (RHF+Zod) e Diagnóstico. ✅
-5. Entrevista + Memória (dashboard, sugestões, consistência)
+5. **Entrevista + Memória** — pergunta a pergunta, dashboard, biblioteca, consistência, revisão. ✅
 6. Biblioteca + DNA
 7. Relatório editor (preview = exportação)
 8. PDF premium + exportação (PDF/WhatsApp/HTML)
