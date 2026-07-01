@@ -1,5 +1,5 @@
 import { SYSTEM_PROMPT, ANAMNESE_SECTIONS } from "@/lib/domain";
-import type { StrategyState, Anamnese } from "@/lib/domain/schema";
+import type { StrategyState, Anamnese, VolumeRow } from "@/lib/domain/schema";
 import type { AiConfig } from "@/lib/store";
 import { DEFAULT_AI_MODEL } from "@/lib/store";
 
@@ -71,6 +71,10 @@ type ContentBlock =
   | {
       type: "document";
       source: { type: "base64"; media_type: "application/pdf"; data: string };
+    }
+  | {
+      type: "image";
+      source: { type: "base64"; media_type: string; data: string };
     };
 
 async function callWithContent(
@@ -221,6 +225,60 @@ export async function aiSuggestAnswers(
     `PERGUNTA: ${question}\n\nCONTEXTO DO ALUNO:\n${context}`;
   const raw = await call(config, prompt, 800);
   return extractStringArray(raw);
+}
+
+/** Extrai um array de objetos de volume ({grupo, series}) de uma resposta JSON. */
+function extractVolumeArray(text: string): VolumeRow[] {
+  let t = text.trim();
+  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) t = fenced[1].trim();
+  const s = t.indexOf("[");
+  const e = t.lastIndexOf("]");
+  if (s !== -1 && e > s) t = t.slice(s, e + 1);
+  try {
+    const arr = JSON.parse(t) as unknown;
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((o) => {
+        const obj = (o ?? {}) as Record<string, unknown>;
+        const grupo = String(obj.grupo ?? obj.grupoMuscular ?? obj.group ?? obj.musculo ?? "").trim();
+        const m = String(obj.series ?? obj["séries"] ?? obj.sets ?? obj.set ?? "").match(/\d+/);
+        return { grupo, series: m ? m[0] : "" };
+      })
+      .filter((r) => r.grupo && r.series);
+  } catch {
+    return [];
+  }
+}
+
+const VOLUME_SYSTEM =
+  "Você extrai tabelas de volume de treino (grupo muscular e nº de séries semanais) " +
+  "de imagens ou textos. Seja fiel ao conteúdo; ignore percentuais, totais e cabeçalhos.";
+
+/**
+ * Lê a imagem (print) de uma tabela de volume semanal e devolve as linhas
+ * (grupo muscular + nº de séries). O treinador sempre revisa o resultado.
+ */
+export async function aiExtractVolumeFromImage(
+  config: AiConfig,
+  imageBase64: string,
+  mediaType: string,
+): Promise<VolumeRow[]> {
+  const prompt =
+    "Esta imagem contém uma tabela de volume semanal de treino, com grupos musculares e o " +
+    "número de séries por semana de cada um. Extraia cada linha. Responda APENAS com um array " +
+    'JSON de objetos no formato {"grupo": "Peito", "series": 12}. Use o número inteiro de séries; ' +
+    "ignore percentuais, linhas de total e cabeçalhos. Não invente linhas que não estejam na imagem.";
+  const raw = await callWithContent(
+    config,
+    VOLUME_SYSTEM,
+    [
+      { type: "image", source: { type: "base64", media_type: mediaType, data: imageBase64 } },
+      { type: "text", text: prompt },
+    ],
+    1500,
+  );
+  return extractVolumeArray(raw);
 }
 
 /** Reescreve uma seção mantendo as decisões, melhorando a voz do Montinho. */
