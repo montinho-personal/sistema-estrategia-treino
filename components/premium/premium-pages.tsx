@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import type { Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal } from "@/lib/domain";
+import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal, parseRichBlocks, inlineSegments } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
@@ -248,35 +248,35 @@ export function EvolucaoPage({ state, brand, n, total }: { state: StrategyState;
 }
 
 /* ---- Detalhamento completo: todo o relatório escrito, no estilo premium ---- */
+function renderInline(text: string, keyPrefix: string) {
+  return inlineSegments(text).map((seg, i) =>
+    seg.bold ? (
+      <strong key={`${keyPrefix}-b-${i}`}>{seg.text}</strong>
+    ) : (
+      <span key={`${keyPrefix}-t-${i}`}>{seg.text}</span>
+    ),
+  );
+}
+
 function renderBody(body: string, keyPrefix: string) {
-  const blocks = body
-    .split(/\n{2,}/)
-    .map((b) => b.trim())
-    .filter(Boolean);
-  return blocks.map((block, i) => {
-    const lines = block
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-    const proseLines = lines.filter((l) => !/^[✓•]/.test(l));
-    const listLines = lines.filter((l) => /^[✓•]/.test(l));
-    return (
-      <div key={`${keyPrefix}-${i}`}>
-        {proseLines.map((l, j) => (
-          <p key={`p-${j}`} className="pg-report__p">{l}</p>
-        ))}
-        {listLines.length > 0 && (
-          <ul className="pg-report__list">
-            {listLines.map((l, j) => (
-              <li key={`l-${j}`}>
-                <span className="pg-tick"><PgCheck /></span>
-                {l.replace(/^[✓•]\s*/, "")}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    );
+  return parseRichBlocks(body).map((b, i) => {
+    const k = `${keyPrefix}-${i}`;
+    if (b.type === "heading") {
+      return <div key={k} className="pg-report__h">{renderInline(b.text, k)}</div>;
+    }
+    if (b.type === "list") {
+      return (
+        <ul key={k} className="pg-report__list">
+          {b.items.map((it, j) => (
+            <li key={j}>
+              <span className="pg-tick"><PgCheck /></span>
+              {renderInline(it, `${k}-${j}`)}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    return <p key={k} className="pg-report__p">{renderInline(b.text, k)}</p>;
   });
 }
 

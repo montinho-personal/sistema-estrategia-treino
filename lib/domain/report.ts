@@ -378,6 +378,70 @@ export function volumeLines(state: StrategyState): VolumeLine[] {
   });
 }
 
+/* ---- Formatação de texto rico (parágrafos, subtítulos, listas) ---- */
+export type RichBlock =
+  | { type: "heading"; text: string }
+  | { type: "para"; text: string }
+  | { type: "list"; items: string[] };
+
+/**
+ * Divide o corpo de uma seção em blocos legíveis. Cada linha vira um parágrafo
+ * (independente de a quebra ser simples ou dupla); linhas com ✓/•/- viram lista;
+ * linhas totalmente em **negrito** (ou com #) viram subtítulos.
+ */
+export function parseRichBlocks(body: string): RichBlock[] {
+  const blocks: RichBlock[] = [];
+  let list: string[] | null = null;
+  const flush = () => {
+    if (list) {
+      blocks.push({ type: "list", items: list });
+      list = null;
+    }
+  };
+  for (const raw of (body ?? "").split(/\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (/^[✓•\-]\s+/.test(line)) {
+      (list ??= []).push(line.replace(/^[✓•\-]\s+/, ""));
+      continue;
+    }
+    flush();
+    const h = line.match(/^\*\*(.+?)\*\*[:：]?$/) ?? line.match(/^#{1,6}\s+(.+?)[:：]?$/);
+    if (h) {
+      blocks.push({ type: "heading", text: h[1].trim() });
+      continue;
+    }
+    blocks.push({ type: "para", text: line });
+  }
+  flush();
+  return blocks;
+}
+
+export interface InlineSegment {
+  bold: boolean;
+  text: string;
+}
+
+/** Quebra um texto em segmentos, marcando trechos em **negrito**. */
+export function inlineSegments(text: string): InlineSegment[] {
+  const parts: InlineSegment[] = [];
+  const re = /\*\*(.+?)\*\*/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) parts.push({ bold: false, text: text.slice(last, m.index) });
+    parts.push({ bold: true, text: m[1] });
+    last = re.lastIndex;
+  }
+  if (last < text.length) parts.push({ bold: false, text: text.slice(last) });
+  return parts.length ? parts : [{ bold: false, text }];
+}
+
+/** Converte **negrito** (markdown) para *negrito* (formato do WhatsApp). */
+function toWhatsappText(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "*$1*");
+}
+
 /* ---- Versão WhatsApp (títulos + emojis discretos) ---- */
 const WA_EMOJI: Record<string, string> = {
   objetivo: "🎯", diagnostico: "🩺", estrategia: "🧠", divisao: "🗓️",
@@ -385,11 +449,11 @@ const WA_EMOJI: Record<string, string> = {
 };
 
 export function reportWhatsapp(state: StrategyState): string {
-  const lines: string[] = ["*Sua estratégia de treino* 💪", "", reportIntro(state).replace(/\n{2,}/g, "\n")];
+  const lines: string[] = ["*Sua estratégia de treino* 💪", "", toWhatsappText(reportIntro(state))];
   for (const s of reportSections(state)) {
     lines.push("");
     lines.push(`*${WA_EMOJI[s.id] ? `${WA_EMOJI[s.id]} ` : ""}${s.title}*`);
-    lines.push(s.body.replace(/\n{2,}/g, "\n"));
+    lines.push(toWhatsappText(s.body));
   }
   const vlines = volumeLines(state);
   if (vlines.length > 0) {
@@ -400,6 +464,6 @@ export function reportWhatsapp(state: StrategyState): string {
     const tot = volumeTotal(state);
     if (tot != null) lines.push(`_Total: ${tot} séries/semana_`);
   }
-  lines.push("", "*Mensagem final*", reportClosing(state), "", "_Vamos juntos! — Montinho Personal Trainer_");
+  lines.push("", "*Mensagem final*", toWhatsappText(reportClosing(state)), "", "_Vamos juntos! — Montinho Personal Trainer_");
   return lines.join("\n");
 }
