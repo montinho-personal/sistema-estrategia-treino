@@ -7,6 +7,11 @@ import { RefreshCw } from "lucide-react";
 import { BrandLockup } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { useStrategyStore } from "@/lib/store";
+import { AiDialog } from "@/components/ai/ai-dialog";
+import { LibraryDialog } from "@/components/knowledge/library-dialog";
+import { DnaDialog } from "@/components/dna/dna-dialog";
+import { BrandDialog } from "@/components/brand/brand-dialog";
+import { HistoryDialog } from "@/components/history/history-dialog";
 
 export function WorkspaceNav() {
   const router = useRouter();
@@ -25,10 +30,17 @@ export function WorkspaceNav() {
         <Link href="/" aria-label="Início">
           <BrandLockup />
         </Link>
-        <Button variant="outline" size="sm" onClick={novaEstrategia}>
-          <RefreshCw className="size-4" />
-          Nova estratégia
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <AiDialog />
+          <LibraryDialog trigger={<Button variant="ghost" size="sm">Biblioteca</Button>} />
+          <DnaDialog trigger={<Button variant="ghost" size="sm">DNA</Button>} />
+          <BrandDialog trigger={<Button variant="ghost" size="sm">Marca</Button>} />
+          <HistoryDialog trigger={<Button variant="ghost" size="sm">Histórico</Button>} />
+          <Button variant="outline" size="sm" onClick={novaEstrategia}>
+            <RefreshCw className="size-4" />
+            Nova estratégia
+          </Button>
+        </div>
       </div>
     </header>
   );

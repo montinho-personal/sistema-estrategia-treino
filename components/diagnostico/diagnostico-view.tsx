@@ -1,14 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
+
 import { diagnosis, activeAdaptations, dna } from "@/lib/domain";
 import {
   useStrategyStore,
   usePreferencesStore,
   useHistoryStore,
   useDnaStore,
+  useAiStore,
   toPrefList,
 } from "@/lib/store";
+import { aiDiagnose } from "@/lib/ai/anthropic";
 import { NoteList } from "@/components/common/notes";
+import { Button } from "@/components/ui/button";
 
 function SubHeading({ children }: { children: React.ReactNode }) {
   return (
@@ -20,9 +26,26 @@ function SubHeading({ children }: { children: React.ReactNode }) {
 
 export function DiagnosticoView() {
   const state = useStrategyStore();
+  const patch = useStrategyStore((s) => s.patch);
   const prefs = usePreferencesStore((s) => s.prefs);
   const snapshots = useHistoryStore((s) => s.snapshots);
   const samples = useDnaStore((s) => s.samples);
+  const aiConfig = useAiStore((s) => s.config);
+  const aiEnabled = Boolean(aiConfig.key);
+  const [loading, setLoading] = useState(false);
+
+  async function generateSummary() {
+    setLoading(true);
+    try {
+      const text = await aiDiagnose(aiConfig, state);
+      patch({ diagnosisNote: text });
+      toast.success("Resumo executivo gerado.");
+    } catch (err) {
+      toast.error(`Falha na IA: ${err instanceof Error ? err.message : "erro"}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const d = diagnosis(state);
   const adaptations = activeAdaptations(state);
@@ -34,6 +57,24 @@ export function DiagnosticoView() {
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+      {aiEnabled && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-5">
+          <p className="text-sm text-muted-foreground">
+            Gere um resumo executivo com o assistente de IA a partir da anamnese.
+          </p>
+          <Button variant="outline" size="sm" onClick={generateSummary} disabled={loading}>
+            {loading ? "Analisando…" : "Gerar resumo com IA"}
+          </Button>
+        </div>
+      )}
+      {state.diagnosisNote && (
+        <>
+          <SubHeading>Resumo executivo (IA)</SubHeading>
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/80">
+            {state.diagnosisNote}
+          </p>
+        </>
+      )}
       <SubHeading>Perfil</SubHeading>
       {d.perfil.length ? (
         <dl className="grid grid-cols-1 gap-2 sm:grid-cols-[180px_1fr] sm:gap-y-2.5">

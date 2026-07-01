@@ -11,15 +11,28 @@ export function ReportSection({
   hasOverride,
   onSave,
   onRevert,
+  onAiRewrite,
 }: {
   title: string;
   body: string;
   hasOverride: boolean;
   onSave: (text: string) => void;
   onRevert: () => void;
+  onAiRewrite?: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(body);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  async function aiRewrite() {
+    if (!onAiRewrite) return;
+    setAiLoading(true);
+    try {
+      await onAiRewrite();
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   function startEdit() {
     setDraft(body);
@@ -51,6 +64,16 @@ export function ReportSection({
               className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Reverter
+            </button>
+          )}
+          {onAiRewrite && (
+            <button
+              type="button"
+              onClick={aiRewrite}
+              disabled={aiLoading}
+              className="rounded-full border border-border px-2.5 py-0.5 text-xs text-gold transition-colors hover:border-gold disabled:opacity-60"
+            >
+              {aiLoading ? "…" : "Reescrever com IA"}
             </button>
           )}
         </div>

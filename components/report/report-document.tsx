@@ -4,13 +4,16 @@ import { toast } from "sonner";
 
 import { reportSections, reportIntro, reportClosing } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
-import { useStrategyStore, useDnaStore } from "@/lib/store";
+import { useStrategyStore, useDnaStore, useAiStore } from "@/lib/store";
+import { aiRewriteText } from "@/lib/ai/anthropic";
 import { BrandLockup } from "@/components/brand-mark";
 import { ReportSection } from "./report-section";
 
 export function ReportDocument({ state }: { state: StrategyState }) {
   const setOverride = useStrategyStore((s) => s.setOverride);
   const learnStyle = useDnaStore((s) => s.learnStyle);
+  const aiConfig = useAiStore((s) => s.config);
+  const aiEnabled = Boolean(aiConfig.key);
 
   const sections = reportSections(state);
   const nome = (state.anamnese.nome ?? "").trim();
@@ -52,6 +55,19 @@ export function ReportDocument({ state }: { state: StrategyState }) {
               setOverride(s.id, "");
               toast.success("Seção revertida ao texto automático.");
             }}
+            onAiRewrite={
+              aiEnabled
+                ? async () => {
+                    try {
+                      const text = await aiRewriteText(aiConfig, s.title, s.body, state);
+                      setOverride(s.id, text);
+                      toast.success("Seção reescrita pela IA.");
+                    } catch (err) {
+                      toast.error(`Falha na IA: ${err instanceof Error ? err.message : "erro"}`);
+                    }
+                  }
+                : undefined
+            }
           />
         ))}
 
