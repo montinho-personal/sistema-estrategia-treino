@@ -72,8 +72,9 @@ npm run lint
 4. **Fluxo** — Nav, Stepper, rotas, Anamnese (RHF+Zod) e Diagnóstico. ✅
 5. **Entrevista + Memória** — pergunta a pergunta, dashboard, biblioteca, consistência, revisão. ✅
 6. **Relatório editor** — documento editável, revisão de voz, WhatsApp, histórico. ✅
-7. PDF premium + exportação (PDF/HTML) e biblioteca/DNA/marca no nav
-8. Polimento (Framer Motion, a11y, QA)
+7. **PDF premium** — documento de 5 páginas, exportação PDF/HTML, marca. ✅
+8. Acessos no nav (Biblioteca/DNA/Marca/Histórico) + IA opcional (BYOK)
+9. Polimento (Framer Motion, a11y, QA) + deploy
 
 A pasta [`legacy/`](legacy/) contém a implementação completa e funcional dos 8
 módulos em HTML/CSS/JS puro, usada como referência para o port.

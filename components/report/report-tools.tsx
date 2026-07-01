@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MessageCircle, ArrowLeft } from "lucide-react";
+import { MessageCircle, FileText, Copy, ArrowLeft } from "lucide-react";
 
 import { completion, reportWhatsapp } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
@@ -11,18 +11,29 @@ import { useHistoryStore } from "@/lib/store";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { MemoryDialog } from "@/components/memory/memory-dialog";
+import { BrandDialog } from "@/components/brand/brand-dialog";
+import { PremiumPreview } from "@/components/premium/premium-preview";
 
 export function ReportTools({ state }: { state: StrategyState }) {
   const router = useRouter();
   const saveSnapshot = useHistoryStore((s) => s.saveSnapshot);
   const [waOpen, setWaOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const comp = completion(state);
 
-  async function copyWhatsapp() {
+  async function copyWhatsapp(feedback = true) {
     const ok = await copyToClipboard(reportWhatsapp(state));
-    toast[ok ? "success" : "error"](ok ? "Texto do WhatsApp copiado." : "Não foi possível copiar.");
+    if (feedback) toast[ok ? "success" : "error"](ok ? "Texto do WhatsApp copiado." : "Não foi possível copiar.");
+    return ok;
   }
-
+  function openPremium() {
+    setPreviewOpen(true);
+  }
+  async function ambos() {
+    await copyWhatsapp(false);
+    toast.success("WhatsApp copiado.");
+    openPremium();
+  }
   function save() {
     const snap = saveSnapshot(state);
     toast.success(`Estratégia de ${snap.nome} salva no histórico.`);
@@ -44,11 +55,21 @@ export function ReportTools({ state }: { state: StrategyState }) {
       </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
-        <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Versões finais</h3>
-        <Button className="mt-3 w-full" onClick={copyWhatsapp}>
-          <MessageCircle className="size-4" /> Copiar versão WhatsApp
-        </Button>
-        <Button variant="outline" className="mt-2.5 w-full" onClick={() => setWaOpen((v) => !v)}>
+        <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          Qual versão deseja gerar?
+        </h3>
+        <div className="mt-3 grid gap-2.5">
+          <Button className="justify-start" onClick={() => copyWhatsapp()}>
+            <MessageCircle className="size-4" /> 1 · WhatsApp
+          </Button>
+          <Button variant="outline" className="justify-start" onClick={openPremium}>
+            <FileText className="size-4" /> 2 · PDF Premium
+          </Button>
+          <Button variant="outline" className="justify-start" onClick={ambos}>
+            <Copy className="size-4" /> 3 · Ambos
+          </Button>
+        </div>
+        <Button variant="ghost" className="mt-2.5 w-full" onClick={() => setWaOpen((v) => !v)}>
           Prévia do WhatsApp
         </Button>
         {waOpen && (
@@ -56,25 +77,21 @@ export function ReportTools({ state }: { state: StrategyState }) {
             {reportWhatsapp(state)}
           </pre>
         )}
-        <p className="mt-3 text-[12.5px] text-muted-foreground">
-          PDF premium e exportação HTML chegam na Fase 7.
-        </p>
       </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
         <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Estratégia</h3>
         <MemoryDialog
           state={state}
-          trigger={
-            <Button variant="outline" className="mt-3 w-full">
-              Ver estratégia completa
-            </Button>
-          }
+          trigger={<Button variant="outline" className="mt-3 w-full">Ver estratégia completa</Button>}
         />
+        <BrandDialog trigger={<Button variant="outline" className="mt-2.5 w-full">Configurar marca</Button>} />
         <Button variant="ghost" className="mt-2.5 w-full" onClick={save}>
           Salvar no histórico
         </Button>
       </div>
+
+      {previewOpen && <PremiumPreview state={state} onClose={() => setPreviewOpen(false)} />}
     </div>
   );
 }
