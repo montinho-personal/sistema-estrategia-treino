@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { RichText } from "@/components/common/rich-text";
 
 export function ReportSection({
   title,
@@ -97,7 +98,7 @@ export function ReportSection({
           </div>
         </div>
       ) : (
-        <p className="mt-3 whitespace-pre-wrap text-[16px] leading-[1.7]">{body}</p>
+        <RichText body={body} className="mt-3.5" />
       )}
     </section>
   );

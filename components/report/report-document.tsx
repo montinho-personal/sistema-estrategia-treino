@@ -7,6 +7,7 @@ import type { StrategyState } from "@/lib/domain/schema";
 import { useStrategyStore, useDnaStore, useAiStore } from "@/lib/store";
 import { aiRewriteText } from "@/lib/ai/anthropic";
 import { BrandLockup } from "@/components/brand-mark";
+import { RichText } from "@/components/common/rich-text";
 import { ReportSection } from "./report-section";
 
 export function ReportDocument({ state }: { state: StrategyState }) {
@@ -36,9 +37,7 @@ export function ReportDocument({ state }: { state: StrategyState }) {
         <h2 className="text-[clamp(24px,3.4vw,34px)] font-[680] leading-tight tracking-[-0.035em]">
           Estratégia de treino{nome ? ` · ${nome}` : ""}
         </h2>
-        <p className="mt-3 whitespace-pre-wrap text-[16.5px] leading-[1.65] text-foreground/80">
-          {reportIntro(state)}
-        </p>
+        <RichText body={reportIntro(state)} className="mt-4" />
 
         {sections.map((s) => (
           <ReportSection
@@ -71,9 +70,9 @@ export function ReportDocument({ state }: { state: StrategyState }) {
           />
         ))}
 
-        <p className="mt-8 border-t border-border pt-6 text-[16px] italic leading-[1.65] text-foreground/80">
-          {reportClosing(state)}
-        </p>
+        <div className="mt-8 border-t border-border pt-6">
+          <RichText body={reportClosing(state)} />
+        </div>
       </div>
     </article>
   );
