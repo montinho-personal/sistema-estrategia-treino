@@ -80,6 +80,31 @@ conversa entre dois treinadores. Aprofunda o Módulo 2 com:
 - **Revisão / checklist final.** Confirma que todas as áreas foram respondidas
   antes de liberar o relatório. Nunca gera relatório incompleto.
 
+## Módulo 4 — Memória estratégica & dashboard
+
+O sistema deixa de ser só uma entrevista e passa a **construir a estratégia em
+tempo real**, com uma memória viva de tudo que foi definido.
+
+- **Memória estratégica.** Um retrato organizado do aluno nas 11 áreas do PRD
+  (👤 Aluno, 🎯 Objetivo, 🧠 Filosofia, 🏋 Divisão, 🔥 Intensidade,
+  📈 Periodização, 🦵 Exercícios, 🤸 Mobilidade, 🏃 Cardio, 📊 Progressão,
+  📲 Feedback), atualizado a cada resposta. Acesse por **“Estratégia”** na barra
+  superior ou por **“Ver estratégia completa”**.
+- **Painel “Estratégia em construção”.** Durante a entrevista, um dashboard com
+  barra de progresso em blocos e porcentagem, e o status de cada área
+  (✓ concluída · ● em andamento · ○ pendente). Alterne com o relatório em tempo
+  real.
+- **Sugestões oportunas.** O sistema aponta lacunas (progressão não definida,
+  falta de adaptação para uma limitação, etc.) — sem nunca obrigar.
+- **Consistência.** Cada resposta é comparada com a memória; conflitos (ex.:
+  hipertrofia × força) geram o alerta *“alterar ou manter?”*.
+- **Edição a qualquer momento.** Alterar uma decisão atualiza memória, painel e
+  relatório na hora, sem reiniciar a entrevista.
+- **Versões finais.** A revisão pergunta *“deseja alterar algo antes de gerar?”*
+  e o relatório oferece as três versões do PRD: WhatsApp, PDF Premium ou ambos.
+- **Histórico de estratégias.** Snapshots salvos localmente — base para a visão
+  de futuro (comparar ciclos, reutilizar planejamentos, banco por perfil).
+
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
 
@@ -104,8 +129,9 @@ css/
 js/
   app.js              Conteúdo e interações da landing
   config.js           SYSTEM_PROMPT, anamnese, 11 tópicos + perguntas, adaptativas, auditorias
-  store.js            Estado + persistência local (localStorage)
+  store.js            Estado + persistência local (localStorage) + histórico de estratégias
   interview.js        Motor da entrevista: plano adaptativo, progresso, inconsistências, checklist
+  memory.js           Memória estratégica: estrutura por área, status do dashboard, sugestões
   report.js           Diagnóstico, relatório e versão WhatsApp (determinístico)
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
@@ -130,7 +156,7 @@ python3 -m http.server 8000
 | 01 | Fundação & Identidade | ✅ Disponível |
 | 02 | O cérebro & o workspace (anamnese, diagnóstico, entrevista, relatório) | ✅ Disponível |
 | 03 | Entrevista inteligente (adaptativa, auditoria, checklist) | ✅ Disponível |
-| 04 | Estratégia estruturada e editável | Em breve |
+| 04 | Memória estratégica & dashboard (painel, sugestões, histórico) | ✅ Disponível |
 | 05 | Entrega premium com identidade visual completa | Em breve |
 
 ---

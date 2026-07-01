@@ -8,6 +8,7 @@ window.MTS = window.MTS || {};
 MTS.Store = (function () {
   var KEY = 'mts.strategy.v2';
   var AI_KEY = 'mts.ai.v1';
+  var HIST_KEY = 'mts.history.v1';
 
   var subs = [];
 
@@ -78,6 +79,38 @@ MTS.Store = (function () {
     /* ---- Configuração de IA (bring-your-own-key, opcional) ---- */
     getAI: function () { try { return JSON.parse(localStorage.getItem(AI_KEY)) || {}; } catch (e) { return {}; } },
     setAI: function (cfg) { try { localStorage.setItem(AI_KEY, JSON.stringify(cfg || {})); } catch (e) {} },
-    clearAI: function () { try { localStorage.removeItem(AI_KEY); } catch (e) {} }
+    clearAI: function () { try { localStorage.removeItem(AI_KEY); } catch (e) {} },
+
+    /* ---- Histórico de estratégias (base para evoluções futuras) ---- */
+    history: function () { try { return JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch (e) { return []; } },
+    saveSnapshot: function () {
+      var list = this.history();
+      var nome = (state.anamnese && state.anamnese.nome || '').trim() || 'Aluno sem nome';
+      var snap = {
+        id: 's_' + new Date().getTime() + '_' + list.length,
+        nome: nome, savedAt: new Date().toISOString(),
+        anamnese: JSON.parse(JSON.stringify(state.anamnese || {})),
+        answers: JSON.parse(JSON.stringify(state.answers || {})),
+        overrides: JSON.parse(JSON.stringify(state.overrides || {}))
+      };
+      list.unshift(snap);
+      try { localStorage.setItem(HIST_KEY, JSON.stringify(list.slice(0, 50))); } catch (e) {}
+      return snap;
+    },
+    loadSnapshot: function (id) {
+      var snap = this.history().filter(function (s) { return s.id === id; })[0];
+      if (!snap) return false;
+      state = fresh();
+      state.anamnese = snap.anamnese || {};
+      state.answers = snap.answers || {};
+      state.overrides = snap.overrides || {};
+      state.step = 'relatorio';
+      persist(); emit();
+      return true;
+    },
+    deleteSnapshot: function (id) {
+      var list = this.history().filter(function (s) { return s.id !== id; });
+      try { localStorage.setItem(HIST_KEY, JSON.stringify(list)); } catch (e) {}
+    }
   };
 })();

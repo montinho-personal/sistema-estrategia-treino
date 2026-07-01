@@ -145,6 +145,75 @@
 .loading { display: inline-block; width: 15px; height: 15px; border: 2px solid color-mix(in srgb, currentColor 30%, transparent); border-top-color: currentColor; border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* =========================================================================
+   MÓDULO 4 — Memória estratégica & dashboard
+   ========================================================================= */
+
+/* ---- Painel "Estratégia em construção" ---- */
+.dash { position: sticky; top: 128px; }
+.dash__card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+.seg { display: flex; gap: 2px; padding: 6px; background: var(--line-soft); border-radius: 999px; margin-bottom: var(--s3); }
+.seg button { flex: 1; padding: 8px 10px; border-radius: 999px; font-size: 13.5px; font-weight: 520; color: var(--ink-mute); background: transparent; border: none; transition: all .2s var(--ease); }
+.seg button.is-on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+.dash__inner { padding: var(--s4); }
+.dash__title { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-mute); }
+.dash__pct { display: flex; align-items: baseline; gap: 10px; margin: 10px 0 4px; }
+.dash__pct b { font-size: 34px; font-weight: 680; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.dash__pct span { font-size: 13px; color: var(--ink-mute); }
+.blockbar { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; letter-spacing: 2px; color: var(--accent); margin-bottom: var(--s3); }
+.blockbar .empty { color: var(--line); }
+
+.arealist { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.arealist li { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--r-sm); font-size: 14px; transition: background .2s var(--ease); }
+.arealist li:hover { background: var(--bg); }
+.arealist .amark { width: 20px; height: 20px; flex: 0 0 auto; display: grid; place-items: center; font-size: 13px; }
+.arealist .adone { color: #16a34a; }
+.arealist .aprog { color: #d97706; }
+.arealist .apend { color: var(--line); }
+.arealist li.is-done { color: var(--ink); }
+.arealist li.is-pending { color: var(--ink-mute); }
+.arealist .aname { flex: 1; }
+.arealist .aedit { font-size: 12px; color: var(--accent); opacity: 0; transition: opacity .2s var(--ease); background: none; border: none; padding: 0; }
+.arealist li:hover .aedit { opacity: 1; }
+
+.suggest { margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.suggest h5 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 10px; }
+.suggest .stip { display: flex; gap: 9px; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); padding: 8px 0; }
+.suggest .stip svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--accent); margin-top: 2px; }
+.dash__full { width: 100%; margin-top: var(--s3); }
+
+/* ---- Memória estratégica completa (modal) ---- */
+.mem { display: grid; gap: 2px; }
+.mem__sec { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3) var(--s4); }
+.mem__sec + .mem__sec { margin-top: 10px; }
+.mem__h { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mem__h .emo { font-size: 18px; }
+.mem__h h4 { font-size: 15px; font-weight: 640; letter-spacing: -0.01em; flex: 1; }
+.mem__h button { font-size: 12px; color: var(--accent); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.mem__h button:hover { border-color: var(--accent); }
+.mem__rows { display: grid; grid-template-columns: minmax(140px, 34%) 1fr; gap: 7px 16px; font-size: 14px; }
+.mem__rows dt { color: var(--ink-mute); }
+.mem__rows dd { color: var(--ink); }
+.mem__rows dd.empty { color: var(--line); }
+@media (max-width: 560px) { .mem__rows { grid-template-columns: 1fr; gap: 1px 0; } .mem__rows dd { margin-bottom: 8px; } }
+.modal--wide { max-width: 720px; max-height: 86vh; overflow: auto; }
+
+/* ---- Escolha de versões ---- */
+.vers { display: grid; gap: 10px; }
+.vers button { justify-content: flex-start; }
+.confirm-q { font-size: 15px; color: var(--ink-soft); background: var(--accent-tint); border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line)); border-radius: var(--r-md); padding: 14px 16px; margin-bottom: var(--s3); }
+
+/* ---- Histórico ---- */
+.hist { list-style: none; padding: 0; display: grid; gap: 8px; }
+.histitem { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); }
+.histitem b { font-size: 15px; }
+.histitem small { color: var(--ink-mute); font-size: 12.5px; }
+.histitem .spacer { flex: 1; }
+.histitem button { font-size: 13px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.histitem button.danger { color: #dc2626; }
+.histitem button:hover { border-color: var(--ink-mute); }
+
 /* ---- Impressão / PDF ---- */
 @media print {
   .nav, .stepper, .panel__head, .actions, .split > *:first-child, .ai-pill, .topicnav, .toast { display: none !important; }

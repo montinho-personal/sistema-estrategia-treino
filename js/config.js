@@ -63,6 +63,9 @@ window.MTS = window.MTS || {};
     'CHECKLIST FINAL',
     'Antes de finalizar, confirme se todas as áreas foram respondidas. Se faltar qualquer informação, pergunte. Nunca gere relatório incompleto.',
     '',
+    'MEMÓRIA ESTRATÉGICA',
+    'Mantenha uma memória viva de tudo que já foi definido, atualizada após cada resposta e nunca apagada durante a sessão. Use-a para evitar perguntas repetidas, evitar inconsistências, mostrar a estratégia em construção em tempo real e alimentar o relatório final. Nunca peça de novo o que já está na memória. Compare cada nova resposta com a memória: havendo conflito, pergunte se deseja alterar ou manter. Ofereça sugestões oportunas (sem obrigar). O treinador deve sentir que está construindo um planejamento profissional, não respondendo perguntas.',
+    '',
     'ESCRITA E ESTILO',
     'Vá escrevendo o relatório durante a entrevista; ao final ele já deve estar quase pronto — só revisar e gerar as versões. Escreva sempre falando diretamente com o aluno, nunca para outro profissional. Explique, ensine, mostre o motivo. O aluno deve sentir confiança.',
     '',
@@ -80,6 +83,7 @@ window.MTS = window.MTS || {};
     { id: 'identificacao', title: 'Identificação', fields: [
       { id: 'nome', label: 'Nome do aluno', type: 'text', placeholder: 'Ex.: Marina Souza' },
       { id: 'idade', label: 'Idade', type: 'number', placeholder: 'Ex.: 34' },
+      { id: 'sexo', label: 'Sexo', type: 'select', options: ['Masculino', 'Feminino', 'Prefiro não informar'] },
       { id: 'modalidade', label: 'Modalidade', type: 'select', options: ['Presencial', 'Online', 'Híbrido'] }
     ] },
     { id: 'objetivo', title: 'Objetivo & experiência', fields: [
@@ -127,6 +131,7 @@ window.MTS = window.MTS || {};
         { id: 'objetivo_principal', prompt: 'Qual será o objetivo principal deste ciclo?', type: 'textarea', placeholder: 'Ex.: Hipertrofia de membros superiores nas próximas 12 semanas' },
         { id: 'objetivo_secundario', prompt: 'Existe algum objetivo secundário?', type: 'text', optional: true, label: 'Objetivo secundário', placeholder: 'Ex.: Melhorar a postura' },
         { id: 'objetivo_prioridade', prompt: 'Existe alguma prioridade muscular?', type: 'text', optional: true, label: 'Prioridade muscular', placeholder: 'Ex.: Ombros e dorsais' },
+        { id: 'objetivo_prazo', prompt: 'Qual o prazo previsto para este ciclo?', type: 'text', optional: true, label: 'Prazo', placeholder: 'Ex.: 12 semanas' },
         { id: 'objetivo_porque', prompt: 'Por que você escolheu esse objetivo para este aluno?', type: 'textarea', why: true }
       ] },
     { id: 'filosofia', n: 2, name: 'Filosofia da estratégia', title: 'A filosofia do seu treino',
@@ -254,6 +259,11 @@ window.MTS = window.MTS || {};
     function (a, ans) {
       if (low(a.experiencia) === 'iniciante' && /(drop|rest-?pause|cluster|falha)/i.test(joinAns(ans.intensidade_tecnicas, ans.intensidade_estrategia)))
         return { id: 'c_inic_tecnicas', topic: 'intensidade', text: 'Aluno iniciante com técnicas avançadas de intensidade. Rever agora ou manter e introduzir com cautela?' };
+    },
+    function (a, ans) {
+      // objetivo definido como hipertrofia, mas a intensidade prioriza força
+      if (low(a.objetivo) === 'hipertrofia' && /(for[çc]a m[áa]xima|for[çc]a|1rm|pesad[íi]ssim|baixa[s]? repeti)/i.test(joinAns(ans.intensidade_estrategia, ans.intensidade_porque, ans.intensidade_reps)))
+        return { id: 'c_obj_forca', topic: 'intensidade', text: 'Percebi que anteriormente definimos um foco em hipertrofia, mas agora a estratégia parece priorizar força. Gostaria de alterar o objetivo ou manter ambas as abordagens?' };
     }
   ];
 

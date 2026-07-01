@@ -7,7 +7,8 @@
 (function () {
   "use strict";
 
-  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview;
+  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview, Memory = MTS.Memory;
+  var sideView = 'estrategia'; // painel lateral da entrevista: estrategia | relatorio
   var panel = document.getElementById('panel');
   var stepperEl = document.getElementById('stepper');
   var modalRoot = document.getElementById('modalRoot');
@@ -309,10 +310,92 @@
     qcard.appendChild(tnav);
 
     split.appendChild(qcard);
-    split.appendChild(livePreview(s));
+    split.appendChild(sidePanel(s, topic.id));
     wrap.appendChild(split);
 
     panel.innerHTML = ''; panel.appendChild(wrap);
+  }
+
+  /* ---------- painel lateral: Estratégia em construção / Relatório ---------- */
+  function sidePanel(s, currentTopicId) {
+    var dash = el('div', 'dash');
+    var card = el('div', 'dash__card');
+    var inner = el('div', 'dash__inner');
+
+    var seg = el('div', 'seg');
+    [['estrategia', 'Estratégia'], ['relatorio', 'Relatório']].forEach(function (pair) {
+      var b = el('button', sideView === pair[0] ? 'is-on' : '', pair[1]);
+      b.addEventListener('click', function () { sideView = pair[0]; renderEntrevista(); });
+      seg.appendChild(b);
+    });
+    inner.appendChild(seg);
+
+    if (sideView === 'relatorio') inner.appendChild(livePreview(s));
+    else inner.appendChild(dashboard(s, currentTopicId));
+
+    card.appendChild(inner);
+    dash.appendChild(card);
+    return dash;
+  }
+
+  function blockBar(pct) {
+    var total = 12, filled = Math.max(0, Math.min(total, Math.round(pct / 100 * total)));
+    var wrap = el('span', 'blockbar');
+    var full = ''; for (var i = 0; i < filled; i++) full += '█';
+    var empty = ''; for (var j = 0; j < total - filled; j++) empty += '░';
+    wrap.appendChild(document.createTextNode(full));
+    wrap.appendChild(el('span', 'empty', empty));
+    return wrap;
+  }
+
+  function dashboard(s, currentTopicId) {
+    var box = el('div');
+    box.appendChild(el('div', 'dash__title', 'Estratégia em construção'));
+
+    var comp = Report.completion(s);
+    var pctRow = el('div', 'dash__pct');
+    pctRow.appendChild(el('b', null, comp.pct + '%'));
+    pctRow.appendChild(el('span', null, comp.complete ? 'estratégia concluída' : 'em construção'));
+    box.appendChild(pctRow);
+    box.appendChild(blockBar(comp.pct));
+
+    var ul = el('ul', 'arealist');
+    Memory.areaStatus(s, currentTopicId).forEach(function (area) {
+      var li = el('li', area.status === 'done' ? 'is-done' : (area.status === 'pending' ? 'is-pending' : ''));
+      var mark = area.status === 'done' ? '✓' : (area.status === 'progress' ? '●' : '○');
+      var mcls = area.status === 'done' ? 'adone' : (area.status === 'progress' ? 'aprog' : 'apend');
+      li.appendChild(el('span', 'amark ' + mcls, mark));
+      li.appendChild(el('span', 'aname', area.n + '. ' + esc(area.name)));
+      var edit = el('button', 'aedit', 'editar');
+      edit.addEventListener('click', function () { jumpToTopic(area.id); });
+      li.appendChild(edit);
+      li.addEventListener('click', function (e) { if (e.target !== edit) jumpToTopic(area.id); });
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+
+    var sugg = Memory.suggestions(s);
+    if (sugg.length) {
+      var sbox = el('div', 'suggest');
+      sbox.appendChild(el('h5', null, 'Sugestões'));
+      sugg.forEach(function (t) {
+        var row = el('div', 'stip');
+        row.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.2 1 2V17h6v-1.5c0-.8.4-1.4 1-2A6 6 0 0 0 12 3zM9 21h6"/></svg><span>' + esc(t) + '</span>';
+        sbox.appendChild(row);
+      });
+      box.appendChild(sbox);
+    }
+
+    var full = el('button', 'btn btn--ghost dash__full', 'Ver estratégia completa');
+    full.addEventListener('click', openMemoryModal);
+    box.appendChild(full);
+    return box;
+  }
+
+  function jumpToTopic(topicId) {
+    var fid = IV.firstIdOfTopic(state(), topicId);
+    if (fid) { Store.patch({ step: 'entrevista', currentQ: fid }); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else { go('anamnese'); }
   }
 
   /* Controle de resposta conforme o tipo da pergunta. */
@@ -449,10 +532,17 @@
     card.appendChild(ul);
     wrap.appendChild(card);
 
+    if (!missing.length)
+      wrap.appendChild(el('div', 'confirm-q', 'Deseja alterar alguma informação antes de gerar o relatório? ' +
+        'Você pode editar qualquer área — nada é gerado automaticamente.'));
+
     var actions = el('div', 'actions');
     var back = el('button', 'btn btn--ghost', '← Voltar à entrevista');
     back.addEventListener('click', function () { go('entrevista'); });
     actions.appendChild(back);
+    var memBtn = el('button', 'btn btn--ghost', 'Ver estratégia completa');
+    memBtn.addEventListener('click', openMemoryModal);
+    actions.appendChild(memBtn);
     actions.appendChild(el('span', 'spacer'));
 
     if (missing.length) {
@@ -527,22 +617,30 @@
     tools.appendChild(toolsCard);
 
     var expCard = el('div', 'formcard');
-    expCard.appendChild(el('h3', null, 'Versões finais'));
-    var waBtn = el('button', 'btn btn--primary', 'Copiar versão WhatsApp'); waBtn.style.width = '100%';
-    waBtn.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'Texto do WhatsApp copiado.'); });
-    expCard.appendChild(waBtn);
-    var pdfBtn = el('button', 'btn btn--ghost', 'Imprimir / salvar PDF'); pdfBtn.style.cssText = 'width:100%;margin-top:10px';
-    pdfBtn.addEventListener('click', function () { window.print(); });
-    expCard.appendChild(pdfBtn);
-    var waToggle = el('button', 'btn btn--ghost', 'Prévia do WhatsApp'); waToggle.style.cssText = 'width:100%;margin-top:10px';
+    expCard.appendChild(el('h3', null, 'Qual versão deseja gerar?'));
     var waPrev = el('div', 'wa'); waPrev.style.display = 'none'; waPrev.style.marginTop = '12px';
-    waToggle.addEventListener('click', function () {
-      var show = waPrev.style.display === 'none';
-      waPrev.style.display = show ? 'block' : 'none';
-      if (show) waPrev.textContent = Report.whatsapp(state());
-    });
-    expCard.appendChild(waToggle); expCard.appendChild(waPrev);
+    var vers = el('div', 'vers');
+    var v1 = el('button', 'btn btn--primary', '1 · WhatsApp');
+    v1.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'Texto do WhatsApp copiado.'); showWA(); });
+    var v2 = el('button', 'btn btn--ghost', '2 · PDF Premium');
+    v2.addEventListener('click', function () { window.print(); });
+    var v3 = el('button', 'btn btn--ghost', '3 · Ambos');
+    v3.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'WhatsApp copiado. Gerando PDF...'); showWA(); setTimeout(function () { window.print(); }, 400); });
+    vers.appendChild(v1); vers.appendChild(v2); vers.appendChild(v3);
+    expCard.appendChild(vers);
+    function showWA() { waPrev.style.display = 'block'; waPrev.textContent = Report.whatsapp(state()); }
+    expCard.appendChild(waPrev);
     tools.appendChild(expCard);
+
+    var saveCard = el('div', 'formcard');
+    saveCard.appendChild(el('h3', null, 'Estratégia'));
+    var memBtn = el('button', 'btn btn--ghost', 'Ver estratégia completa'); memBtn.style.width = '100%';
+    memBtn.addEventListener('click', openMemoryModal);
+    saveCard.appendChild(memBtn);
+    var saveBtn = el('button', 'btn btn--ghost', 'Salvar no histórico'); saveBtn.style.cssText = 'width:100%;margin-top:10px';
+    saveBtn.addEventListener('click', function () { var snap = Store.saveSnapshot(); toast('Estratégia de ' + snap.nome + ' salva no histórico.'); });
+    saveCard.appendChild(saveBtn);
+    tools.appendChild(saveCard);
     split.appendChild(tools);
 
     wrap.appendChild(split);
@@ -590,6 +688,109 @@
     document.body.appendChild(ta); ta.select();
     try { document.execCommand('copy'); toast(okMsg); } catch (e) { toast('Não foi possível copiar.'); }
     document.body.removeChild(ta);
+  }
+
+  /* =======================================================================
+     Memória estratégica completa (comando "Mostrar estratégia")
+     ======================================================================= */
+  function openMemoryModal() {
+    var s = state();
+    var back = el('div', 'modal-backdrop');
+    var m = el('div', 'modal modal--wide');
+    m.appendChild(el('h3', null, 'Estratégia em construção'));
+    m.appendChild(el('p', null, 'Tudo o que já foi definido para este aluno, organizado. Atualiza em tempo real.'));
+
+    var mem = el('div', 'mem'); mem.style.marginTop = 'var(--s3)';
+    Memory.build(s).forEach(function (sec) {
+      var block = el('div', 'mem__sec');
+      var h = el('div', 'mem__h');
+      h.appendChild(el('span', 'emo', sec.emoji));
+      h.appendChild(el('h4', null, esc(sec.title)));
+      var edit = el('button', null, 'Editar');
+      edit.addEventListener('click', function () {
+        close();
+        if (sec.editStep) go(sec.editStep);
+        else jumpToTopic(sec.editTopic);
+      });
+      h.appendChild(edit);
+      block.appendChild(h);
+      var dl = el('dl', 'mem__rows');
+      sec.rows.forEach(function (row) {
+        dl.appendChild(el('dt', null, esc(row[0])));
+        var filled = row[1] != null && String(row[1]).trim() !== '';
+        dl.appendChild(el('dd', filled ? null : 'empty', filled ? esc(row[1]) : '—'));
+      });
+      block.appendChild(dl);
+      mem.appendChild(block);
+    });
+    m.appendChild(mem);
+
+    var actions = el('div', 'modal__actions');
+    var closeB = el('button', 'btn btn--primary', 'Fechar');
+    closeB.addEventListener('click', function () { close(); });
+    actions.appendChild(closeB);
+    m.appendChild(actions);
+
+    back.appendChild(m);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    modalRoot.appendChild(back);
+    function close() { modalRoot.innerHTML = ''; }
+  }
+
+  /* =======================================================================
+     Histórico de estratégias (base para evoluções futuras)
+     ======================================================================= */
+  function openHistoryModal() {
+    var back = el('div', 'modal-backdrop');
+    var m = el('div', 'modal modal--wide');
+    m.appendChild(el('h3', null, 'Histórico de estratégias'));
+    m.appendChild(el('p', null, 'Estratégias salvas neste navegador. Base para comparar ciclos e reutilizar planejamentos.'));
+
+    var list = Store.history();
+    if (!list.length) {
+      m.appendChild(el('p', 'hint', 'Nenhuma estratégia salva ainda. Salve a partir da etapa de Relatório.')).style.marginTop = 'var(--s3)';
+    } else {
+      var ul = el('ul', 'hist'); ul.style.marginTop = 'var(--s3)';
+      list.forEach(function (snap) {
+        var li = el('li', 'histitem');
+        var meta = el('div');
+        meta.appendChild(el('b', null, esc(snap.nome)));
+        meta.appendChild(el('div', null, '<small>' + esc(formatDate(snap.savedAt)) + '</small>'));
+        li.appendChild(meta);
+        li.appendChild(el('span', 'spacer'));
+        var open = el('button', null, 'Abrir');
+        open.addEventListener('click', function () {
+          if (confirm('Abrir esta estratégia? A estratégia atual em edição será substituída.')) {
+            Store.loadSnapshot(snap.id); close(); render(); toast('Estratégia carregada.');
+          }
+        });
+        var del = el('button', 'danger', 'Excluir');
+        del.addEventListener('click', function () {
+          if (confirm('Excluir esta estratégia do histórico?')) { Store.deleteSnapshot(snap.id); close(); openHistoryModal(); }
+        });
+        li.appendChild(open); li.appendChild(del);
+        ul.appendChild(li);
+      });
+      m.appendChild(ul);
+    }
+
+    var actions = el('div', 'modal__actions');
+    var closeB = el('button', 'btn btn--ghost', 'Fechar');
+    closeB.addEventListener('click', function () { close(); });
+    actions.appendChild(closeB);
+    m.appendChild(actions);
+
+    back.appendChild(m);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    modalRoot.appendChild(back);
+    function close() { modalRoot.innerHTML = ''; }
+  }
+
+  function formatDate(iso) {
+    try {
+      var d = new Date(iso);
+      return d.toLocaleDateString('pt-BR') + ' · ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return iso; }
   }
 
   /* =======================================================================
@@ -648,6 +849,8 @@
   }
 
   document.getElementById('aiPill').addEventListener('click', openAIModal);
+  document.getElementById('btnMemory').addEventListener('click', openMemoryModal);
+  document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnReset').addEventListener('click', function () {
     if (confirm('Começar uma nova estratégia? Os dados atuais deste navegador serão apagados.')) {
       Store.reset(); go('anamnese'); toast('Nova estratégia iniciada.');

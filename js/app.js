@@ -37,9 +37,9 @@
     },
     {
       id: "04",
-      title: "Estratégia estruturada",
-      desc: "As decisões do treinador viram um plano coerente, justificado e totalmente editável.",
-      status: "next",
+      title: "Memória estratégica & dashboard",
+      desc: "Memória viva de tudo que foi definido, painel de progresso em tempo real, sugestões e histórico.",
+      status: "now",
     },
     {
       id: "05",
