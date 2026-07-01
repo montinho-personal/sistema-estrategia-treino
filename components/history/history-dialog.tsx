@@ -34,7 +34,7 @@ export function HistoryDialog({ trigger }: { trigger: ReactNode }) {
     const snap = snapshots.find((s) => s.id === id);
     if (!snap) return;
     if (confirm("Abrir esta estratégia? A estratégia atual em edição será substituída.")) {
-      loadSnapshot({ anamnese: snap.anamnese, answers: snap.answers, overrides: snap.overrides });
+      loadSnapshot(snap, snap.id);
       setOpen(false);
       router.push("/alunos/relatorio");
       toast.success("Estratégia carregada.");

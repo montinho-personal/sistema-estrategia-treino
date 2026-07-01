@@ -7,7 +7,7 @@ import { MessageCircle, FileText, Copy, ArrowLeft } from "lucide-react";
 
 import { completion, reportWhatsapp } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
-import { useHistoryStore } from "@/lib/store";
+import { useHistoryStore, useStrategyStore } from "@/lib/store";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { MemoryDialog } from "@/components/memory/memory-dialog";
@@ -17,6 +17,10 @@ import { PremiumPreview } from "@/components/premium/premium-preview";
 export function ReportTools({ state }: { state: StrategyState }) {
   const router = useRouter();
   const saveSnapshot = useHistoryStore((s) => s.saveSnapshot);
+  const updateSnapshot = useHistoryStore((s) => s.updateSnapshot);
+  const snapshots = useHistoryStore((s) => s.snapshots);
+  const sourceId = useStrategyStore((s) => s.sourceId);
+  const loaded = sourceId ? snapshots.find((s) => s.id === sourceId) : undefined;
   const [waOpen, setWaOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const comp = completion(state);
@@ -37,6 +41,12 @@ export function ReportTools({ state }: { state: StrategyState }) {
   function save() {
     const snap = saveSnapshot(state);
     toast.success(`Estratégia de ${snap.nome} salva no histórico.`);
+  }
+  function update() {
+    if (!sourceId) return;
+    const snap = updateSnapshot(sourceId, state);
+    if (snap) toast.success(`Relatório de ${snap.nome} atualizado no histórico.`);
+    else toast.error("Este relatório não está mais no histórico. Salve como novo.");
   }
 
   return (
@@ -86,9 +96,20 @@ export function ReportTools({ state }: { state: StrategyState }) {
           trigger={<Button variant="outline" className="mt-3 w-full">Ver estratégia completa</Button>}
         />
         <BrandDialog trigger={<Button variant="outline" className="mt-2.5 w-full">Configurar marca</Button>} />
-        <Button variant="ghost" className="mt-2.5 w-full" onClick={save}>
-          Salvar no histórico
-        </Button>
+        {loaded ? (
+          <>
+            <Button className="mt-2.5 w-full" onClick={update}>
+              Atualizar “{loaded.nome}” no histórico
+            </Button>
+            <Button variant="ghost" className="mt-2.5 w-full" onClick={save}>
+              Salvar como novo (cópia)
+            </Button>
+          </>
+        ) : (
+          <Button variant="ghost" className="mt-2.5 w-full" onClick={save}>
+            Salvar no histórico
+          </Button>
+        )}
       </div>
 
       {previewOpen && <PremiumPreview state={state} onClose={() => setPreviewOpen(false)} />}
