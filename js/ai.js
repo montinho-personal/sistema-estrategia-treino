@@ -65,15 +65,25 @@ MTS.AI = (function () {
     return call(prompt, 700);
   }
 
-  /* Passo 5 — transforma a decisão + o motivo do treinador em texto para o aluno. */
-  function rewriteSection(topic, decision, why, state) {
+  /* Passo 5 — transforma as respostas do treinador em texto para o aluno. */
+  function topicAnswersText(topic, state) {
+    var A = state.answers || {};
+    var rows = [];
+    MTS.Interview.questionsForTopic(topic, state).forEach(function (q) {
+      var v = A[q.id];
+      if (v == null || String(v).trim() === '') return;
+      rows.push('- ' + (q.label || q.prompt) + ': ' + (Array.isArray(v) ? v.join(', ') : v));
+    });
+    return rows.join('\n') || '(sem respostas ainda)';
+  }
+
+  function rewriteSection(topic, state) {
     var prompt =
-      'O treinador tomou uma decisão sobre "' + topic.name + '" para o aluno abaixo. ' +
-      'Reescreva isso como uma seção do relatório, falando DIRETAMENTE com o aluno, ' +
-      'de forma clara, humana e didática (2 a 4 frases). Explique o porquê. Não invente ' +
-      'nada além do que o treinador decidiu.\n\n' +
-      'DECISÃO: ' + (decision || '(não informada)') + '\n' +
-      'MOTIVO DO TREINADOR: ' + (why || '(não informado)') + '\n\n' +
+      'O treinador definiu o bloco "' + topic.name + '" para o aluno abaixo. ' +
+      'Reescreva como uma seção do relatório, falando DIRETAMENTE com o aluno, de forma ' +
+      'clara, humana e didática (2 a 4 frases). Explique o porquê. Não invente nada além ' +
+      'do que o treinador decidiu.\n\n' +
+      'DECISÕES DO TREINADOR:\n' + topicAnswersText(topic, state) + '\n\n' +
       'CONTEXTO DO ALUNO:\n' + anamneseText(state.anamnese || {});
     return call(prompt, 500);
   }

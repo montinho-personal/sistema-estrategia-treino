@@ -56,13 +56,29 @@ system prompt, do primeiro dado à entrega.
 - **Anamnese.** Ficha de entrada do aluno, com autosave local.
 - **Diagnóstico.** Resumo executivo organizado a partir da anamnese, com pontos
   de atenção e oportunidades. Nunca monta estratégia nesta etapa.
-- **Entrevista guiada.** Uma pergunta por vez, na ordem fixa dos 11 tópicos. A
-  cada decisão o sistema registra e pergunta o porquê (a *regra das decisões*),
-  e faz uma *análise crítica* frente à anamnese.
+- **Entrevista guiada.** Base do processo: a ordem fixa dos 11 tópicos e a
+  *regra das decisões* (registrar + perguntar o porquê).
 - **Relatório em tempo real.** À medida que o treinador responde, o documento do
   aluno é escrito — em linguagem clara, explicando o motivo de cada escolha.
 - **Versões finais.** Relatório editável, exportação para PDF (impressão) e
   versão pronta para WhatsApp.
+
+## Módulo 3 — Entrevista inteligente
+
+O coração do sistema: a entrevista deixa de ser um formulário e vira uma
+conversa entre dois treinadores. Aprofunda o Módulo 2 com:
+
+- **Múltiplas perguntas por área**, uma de cada vez — nunca um questionário
+  enorme.
+- **Perguntas adaptativas.** A anamnese é analisada antes de começar e perguntas
+  extras entram conforme o perfil: dor, atleta, idoso, emagrecimento,
+  hipertrofia, reabilitação. Cada entrevista fica diferente.
+- **Auditoria de inconsistências.** Combinações de risco (ex.: força com dor
+  aguda, cardio ausente no emagrecimento, técnicas avançadas em iniciante) geram
+  um alerta *"rever ou manter?"*. O sistema nunca altera a decisão do treinador —
+  apenas pergunta.
+- **Revisão / checklist final.** Confirma que todas as áreas foram respondidas
+  antes de liberar o relatório. Nunca gera relatório incompleto.
 
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
@@ -79,7 +95,7 @@ nunca decide.
 
 ```
 index.html            Módulo 1 — página de fundação
-app.html              Módulo 2 — workspace (anamnese → diagnóstico → entrevista → relatório)
+app.html              Workspace: anamnese → diagnóstico → entrevista → revisão → relatório
 prompts/
   system-prompt.md    O cérebro do sistema (fonte da verdade)
 css/
@@ -87,8 +103,9 @@ css/
   workspace.css        Estilos do workspace
 js/
   app.js              Conteúdo e interações da landing
-  config.js           SYSTEM_PROMPT, schema da anamnese, 11 tópicos, regras de auditoria
+  config.js           SYSTEM_PROMPT, anamnese, 11 tópicos + perguntas, adaptativas, auditorias
   store.js            Estado + persistência local (localStorage)
+  interview.js        Motor da entrevista: plano adaptativo, progresso, inconsistências, checklist
   report.js           Diagnóstico, relatório e versão WhatsApp (determinístico)
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
@@ -111,8 +128,8 @@ python3 -m http.server 8000
 | Módulo | Etapa | Status |
 | ------ | ----- | ------ |
 | 01 | Fundação & Identidade | ✅ Disponível |
-| 02 | O cérebro & a entrevista (anamnese, diagnóstico, entrevista, relatório) | ✅ Disponível |
-| 03 | Análise crítica & ciência aprofundadas | Em breve |
+| 02 | O cérebro & o workspace (anamnese, diagnóstico, entrevista, relatório) | ✅ Disponível |
+| 03 | Entrevista inteligente (adaptativa, auditoria, checklist) | ✅ Disponível |
 | 04 | Estratégia estruturada e editável | Em breve |
 | 05 | Entrega premium com identidade visual completa | Em breve |
 

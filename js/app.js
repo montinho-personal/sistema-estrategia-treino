@@ -31,9 +31,9 @@
     },
     {
       id: "03",
-      title: "Análise crítica & ciência",
-      desc: "Auditoria de cada decisão frente à anamnese, com as metodologias dos maiores especialistas.",
-      status: "next",
+      title: "Entrevista inteligente",
+      desc: "Uma pergunta por vez, adaptada à anamnese, com auditoria de inconsistências e checklist final.",
+      status: "now",
     },
     {
       id: "04",

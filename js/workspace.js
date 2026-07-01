@@ -1,12 +1,13 @@
 /* =========================================================================
-   Montinho Training Strategy — Workspace (orquestração da UI · Módulo 2)
-   Fluxo: Anamnese -> Diagnóstico -> Entrevista -> Relatório.
-   Determinístico por padrão; a IA (opcional) apenas potencializa.
+   Montinho Training Strategy — Workspace (orquestração da UI)
+   Fluxo: Anamnese -> Diagnóstico -> Entrevista -> Revisão -> Relatório.
+   Entrevista inteligente (Módulo 3): uma pergunta por vez, adaptativa,
+   com auditoria de inconsistências e checklist final.
    ========================================================================= */
 (function () {
   "use strict";
 
-  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI;
+  var Store = MTS.Store, Report = MTS.Report, AI = MTS.AI, IV = MTS.Interview;
   var panel = document.getElementById('panel');
   var stepperEl = document.getElementById('stepper');
   var modalRoot = document.getElementById('modalRoot');
@@ -16,8 +17,10 @@
     { id: 'anamnese', label: 'Anamnese' },
     { id: 'diagnostico', label: 'Diagnóstico' },
     { id: 'entrevista', label: 'Entrevista' },
+    { id: 'revisao', label: 'Revisão' },
     { id: 'relatorio', label: 'Relatório' }
   ];
+  var STEP_TOTAL = STEPS.length;
 
   /* ---------- helpers ---------- */
   function el(tag, cls, html) {
@@ -28,13 +31,12 @@
   }
   function esc(s) {
     return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
+  function has(v) { return Array.isArray(v) ? v.length > 0 : (v != null && String(v).trim() !== ''); }
   var toastTimer;
   function toast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('is-show');
+    toastEl.textContent = msg; toastEl.classList.add('is-show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toastEl.classList.remove('is-show'); }, 2600);
   }
@@ -43,6 +45,7 @@
 
   function state() { return Store.get(); }
   function go(step) { Store.patch({ step: step }); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function isAdaptive(id) { return (MTS.ADAPTIVE || []).some(function (a) { return a.id === id; }); }
 
   /* ---------- stepper ---------- */
   function renderStepper() {
@@ -60,7 +63,6 @@
     });
   }
 
-  /* ---------- AI pill ---------- */
   function renderAIPill() {
     var pill = document.getElementById('aiPill');
     var lbl = document.getElementById('aiPillLabel');
@@ -69,105 +71,112 @@
     lbl.textContent = on ? 'IA ligada' : 'IA desligada';
   }
 
+  function head(step, title, desc) {
+    var idx = STEPS.map(function (s) { return s.id; }).indexOf(step) + 1;
+    var h = el('div', 'panel__head');
+    h.innerHTML = '<span class="eyebrow">Passo ' + idx + ' de ' + STEP_TOTAL + '</span><h2>' +
+      esc(title) + '</h2>' + (desc ? '<p>' + esc(desc) + '</p>' : '');
+    return h;
+  }
+
   /* =======================================================================
      PASSO 1 — ANAMNESE
      ======================================================================= */
   function renderAnamnese() {
     var wrap = el('div');
-    wrap.appendChild(head('Passo 1 de 4', 'Anamnese do aluno',
+    wrap.appendChild(head('anamnese', 'Anamnese do aluno',
       'Preencha o que você já sabe sobre o aluno. Tudo é salvo automaticamente neste navegador. ' +
-      'Nenhuma estratégia é montada aqui — primeiro entendemos o cenário.'));
+      'A partir daqui, a entrevista se adapta a este perfil.'));
 
     var a = state().anamnese;
     (MTS.ANAMNESE).forEach(function (sec) {
       var card = el('div', 'formcard');
       card.appendChild(el('h3', null, esc(sec.title)));
-      var rowFields = [];
-      sec.fields.forEach(function (f) { rowFields.push(buildField(f, a[f.id])); });
-      // agrupa campos curtos (number/select) em linha quando fizer sentido
-      rowFields.forEach(function (fEl) { card.appendChild(fEl); });
+      sec.fields.forEach(function (f) { card.appendChild(buildField(f, a[f.id])); });
       wrap.appendChild(card);
     });
 
     var actions = el('div', 'actions');
-    var next = el('button', 'btn btn--primary btn--lg', 'Analisar anamnese →');
-    next.addEventListener('click', function () { go('diagnostico'); });
     actions.appendChild(el('span', 'hint', 'Você pode voltar e ajustar a qualquer momento.'));
     actions.appendChild(el('span', 'spacer'));
+    var next = el('button', 'btn btn--primary btn--lg', 'Analisar anamnese →');
+    next.addEventListener('click', function () { go('diagnostico'); });
     actions.appendChild(next);
     wrap.appendChild(actions);
 
-    panel.innerHTML = '';
-    panel.appendChild(wrap);
+    panel.innerHTML = ''; panel.appendChild(wrap);
   }
 
   function buildField(f, value) {
     var field = el('div', 'field');
     var id = 'f_' + f.id;
-    field.appendChild(el('label', null, esc(f.label))).setAttribute('for', id);
-    var input;
-    if (f.type === 'textarea') {
-      input = el('textarea');
-    } else if (f.type === 'select') {
-      input = el('select');
-      input.appendChild(el('option', null, '—')).value = '';
-      f.options.forEach(function (opt) {
-        var o = el('option', null, esc(opt)); o.value = opt; input.appendChild(o);
-      });
-    } else {
-      input = el('input');
-      input.type = f.type === 'number' ? 'number' : 'text';
-    }
-    input.id = id;
-    if (f.placeholder) input.placeholder = f.placeholder;
-    if (value != null) input.value = value;
-    var evt = (f.type === 'select') ? 'change' : 'input';
-    input.addEventListener(evt, function () { Store.setAnamnese(f.id, input.value); });
-    field.querySelector('label').setAttribute('for', id);
+    var lab = el('label', null, esc(f.label)); lab.setAttribute('for', id);
+    field.appendChild(lab);
+    var input = inputForType(f, value, id);
+    input.addEventListener(f.type === 'select' ? 'change' : 'input', function () {
+      Store.setAnamnese(f.id, input.value);
+    });
     field.appendChild(input);
     return field;
   }
 
+  function inputForType(f, value, id) {
+    var input;
+    if (f.type === 'textarea') { input = el('textarea'); }
+    else if (f.type === 'select') {
+      input = el('select');
+      var o0 = el('option', null, '—'); o0.value = ''; input.appendChild(o0);
+      f.options.forEach(function (opt) { var o = el('option', null, esc(opt)); o.value = opt; input.appendChild(o); });
+    } else { input = el('input'); input.type = f.type === 'number' ? 'number' : 'text'; }
+    if (id) input.id = id;
+    if (f.placeholder) input.placeholder = f.placeholder;
+    if (value != null) input.value = value;
+    return input;
+  }
+
   /* =======================================================================
-     PASSO 2/3 — DIAGNÓSTICO (resumo executivo)
+     PASSO 2 — DIAGNÓSTICO
      ======================================================================= */
   function renderDiagnostico() {
     var s = state();
     var d = Report.diagnosis(s);
     var wrap = el('div');
-    wrap.appendChild(head('Passo 2 de 4', 'Diagnóstico',
+    wrap.appendChild(head('diagnostico', 'Diagnóstico',
       'Um retrato organizado do aluno, a partir da anamnese. Ainda não há estratégia — ' +
-      'este resumo serve para guiar a entrevista com clareza.'));
+      'este resumo guia a entrevista, que se adapta ao que aparece aqui.'));
 
     var diag = el('div', 'diag');
-
     if (s.diagnosisNote) {
       diag.appendChild(el('h4', null, 'Resumo executivo (IA)'));
       diag.appendChild(el('p', 'diag__note', esc(s.diagnosisNote)));
     }
 
-    // Perfil
     diag.appendChild(el('h4', null, 'Perfil'));
     if (d.perfil.length) {
       var dl = el('dl', 'kv');
-      d.perfil.forEach(function (row) {
-        dl.appendChild(el('dt', null, esc(row[0])));
-        dl.appendChild(el('dd', null, esc(row[1])));
-      });
+      d.perfil.forEach(function (row) { dl.appendChild(el('dt', null, esc(row[0]))); dl.appendChild(el('dd', null, esc(row[1]))); });
       diag.appendChild(dl);
-    } else {
-      diag.appendChild(el('p', 'hint', 'Preencha a anamnese para ver o perfil.'));
-    }
+    } else { diag.appendChild(el('p', 'hint', 'Preencha a anamnese para ver o perfil.')); }
 
-    // Pontos de atenção
     diag.appendChild(el('h4', null, 'Pontos de atenção & riscos'));
-    diag.appendChild(noteList(d.atencao, 'warn',
-      'Nenhum ponto crítico identificado automaticamente.'));
+    diag.appendChild(noteList(d.atencao, 'warn', 'Nenhum ponto crítico identificado automaticamente.'));
 
-    // Oportunidades
     diag.appendChild(el('h4', null, 'Oportunidades'));
-    diag.appendChild(noteList(d.oportunidades, 'good',
-      'Sem oportunidades destacadas ainda — depende de mais dados da anamnese.'));
+    diag.appendChild(noteList(d.oportunidades, 'good', 'Sem oportunidades destacadas ainda — depende de mais dados da anamnese.'));
+
+    // prévia das adaptações da entrevista
+    var adapts = (MTS.ADAPTIVE || []).filter(function (aq) { return aq.when(s.anamnese || {}); });
+    if (adapts.length) {
+      diag.appendChild(el('h4', null, 'A entrevista foi adaptada'));
+      var ul = el('ul', 'notelist');
+      adapts.forEach(function (aq) {
+        var li = el('li', 'note');
+        li.appendChild(el('span', 'note__ico', ICON_GOOD));
+        li.appendChild(el('span', null, 'Perguntas extras sobre <b>' + esc(aq.label.toLowerCase()) + '</b> foram incluídas.'));
+        ul.appendChild(li);
+      });
+      diag.appendChild(ul);
+    }
 
     wrap.appendChild(diag);
 
@@ -175,29 +184,23 @@
     var back = el('button', 'btn btn--ghost', '← Anamnese');
     back.addEventListener('click', function () { go('anamnese'); });
     actions.appendChild(back);
-
     if (AI.isConfigured()) {
       var aiBtn = el('button', 'btn btn--ghost', 'Gerar resumo com IA');
       aiBtn.addEventListener('click', function () { runDiagnose(aiBtn); });
       actions.appendChild(aiBtn);
     }
-
     actions.appendChild(el('span', 'spacer'));
     var next = el('button', 'btn btn--primary btn--lg', 'Iniciar entrevista →');
     next.addEventListener('click', function () { go('entrevista'); });
     actions.appendChild(next);
     wrap.appendChild(actions);
 
-    panel.innerHTML = '';
-    panel.appendChild(wrap);
+    panel.innerHTML = ''; panel.appendChild(wrap);
   }
 
   function noteList(items, kind, emptyMsg) {
     var ul = el('ul', 'notelist');
-    if (!items || !items.length) {
-      ul.appendChild(el('li', 'hint', esc(emptyMsg)));
-      return ul;
-    }
+    if (!items || !items.length) { if (emptyMsg) ul.appendChild(el('li', 'hint', esc(emptyMsg))); return ul; }
     var ico = kind === 'warn' ? ICON_WARN : ICON_GOOD;
     items.forEach(function (msg) {
       var li = el('li', 'note note--' + kind);
@@ -212,143 +215,176 @@
     var original = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = '<span class="loading"></span> Analisando...';
     AI.diagnose(state()).then(function (text) {
-      Store.patch({ diagnosisNote: text });
-      renderDiagnostico();
-      toast('Resumo executivo gerado.');
-    }).catch(function (e) {
-      btn.disabled = false; btn.innerHTML = original;
-      toast('Falha na IA: ' + e.message);
-    });
+      Store.patch({ diagnosisNote: text }); renderDiagnostico(); toast('Resumo executivo gerado.');
+    }).catch(function (e) { btn.disabled = false; btn.innerHTML = original; toast('Falha na IA: ' + e.message); });
   }
 
   /* =======================================================================
-     PASSO 4/5 — ENTREVISTA (uma pergunta por vez + relatório em tempo real)
+     PASSO 3 — ENTREVISTA (uma pergunta por vez, conversacional)
      ======================================================================= */
   function renderEntrevista() {
     var s = state();
-    var topics = MTS.TOPICS;
-    var idx = Math.max(0, Math.min(s.topicIndex || 0, topics.length - 1));
-    var topic = topics[idx];
-    var dec = (s.decisions[topic.id]) || { decision: '', why: '' };
-
+    var curId = IV.currentId(s);
     var wrap = el('div');
-    wrap.appendChild(head('Passo 3 de 4', 'Entrevista',
-      'Uma pergunta por vez, na ordem que estrutura o raciocínio. Cada decisão vira uma ' +
-      'seção do relatório — e o sistema pergunta o porquê para explicar ao aluno.'));
+    wrap.appendChild(head('entrevista', 'Entrevista',
+      'Uma conversa, uma pergunta por vez. Cada resposta vira uma seção do relatório — e o ' +
+      'sistema pergunta o porquê para explicar ao aluno.'));
+
+    if (!curId) {
+      wrap.appendChild(el('p', 'hint', 'Preencha a anamnese para começar a entrevista.'));
+      panel.innerHTML = ''; panel.appendChild(wrap); return;
+    }
+
+    var item = IV.itemById(s, curId);
+    var topic = item.topic, q = item.q;
+    var prog = IV.progress(s);
 
     var split = el('div', 'split');
 
-    /* ---- coluna esquerda: a pergunta ---- */
+    /* ---- esquerda: a pergunta ---- */
     var qcard = el('div', 'qcard');
 
     var meta = el('div', 'qcard__meta');
-    meta.innerHTML = '<span class="qcard__badge">Tópico ' + topic.n + ' de ' + topics.length +
-      '</span><span>' + esc(topic.name) + '</span>';
+    meta.innerHTML = '<span class="qcard__badge">Tópico ' + topic.n + ' de ' + MTS.TOPICS.length + '</span>' +
+      '<span>' + esc(topic.name) + '</span>' +
+      (isAdaptive(q.id) ? '<span class="qcard__badge" style="background:var(--line-soft);color:var(--ink-mute)">✦ pergunta adaptada</span>' : '');
     qcard.appendChild(meta);
 
     var pb = el('div', 'progressbar');
-    pb.innerHTML = '<span style="width:' + Math.round(((idx) / topics.length) * 100) + '%"></span>';
+    pb.innerHTML = '<span style="width:' + prog.pct + '%"></span>';
     qcard.appendChild(pb);
+    qcard.appendChild(el('p', 'hint', prog.answered + ' de ' + prog.total + ' perguntas respondidas'))
+      .style.margin = '6px 0 18px';
 
-    qcard.appendChild(el('h3', 'qcard__ask', esc(topic.ask)));
+    var isWhy = !!q.why;
+    if (isWhy) qcard.appendChild(el('div', 'qcard__why', '<span class="dotline">↳</span> ' + esc(q.prompt)));
+    else qcard.appendChild(el('h3', 'qcard__ask', esc(q.prompt)));
 
-    // decisão
-    var decField = el('div', 'field');
-    decField.appendChild(el('label', null, 'A decisão do treinador'));
-    var decInput = el('textarea');
-    decInput.placeholder = topic.placeholder || '';
-    decInput.value = dec.decision || '';
-    decField.appendChild(decInput);
-    qcard.appendChild(decField);
+    if (q.hint) qcard.appendChild(el('p', 'hint', esc(q.hint))).style.marginTop = '-4px';
 
-    // motivo (regra das decisões)
-    var whyInput = null;
-    if (topic.why) {
-      qcard.appendChild(el('div', 'qcard__why',
-        '<span class="dotline">↳</span> ' + esc(topic.why)));
-      var whyField = el('div', 'field');
-      whyField.appendChild(el('label', null, 'O porquê (será explicado ao aluno em linguagem simples)'));
-      whyInput = el('textarea');
-      whyInput.placeholder = 'Explique o motivo desta escolha para este aluno...';
-      whyInput.value = dec.why || '';
-      whyField.appendChild(whyInput);
-      qcard.appendChild(whyField);
-    }
+    // input da resposta
+    var field = el('div', 'field'); field.style.marginTop = '18px';
+    field.appendChild(el('label', null, isWhy ? 'O porquê (será explicado ao aluno em linguagem simples)' : 'Sua resposta'));
+    var control = buildAnswerControl(q, s.answers[q.id]);
+    field.appendChild(control.node);
+    qcard.appendChild(field);
 
-    function save() {
-      Store.setDecision(topic.id, decInput.value, whyInput ? whyInput.value : '');
-    }
-    decInput.addEventListener('input', save);
-    if (whyInput) whyInput.addEventListener('input', save);
-
-    // auditoria contextual (análise crítica)
+    // auditoria de inconsistências
     var auditBox = el('div');
-    function refreshAudit() {
-      auditBox.innerHTML = '';
-      var notes = auditTopic(topic.id, decInput.value, s.anamnese);
-      if (notes.length) {
-        auditBox.appendChild(el('h4', null, 'Análise crítica')).style.cssText =
-          'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin:20px 0 10px';
-        auditBox.appendChild(noteList(notes, 'warn', ''));
-      }
-    }
-    decInput.addEventListener('input', refreshAudit);
+    function refreshAudit() { renderConsistency(auditBox, IV.consistency(state())); }
+    control.onChange = function () { refreshAudit(); };
     refreshAudit();
     qcard.appendChild(auditBox);
 
     // navegação
     var nav = el('div', 'actions');
+    var prevId = IV.neighbor(s, curId, -1);
     var prev = el('button', 'btn btn--ghost', '← Anterior');
-    prev.disabled = idx === 0;
-    prev.addEventListener('click', function () { save(); Store.patch({ topicIndex: idx - 1 }); renderEntrevista(); });
+    prev.disabled = !prevId;
+    prev.addEventListener('click', function () { Store.patch({ currentQ: prevId }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
     nav.appendChild(prev);
     nav.appendChild(el('span', 'spacer'));
 
-    if (idx < topics.length - 1) {
+    var nextId = IV.neighbor(s, curId, +1);
+    if (nextId) {
       var nextBtn = el('button', 'btn btn--primary', 'Registrar e continuar →');
-      nextBtn.addEventListener('click', function () { save(); Store.patch({ topicIndex: idx + 1 }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      nextBtn.addEventListener('click', function () { Store.patch({ currentQ: nextId }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
       nav.appendChild(nextBtn);
     } else {
-      var doneBtn = el('button', 'btn btn--primary', 'Concluir e ver relatório →');
-      doneBtn.addEventListener('click', function () { save(); go('relatorio'); });
+      var doneBtn = el('button', 'btn btn--primary', 'Concluir e revisar →');
+      doneBtn.addEventListener('click', function () { go('revisao'); });
       nav.appendChild(doneBtn);
     }
     qcard.appendChild(nav);
 
     // atalhos entre tópicos
     var tnav = el('div', 'topicnav');
-    topics.forEach(function (t, i) {
-      var filled = s.decisions[t.id] && (s.decisions[t.id].decision || s.decisions[t.id].why);
-      var b = el('button', (i === idx ? 'is-current' : '') + (filled ? ' is-filled' : ''), t.n + '. ' + esc(t.name));
-      b.addEventListener('click', function () { save(); Store.patch({ topicIndex: i }); renderEntrevista(); });
+    MTS.TOPICS.forEach(function (t) {
+      var firstId = IV.firstIdOfTopic(s, t.id);
+      var filled = IV.questionsForTopic(t, s).some(function (qq) { return has(s.answers[qq.id]); });
+      var b = el('button', (t.id === topic.id ? 'is-current' : '') + (filled ? ' is-filled' : ''), t.n + '. ' + esc(t.name));
+      b.addEventListener('click', function () { if (firstId) { Store.patch({ currentQ: firstId }); renderEntrevista(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
       tnav.appendChild(b);
     });
     qcard.appendChild(tnav);
 
     split.appendChild(qcard);
-
-    /* ---- coluna direita: relatório em tempo real ---- */
     split.appendChild(livePreview(s));
     wrap.appendChild(split);
 
-    panel.innerHTML = '';
-    panel.appendChild(wrap);
+    panel.innerHTML = ''; panel.appendChild(wrap);
   }
 
-  function auditTopic(topicId, decision, anamnese) {
-    var rules = (MTS.TOPIC_RULES || {})[topicId] || [];
-    var out = [];
-    rules.forEach(function (rule) { var m = rule(anamnese, decision); if (m) out.push(m); });
-    return out;
+  /* Controle de resposta conforme o tipo da pergunta. */
+  function buildAnswerControl(q, value) {
+    var api = { node: null, onChange: function () {} };
+    if (q.type === 'choice') {
+      var sel = el('select');
+      var o0 = el('option', null, '—'); o0.value = ''; sel.appendChild(o0);
+      q.options.forEach(function (opt) { var o = el('option', null, esc(opt)); o.value = opt; sel.appendChild(o); });
+      if (value != null) sel.value = value;
+      sel.addEventListener('change', function () { Store.setAnswer(q.id, sel.value); api.onChange(); });
+      api.node = sel;
+    } else if (q.type === 'multi') {
+      var chosen = Array.isArray(value) ? value.slice() : [];
+      var box = el('div', 'topicnav'); box.style.marginTop = '2px';
+      q.options.forEach(function (opt) {
+        var on = chosen.indexOf(opt) !== -1;
+        var b = el('button', on ? 'is-current' : '', esc(opt)); b.type = 'button';
+        b.addEventListener('click', function () {
+          var i = chosen.indexOf(opt);
+          if (i === -1) { chosen.push(opt); b.className = 'is-current'; }
+          else { chosen.splice(i, 1); b.className = ''; }
+          Store.setAnswer(q.id, chosen.slice()); api.onChange();
+        });
+        box.appendChild(b);
+      });
+      api.node = box;
+    } else {
+      var input = q.type === 'text' ? el('input') : el('textarea');
+      if (q.type === 'text') input.type = 'text';
+      if (q.placeholder) input.placeholder = q.placeholder;
+      if (value != null) input.value = value;
+      input.addEventListener('input', function () { Store.setAnswer(q.id, input.value); api.onChange(); });
+      api.node = input;
+    }
+    return api;
+  }
+
+  function renderConsistency(box, notes) {
+    box.innerHTML = '';
+    if (!notes.length) return;
+    var h = el('h4', null, 'Análise crítica');
+    h.style.cssText = 'font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-mute);margin:22px 0 10px';
+    box.appendChild(h);
+    var ul = el('ul', 'notelist');
+    notes.forEach(function (note) {
+      var li = el('li', 'note note--warn');
+      li.appendChild(el('span', 'note__ico', ICON_WARN));
+      var body = el('span');
+      body.appendChild(el('div', null, esc(note.text)));
+      var acts = el('div', 'section-tools'); acts.style.marginTop = '8px'; acts.style.marginLeft = '0';
+      var review = el('button', null, 'Rever');
+      review.addEventListener('click', function () {
+        var fid = IV.firstIdOfTopic(state(), note.topic);
+        if (fid) { Store.patch({ step: 'entrevista', currentQ: fid }); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+      });
+      var keep = el('button', null, 'Manter decisão');
+      keep.addEventListener('click', function () { Store.acknowledge(note.id); toast('Decisão mantida, registrada.'); if (state().step === 'entrevista') renderEntrevista(); else renderRevisao(); });
+      acts.appendChild(review); acts.appendChild(keep);
+      body.appendChild(acts);
+      li.appendChild(body);
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
   }
 
   function livePreview(s) {
     var box = el('div', 'report');
     var inner = el('div', 'report__inner');
-    inner.appendChild(el('div', 'qcard__meta',
-      '<span class="qcard__badge">Relatório em tempo real</span>'));
+    inner.appendChild(el('div', 'qcard__meta', '<span class="qcard__badge">Relatório em tempo real</span>'));
     var secs = Report.sections(s);
-    if (!secs.length) {
+    if (!secs.length && !has((s.answers || {}).filosofia_frase)) {
       inner.appendChild(el('p', 'report__empty', 'À medida que você registra decisões, o relatório do aluno aparece aqui.'));
     } else {
       inner.appendChild(el('div', 'report__intro', esc(Report.intro(s))));
@@ -364,109 +400,153 @@
   }
 
   /* =======================================================================
-     PASSO 6/7 — RELATÓRIO (revisão + versões finais)
+     PASSO 4 — REVISÃO (checklist final)
+     ======================================================================= */
+  function renderRevisao() {
+    var s = state();
+    var missing = IV.requiredMissing(s);
+    var notes = IV.consistency(s);
+    var wrap = el('div');
+    wrap.appendChild(head('revisao', 'Revisão final',
+      'Antes de gerar as versões finais, confirmamos que todas as áreas foram respondidas. ' +
+      'Nunca geramos um relatório incompleto.'));
+
+    // inconsistências pendentes
+    if (notes.length) {
+      var cbox = el('div'); cbox.style.marginBottom = 'var(--s4)';
+      renderConsistency(cbox, notes);
+      wrap.appendChild(cbox);
+    }
+
+    // checklist por tópico
+    var card = el('div', 'formcard');
+    card.appendChild(el('h3', null, 'Checklist por área'));
+    var ul = el('ul', 'notelist');
+    MTS.TOPICS.forEach(function (t) {
+      var topicMissing = missing.filter(function (m) { return m.topic.id === t.id; });
+      var ok = topicMissing.length === 0;
+      var li = el('li', 'note note--' + (ok ? 'good' : 'warn'));
+      li.appendChild(el('span', 'note__ico', ok ? ICON_GOOD : ICON_WARN));
+      var body = el('span');
+      body.appendChild(el('div', null, '<b>' + t.n + '. ' + esc(t.name) + '</b>' + (ok ? ' — completo' : '')));
+      if (!ok) {
+        topicMissing.forEach(function (m) {
+          var row = el('div'); row.style.cssText = 'margin-top:6px;font-size:13.5px;color:var(--ink-mute)';
+          row.textContent = 'Falta: ' + (m.q ? m.q.prompt : m.id);
+          body.appendChild(row);
+        });
+        var tools = el('div', 'section-tools'); tools.style.cssText = 'margin:8px 0 0';
+        var b = el('button', null, 'Responder agora');
+        b.addEventListener('click', function () {
+          var fid = topicMissing[0].id;
+          Store.patch({ step: 'entrevista', currentQ: fid }); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        tools.appendChild(b); body.appendChild(tools);
+      }
+      li.appendChild(body);
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+    wrap.appendChild(card);
+
+    var actions = el('div', 'actions');
+    var back = el('button', 'btn btn--ghost', '← Voltar à entrevista');
+    back.addEventListener('click', function () { go('entrevista'); });
+    actions.appendChild(back);
+    actions.appendChild(el('span', 'spacer'));
+
+    if (missing.length) {
+      actions.appendChild(el('span', 'hint', 'Faltam ' + missing.length + ' resposta(s) obrigatória(s).'));
+      var disabled = el('button', 'btn btn--primary btn--lg', 'Gerar relatório →');
+      disabled.disabled = true; disabled.style.opacity = '.5'; disabled.style.pointerEvents = 'none';
+      actions.appendChild(disabled);
+    } else {
+      var next = el('button', 'btn btn--primary btn--lg', 'Gerar relatório →');
+      next.addEventListener('click', function () { go('relatorio'); });
+      actions.appendChild(next);
+    }
+    wrap.appendChild(actions);
+
+    panel.innerHTML = ''; panel.appendChild(wrap);
+  }
+
+  /* =======================================================================
+     PASSO 5 — RELATÓRIO (revisão + versões finais)
      ======================================================================= */
   function renderRelatorio() {
     var s = state();
     var comp = Report.completion(s);
     var wrap = el('div');
-    wrap.appendChild(head('Passo 4 de 4', 'Relatório',
+    wrap.appendChild(head('relatorio', 'Relatório',
       'Revise, ajuste o texto de cada seção e gere as versões finais para o aluno.'));
 
     var split = el('div', 'split');
 
-    // ---- esquerda: documento ----
+    // documento
     var doc = el('div', 'report');
     var inner = el('div', 'report__inner');
-
     var brand = el('div', 'report__brand');
-    brand.innerHTML = '<span class="brand__mark">M</span>' +
-      '<span class="brand__name">Montinho <small>Training Strategy</small></span>';
+    brand.innerHTML = '<span class="brand__mark">M</span><span class="brand__name">Montinho <small>Training Strategy</small></span>';
     inner.appendChild(brand);
 
     var secs = Report.sections(s);
     if (!secs.length) {
-      inner.appendChild(el('p', 'report__empty',
-        'Ainda não há decisões registradas. Volte à entrevista para construir o relatório.'));
+      inner.appendChild(el('p', 'report__empty', 'Ainda não há decisões registradas. Volte à entrevista para construir o relatório.'));
     } else {
       var nome = (s.anamnese.nome || '').trim();
       inner.appendChild(el('div', 'report__title', 'Estratégia de treino' + (nome ? ' · ' + esc(nome) : '')));
       inner.appendChild(el('div', 'report__intro', esc(Report.intro(s))));
-
       secs.forEach(function (sec) {
-        var block = el('div', 'report__section');
-        block.dataset.id = sec.id;
+        var block = el('div', 'report__section'); block.dataset.id = sec.id;
         var h = el('h3', null, esc(sec.title));
         var tools = el('span', 'section-tools');
-        var editBtn = el('button', null, 'Editar'); editBtn.dataset.edit = sec.id;
-        tools.appendChild(editBtn);
-        if (s.overrides && s.overrides[sec.id]) {
-          var rev = el('button', null, 'Reverter'); rev.dataset.revert = sec.id;
-          tools.appendChild(rev);
-        }
-        if (AI.isConfigured()) {
-          var aiB = el('button', null, 'Reescrever com IA'); aiB.dataset.airewrite = sec.id;
-          tools.appendChild(aiB);
-        }
+        var editBtn = el('button', null, 'Editar'); editBtn.dataset.edit = sec.id; tools.appendChild(editBtn);
+        if (s.overrides && s.overrides[sec.id] != null) { var rev = el('button', null, 'Reverter'); rev.dataset.revert = sec.id; tools.appendChild(rev); }
+        if (AI.isConfigured()) { var aiB = el('button', null, 'Reescrever com IA'); aiB.dataset.airewrite = sec.id; tools.appendChild(aiB); }
         h.appendChild(tools);
         block.appendChild(h);
         block.appendChild(el('p', null, esc(sec.body)));
         inner.appendChild(block);
       });
-
       inner.appendChild(el('div', 'report__closing', esc(Report.closing(s))));
     }
     doc.appendChild(inner);
     split.appendChild(doc);
 
-    // ---- direita: ferramentas / exportação ----
+    // ferramentas
     var tools = el('div');
     var toolsCard = el('div', 'formcard');
     toolsCard.appendChild(el('h3', null, 'Progresso'));
-    var pb = el('div', 'progressbar');
-    pb.innerHTML = '<span style="width:' + comp.pct + '%"></span>';
+    var pb = el('div', 'progressbar'); pb.innerHTML = '<span style="width:' + comp.pct + '%"></span>';
     toolsCard.appendChild(pb);
-    toolsCard.appendChild(el('p', 'hint', comp.done + ' de ' + comp.total + ' tópicos preenchidos.'))
-      .style.marginTop = '10px';
-
-    var backBtn = el('button', 'btn btn--ghost', '← Voltar à entrevista');
-    backBtn.style.marginTop = 'var(--s3)'; backBtn.style.width = '100%';
-    backBtn.addEventListener('click', function () { go('entrevista'); });
+    toolsCard.appendChild(el('p', 'hint', comp.done + ' de ' + comp.total + ' respostas obrigatórias · ' + comp.topics + ' áreas')).style.marginTop = '10px';
+    var backBtn = el('button', 'btn btn--ghost', '← Voltar à revisão');
+    backBtn.style.cssText = 'margin-top:var(--s3);width:100%';
+    backBtn.addEventListener('click', function () { go('revisao'); });
     toolsCard.appendChild(backBtn);
     tools.appendChild(toolsCard);
 
     var expCard = el('div', 'formcard');
     expCard.appendChild(el('h3', null, 'Versões finais'));
-
-    var waBtn = el('button', 'btn btn--primary', 'Copiar versão WhatsApp');
-    waBtn.style.width = '100%';
+    var waBtn = el('button', 'btn btn--primary', 'Copiar versão WhatsApp'); waBtn.style.width = '100%';
     waBtn.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'Texto do WhatsApp copiado.'); });
     expCard.appendChild(waBtn);
-
-    var pdfBtn = el('button', 'btn btn--ghost', 'Imprimir / salvar PDF');
-    pdfBtn.style.cssText = 'width:100%;margin-top:10px';
+    var pdfBtn = el('button', 'btn btn--ghost', 'Imprimir / salvar PDF'); pdfBtn.style.cssText = 'width:100%;margin-top:10px';
     pdfBtn.addEventListener('click', function () { window.print(); });
     expCard.appendChild(pdfBtn);
-
-    var waToggle = el('button', 'btn btn--ghost', 'Prévia do WhatsApp');
-    waToggle.style.cssText = 'width:100%;margin-top:10px';
+    var waToggle = el('button', 'btn btn--ghost', 'Prévia do WhatsApp'); waToggle.style.cssText = 'width:100%;margin-top:10px';
     var waPrev = el('div', 'wa'); waPrev.style.display = 'none'; waPrev.style.marginTop = '12px';
     waToggle.addEventListener('click', function () {
       var show = waPrev.style.display === 'none';
       waPrev.style.display = show ? 'block' : 'none';
       if (show) waPrev.textContent = Report.whatsapp(state());
     });
-    expCard.appendChild(waToggle);
-    expCard.appendChild(waPrev);
-
+    expCard.appendChild(waToggle); expCard.appendChild(waPrev);
     tools.appendChild(expCard);
     split.appendChild(tools);
 
     wrap.appendChild(split);
-    panel.innerHTML = '';
-    panel.appendChild(wrap);
-
-    // edição de seções (delegação)
+    panel.innerHTML = ''; panel.appendChild(wrap);
     doc.addEventListener('click', onSectionAction);
   }
 
@@ -494,21 +574,16 @@
 
   function aiRewrite(id, btn) {
     var topic = MTS.TOPICS.filter(function (t) { return t.id === id; })[0];
-    var dec = state().decisions[id] || {};
-    var original = btn.textContent;
-    btn.textContent = '...'; btn.disabled = true;
-    AI.rewriteSection(topic, dec.decision, dec.why, state()).then(function (text) {
+    var original = btn.textContent; btn.textContent = '...'; btn.disabled = true;
+    AI.rewriteSection(topic, state()).then(function (text) {
       Store.setOverride(id, text); renderRelatorio(); toast('Seção reescrita pela IA.');
-    }).catch(function (err) {
-      btn.textContent = original; btn.disabled = false; toast('Falha na IA: ' + err.message);
-    });
+    }).catch(function (err) { btn.textContent = original; btn.disabled = false; toast('Falha na IA: ' + err.message); });
   }
 
   function copyText(text, okMsg) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { toast(okMsg); },
-        function () { fallbackCopy(text, okMsg); });
-    } else { fallbackCopy(text, okMsg); }
+    if (navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(text).then(function () { toast(okMsg); }, function () { fallbackCopy(text, okMsg); });
+    else fallbackCopy(text, okMsg);
   }
   function fallbackCopy(text, okMsg) {
     var ta = el('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -526,15 +601,13 @@
     var m = el('div', 'modal');
     m.innerHTML =
       '<h3>Assistente de IA <span style="font-weight:480;color:var(--ink-mute);font-size:15px">(opcional)</span></h3>' +
-      '<p>Ligue o assistente com a sua própria chave da API da Anthropic para gerar o resumo ' +
-      'executivo e reescrever as seções em linguagem premium. A chave fica salva apenas neste ' +
-      'navegador e é usada direto do seu dispositivo. Sem chave, tudo funciona normalmente — a IA só potencializa.</p>';
-    var f1 = el('div', 'field');
-    f1.innerHTML = '<label for="aiKey">Chave da API</label>';
+      '<p>Ligue o assistente com a sua própria chave da API da Anthropic para gerar o resumo executivo e ' +
+      'reescrever as seções em linguagem premium. A chave fica salva apenas neste navegador e é usada direto ' +
+      'do seu dispositivo. Sem chave, tudo funciona normalmente — a IA só potencializa.</p>';
+    var f1 = el('div', 'field'); f1.innerHTML = '<label for="aiKey">Chave da API</label>';
     var key = el('input'); key.id = 'aiKey'; key.type = 'password'; key.placeholder = 'sk-ant-...'; key.value = cfg.key || '';
     f1.appendChild(key); m.appendChild(f1);
-    var f2 = el('div', 'field');
-    f2.innerHTML = '<label for="aiModel">Modelo</label>';
+    var f2 = el('div', 'field'); f2.innerHTML = '<label for="aiModel">Modelo</label>';
     var model = el('input'); model.id = 'aiModel'; model.placeholder = AI.defaultModel; model.value = cfg.model || '';
     f2.appendChild(model);
     f2.appendChild(el('p', 'hint', 'Deixe em branco para usar o padrão (' + AI.defaultModel + ').')).style.marginTop = '6px';
@@ -546,9 +619,8 @@
       rm.addEventListener('click', function () { Store.clearAI(); close(); renderAIPill(); render(); toast('IA desligada.'); });
       actions.appendChild(rm);
     }
-    actions.appendChild(el('span', 'spacer')).style.flex = '1';
-    var cancel = el('button', 'btn btn--ghost', 'Cancelar');
-    cancel.addEventListener('click', close);
+    var sp = el('span', 'spacer'); sp.style.flex = '1'; actions.appendChild(sp);
+    var cancel = el('button', 'btn btn--ghost', 'Cancelar'); cancel.addEventListener('click', close);
     var save = el('button', 'btn btn--primary', 'Salvar');
     save.addEventListener('click', function () {
       if (!key.value.trim()) { toast('Informe a chave ou clique em Desligar IA.'); return; }
@@ -564,26 +636,17 @@
     function close() { modalRoot.innerHTML = ''; }
   }
 
-  /* ---------- header util ---------- */
-  function head(eyebrow, title, desc) {
-    var h = el('div', 'panel__head');
-    h.innerHTML = '<span class="eyebrow">' + esc(eyebrow) + '</span><h2>' + esc(title) + '</h2>' +
-      (desc ? '<p>' + esc(desc) + '</p>' : '');
-    return h;
-  }
-
-  /* ---------- render dispatcher ---------- */
+  /* ---------- dispatcher ---------- */
   function render() {
-    renderStepper();
-    renderAIPill();
+    renderStepper(); renderAIPill();
     var step = state().step;
     if (step === 'diagnostico') renderDiagnostico();
     else if (step === 'entrevista') renderEntrevista();
+    else if (step === 'revisao') renderRevisao();
     else if (step === 'relatorio') renderRelatorio();
     else renderAnamnese();
   }
 
-  /* ---------- eventos globais ---------- */
   document.getElementById('aiPill').addEventListener('click', openAIModal);
   document.getElementById('btnReset').addEventListener('click', function () {
     if (confirm('Começar uma nova estratégia? Os dados atuais deste navegador serão apagados.')) {
