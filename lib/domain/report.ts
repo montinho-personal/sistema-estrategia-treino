@@ -327,6 +327,23 @@ export function volumeTotal(state: StrategyState): number | null {
   return any ? sum : null;
 }
 
+export interface VolumeLine {
+  grupo: string;
+  series: string;
+  /** Participação no total de séries (%), ou null se não calculável. */
+  pct: number | null;
+}
+
+/** Linhas de volume com o percentual de cada grupo no total semanal. */
+export function volumeLines(state: StrategyState): VolumeLine[] {
+  const total = volumeTotal(state);
+  return volumeRows(state).map((r) => {
+    const n = toInt(r.series);
+    const pct = total && n != null ? Math.round((n / total) * 100) : null;
+    return { grupo: r.grupo, series: r.series, pct };
+  });
+}
+
 /* ---- Versão WhatsApp (títulos + emojis discretos) ---- */
 const WA_EMOJI: Record<string, string> = {
   objetivo: "🎯", diagnostico: "🩺", estrategia: "🧠", divisao: "🗓️",
@@ -340,10 +357,12 @@ export function reportWhatsapp(state: StrategyState): string {
     lines.push(`*${WA_EMOJI[s.id] ? `${WA_EMOJI[s.id]} ` : ""}${s.title}*`);
     lines.push(s.body.replace(/\n{2,}/g, "\n"));
   }
-  const vrows = volumeRows(state);
-  if (vrows.length > 0) {
+  const vlines = volumeLines(state);
+  if (vlines.length > 0) {
     lines.push("", "*📊 Volume semanal de séries*");
-    for (const r of vrows) lines.push(`• ${r.grupo}: ${r.series}`);
+    for (const r of vlines) {
+      lines.push(`• ${r.grupo}: ${r.series}${r.pct != null ? ` (${r.pct}%)` : ""}`);
+    }
     const tot = volumeTotal(state);
     if (tot != null) lines.push(`_Total: ${tot} séries/semana_`);
   }
