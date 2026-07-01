@@ -5,6 +5,7 @@ import { SiteNav } from "@/components/site/site-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { FadeIn, Reveal } from "@/components/common/reveal";
 import { IDENTITY, PRINCIPLES, FLOW, MODULES } from "@/lib/site-content";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -66,7 +67,7 @@ export default function Home() {
             aria-hidden
             className="pointer-events-none absolute inset-x-0 -top-40 h-[560px] bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_srgb,var(--gold)_10%,transparent)_0%,transparent_70%)]"
           />
-          <div className="mx-auto max-w-6xl px-6 pb-28 pt-28 md:pt-36">
+          <FadeIn className="mx-auto max-w-6xl px-6 pb-28 pt-28 md:pt-36">
             <Badge variant="outline" className="gap-2 bg-surface shadow-sm">
               <span className="size-1.5 rounded-full bg-emerald-500" />
               <span className="font-semibold text-foreground">v2.0</span>
@@ -105,7 +106,7 @@ export default function Home() {
                 trabalho.
               </p>
             </div>
-          </div>
+          </FadeIn>
         </section>
 
         {/* FILOSOFIA */}
@@ -207,11 +208,13 @@ export default function Home() {
         {/* MÓDULOS */}
         <section id="modulos" className="py-28">
           <div className="mx-auto max-w-6xl px-6">
-            <SectionHead
-              eyebrow="Roadmap"
-              title="Construído em módulos."
-              lead="Oito módulos, do conceito à entrega premium — cada um mantendo o mesmo padrão."
-            />
+            <Reveal>
+              <SectionHead
+                eyebrow="Roadmap"
+                title="Construído em módulos."
+                lead="Oito módulos, do conceito à entrega premium — cada um mantendo o mesmo padrão."
+              />
+            </Reveal>
             <div className="overflow-hidden rounded-2xl border border-border">
               {MODULES.map((m, i) => (
                 <div

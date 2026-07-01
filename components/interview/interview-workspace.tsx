@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 
 import {
   currentId,
@@ -23,6 +24,7 @@ const ADAPTIVE_IDS = new Set(ADAPTIVE.map((a) => a.id));
 
 export function InterviewWorkspace() {
   const router = useRouter();
+  const reduce = useReducedMotion();
   const state = useStrategyStore();
   const setAnswer = useStrategyStore((s) => s.setAnswer);
   const setCurrentQ = useStrategyStore((s) => s.setCurrentQ);
@@ -64,25 +66,40 @@ export function InterviewWorkspace() {
     else router.push("/alunos/revisao");
   }
 
+  const card = (
+    <QuestionCard
+      state={state}
+      question={question}
+      topic={topic}
+      progress={progress(state)}
+      isAdaptive={ADAPTIVE_IDS.has(question.id)}
+      isLast={!nextId}
+      prevDisabled={!prevId}
+      notes={consistency(state)}
+      prefs={prefs}
+      onAnswer={(value) => setAnswer(question.id, value)}
+      onPrev={() => prevId && setCurrentQ(prevId)}
+      onAdvance={advance}
+      onReview={jumpTopic}
+      onKeep={acknowledge}
+      onJumpTopic={jumpTopic}
+    />
+  );
+
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-      <QuestionCard
-        state={state}
-        question={question}
-        topic={topic}
-        progress={progress(state)}
-        isAdaptive={ADAPTIVE_IDS.has(question.id)}
-        isLast={!nextId}
-        prevDisabled={!prevId}
-        notes={consistency(state)}
-        prefs={prefs}
-        onAnswer={(value) => setAnswer(question.id, value)}
-        onPrev={() => prevId && setCurrentQ(prevId)}
-        onAdvance={advance}
-        onReview={jumpTopic}
-        onKeep={acknowledge}
-        onJumpTopic={jumpTopic}
-      />
+      {reduce ? (
+        card
+      ) : (
+        <motion.div
+          key={question.id}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {card}
+        </motion.div>
+      )}
       <SidePanel state={state} currentTopicId={topic.id} onJumpTopic={jumpTopic} />
     </div>
   );

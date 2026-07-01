@@ -62,7 +62,17 @@ npm install
 npm run dev      # http://localhost:3000
 npm run build    # build de produção
 npm run lint
+npm test         # 33 testes de domínio e stores (Vitest)
 ```
+
+## Deploy (Vercel)
+
+1. Conecte o repositório na [Vercel](https://vercel.com/new) — o framework
+   Next.js é detectado automaticamente (sem configuração).
+2. Cada push gera um preview; a branch de produção publica o site.
+3. Nenhuma variável de ambiente é necessária: o app roda 100% no cliente
+   (LocalStorage). A IA é opcional e usa a chave do próprio treinador, salva
+   apenas no navegador.
 
 ## Fases
 
@@ -74,7 +84,10 @@ npm run lint
 6. **Relatório editor** — documento editável, revisão de voz, WhatsApp, histórico. ✅
 7. **PDF premium** — documento de 5 páginas, exportação PDF/HTML, marca. ✅
 8. **Nav & IA** — Biblioteca/DNA/Marca/Histórico no nav + IA opcional (BYOK). ✅
-9. Polimento (Framer Motion, a11y, QA) + deploy
+9. **Polimento** — Framer Motion, responsividade, acessibilidade e deploy. ✅
+
+**Todas as 9 fases concluídas.** Os 8 módulos do PRD estão portados para a stack
+profissional (Next.js + TypeScript), com testes, e prontos para a Vercel.
 
 A pasta [`legacy/`](legacy/) contém a implementação completa e funcional dos 8
 módulos em HTML/CSS/JS puro, usada como referência para o port.
