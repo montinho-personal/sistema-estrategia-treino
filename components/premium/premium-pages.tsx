@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import type { Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, reportIntro, reportSections, studentDiagnosisData } from "@/lib/domain";
+import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeRows, volumeTotal } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
@@ -40,7 +40,8 @@ function Card({ icon, label, value }: { icon: Parameters<typeof PgIcon>[0]["name
   );
 }
 
-function Block({ title, icon, value, note, detail, badges }: { title: string; icon: Parameters<typeof PgIcon>[0]["name"]; value: string; note?: string; detail?: string; badges?: string[] }) {
+function Block({ title, icon, value, note, detail, extras, badges }: { title: string; icon: Parameters<typeof PgIcon>[0]["name"]; value: string; note?: string; detail?: string; extras?: { label: string; value: string }[]; badges?: string[] }) {
+  const extraRows = (extras ?? []).filter((e) => has(e.value));
   return (
     <div className="pg-block">
       <div className="pg-block__h">
@@ -50,6 +51,11 @@ function Block({ title, icon, value, note, detail, badges }: { title: string; ic
       {has(value) && <div className="pg-block__v">{value}</div>}
       {has(note) && <div className="pg-block__note">{note}</div>}
       {has(detail) && <div className="pg-block__d">{detail}</div>}
+      {extraRows.map((e) => (
+        <div key={e.label} className="pg-block__x">
+          <span className="pg-block__xl">{e.label}:</span> {e.value}
+        </div>
+      ))}
       {badges && badges.length > 0 && (
         <div className="pg-badges">
           {badges.map((b) => <span key={b} className="pg-badge">{b}</span>)}
@@ -148,13 +154,44 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
   const reps = has(x.intensidade_reps) ? `Repetições: ${val(x.intensidade_reps)}` : "";
   const tec = Array.isArray(x.intensidade_tecnicas) ? x.intensidade_tecnicas : [];
   const steps = timelineSteps(x.periodizacao_fases);
+  const vrows = volumeRows(state);
+  const vtot = volumeTotal(state);
   return (
     <section className="premium__page">
       <h2 className="pg-h2">Estratégia</h2>
       <div className="pg-blocks">
-        <Block title="Divisão semanal" icon="calendar" value={val(x.divisao_qual)} detail={val(x.divisao_porque)} />
+        <Block
+          title="Divisão semanal"
+          icon="calendar"
+          value={val(x.divisao_qual)}
+          detail={val(x.divisao_porque)}
+          extras={[
+            { label: "Vantagens", value: val(x.divisao_vantagens) },
+            { label: "Adaptações", value: val(x.divisao_adaptacoes) },
+          ]}
+        />
         <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} note={reps} detail={val(x.intensidade_porque)} badges={tec} />
       </div>
+      {vrows.length > 0 && (
+        <div className="pg-voltable">
+          <div className="pg-voltable__t">Volume semanal de séries</div>
+          <table className="pg-vol">
+            <thead>
+              <tr><th>Grupo muscular</th><th>Séries / semana</th></tr>
+            </thead>
+            <tbody>
+              {vrows.map((r, i) => (
+                <tr key={i}><td>{r.grupo}</td><td>{r.series}</td></tr>
+              ))}
+            </tbody>
+            {vtot != null && (
+              <tfoot>
+                <tr><td>Total</td><td>{vtot} séries</td></tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      )}
       <div className="pg-timeline">
         <div className="pg-timeline__t">A evolução do seu plano</div>
         <div>
@@ -165,6 +202,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
             </div>
           ))}
         </div>
+        {has(x.periodizacao_porque) && <p className="pg-timeline__why">{val(x.periodizacao_porque)}</p>}
       </div>
       <PageFoot brand={brand} n={n} total={total} />
     </section>
@@ -189,6 +227,7 @@ export function EvolucaoPage({ state, brand, n, total }: { state: StrategyState;
         <div className="pg-box">
           <div className="pg-box__t"><span className="pg-ic"><PgIcon name="trend" /></span> Regras de progressão</div>
           <p>{has(x.progressao_como) ? val(x.progressao_como) : "Você avança quando domina a etapa atual — evolução segura e constante."}</p>
+          {has(x.progressao_porque) && <p className="pg-muted">{val(x.progressao_porque)}</p>}
         </div>
       </div>
       <div className="pg-highlight">

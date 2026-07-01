@@ -2,7 +2,7 @@ import { TOPICS, ANAMNESE_RULES } from "./config";
 import { requiredMissing } from "./interview";
 import { personalLead } from "./voice";
 import { knowledgeForTopic, explainKnowledge, kbById } from "./knowledge";
-import type { StrategyState } from "./schema";
+import type { StrategyState, VolumeRow } from "./schema";
 import { has, val, low, firstName, lowerFirst, upperFirst, toInt } from "./util";
 
 export interface ReportSection {
@@ -307,6 +307,26 @@ export function completion(state: StrategyState): Completion {
   };
 }
 
+/* ---- Volume semanal de séries ---- */
+/** Linhas de volume preenchidas (grupo + séries informados). */
+export function volumeRows(state: StrategyState): VolumeRow[] {
+  return state.volume.filter((r) => has(r.grupo) && has(r.series));
+}
+
+/** Total de séries por semana (soma dos valores numéricos), ou null se não houver. */
+export function volumeTotal(state: StrategyState): number | null {
+  let sum = 0;
+  let any = false;
+  for (const r of volumeRows(state)) {
+    const n = toInt(r.series);
+    if (n != null) {
+      sum += n;
+      any = true;
+    }
+  }
+  return any ? sum : null;
+}
+
 /* ---- Versão WhatsApp (títulos + emojis discretos) ---- */
 const WA_EMOJI: Record<string, string> = {
   objetivo: "🎯", diagnostico: "🩺", estrategia: "🧠", divisao: "🗓️",
@@ -319,6 +339,13 @@ export function reportWhatsapp(state: StrategyState): string {
     lines.push("");
     lines.push(`*${WA_EMOJI[s.id] ? `${WA_EMOJI[s.id]} ` : ""}${s.title}*`);
     lines.push(s.body.replace(/\n{2,}/g, "\n"));
+  }
+  const vrows = volumeRows(state);
+  if (vrows.length > 0) {
+    lines.push("", "*📊 Volume semanal de séries*");
+    for (const r of vrows) lines.push(`• ${r.grupo}: ${r.series}`);
+    const tot = volumeTotal(state);
+    if (tot != null) lines.push(`_Total: ${tot} séries/semana_`);
   }
   lines.push("", "*Mensagem final*", reportClosing(state), "", "_Vamos juntos! — Montinho Personal Trainer_");
   return lines.join("\n");

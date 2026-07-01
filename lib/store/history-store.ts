@@ -33,6 +33,7 @@ export const useHistoryStore = create<HistoryStore>()(
           anamnese: structuredClone(state.anamnese),
           answers: structuredClone(state.answers),
           overrides: structuredClone(state.overrides),
+          volume: structuredClone(state.volume),
         };
         set((s) => ({ snapshots: [snap, ...s.snapshots].slice(0, 50) }));
         return snap;

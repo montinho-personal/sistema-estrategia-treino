@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { createStrategyState } from "@/lib/domain/schema";
-import type { StrategyState, Step } from "@/lib/domain/schema";
+import type { StrategyState, Step, VolumeRow } from "@/lib/domain/schema";
 import type { AnamneseField } from "@/lib/domain/schema/anamnese";
 import type { AnswerValue } from "@/lib/domain/schema/answers";
 import { jsonStorage } from "./storage";
@@ -11,6 +11,7 @@ export interface StrategySnapshotData {
   anamnese: StrategyState["anamnese"];
   answers: StrategyState["answers"];
   overrides: StrategyState["overrides"];
+  volume?: StrategyState["volume"];
 }
 
 interface StrategyActions {
@@ -18,6 +19,7 @@ interface StrategyActions {
   setAnswer: (id: string, value: AnswerValue) => void;
   acknowledge: (id: string) => void;
   setOverride: (sectionId: string, text: string) => void;
+  setVolume: (rows: VolumeRow[]) => void;
   setStep: (step: Step) => void;
   setCurrentQ: (id: string | null) => void;
   patch: (partial: Partial<StrategyState>) => void;
@@ -51,6 +53,8 @@ export const useStrategyStore = create<StrategyStore>()(
           return { overrides, updatedAt: stamp() };
         }),
 
+      setVolume: (volume) => set({ volume, updatedAt: stamp() }),
+
       setStep: (step) => set({ step }),
       setCurrentQ: (currentQ) => set({ currentQ }),
 
@@ -62,6 +66,7 @@ export const useStrategyStore = create<StrategyStore>()(
           anamnese: data.anamnese ?? {},
           answers: data.answers ?? {},
           overrides: data.overrides ?? {},
+          volume: data.volume ?? [],
           step: "relatorio",
           updatedAt: stamp(),
         }),
@@ -77,6 +82,7 @@ export const useStrategyStore = create<StrategyStore>()(
         answers: s.answers,
         acknowledged: s.acknowledged,
         overrides: s.overrides,
+        volume: s.volume,
         diagnosisNote: s.diagnosisNote,
         step: s.step,
         currentQ: s.currentQ,
