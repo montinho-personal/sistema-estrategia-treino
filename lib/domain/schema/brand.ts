@@ -6,6 +6,8 @@ export const BrandSchema = z.object({
   whatsapp: z.string().default(""),
   site: z.string().default(""),
   instagram: z.string().default(""),
+  /** Logo do treinador (data URL da imagem, salvo apenas no navegador). */
+  logo: z.string().default(""),
 });
 
 export type Brand = z.infer<typeof BrandSchema>;
@@ -15,4 +17,5 @@ export const DEFAULT_BRAND: Brand = {
   whatsapp: "",
   site: "",
   instagram: "",
+  logo: "",
 };

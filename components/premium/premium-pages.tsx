@@ -9,6 +9,17 @@ import { whatsappLink, instagramLink } from "@/lib/premium/links";
 import { PgIcon, PgCheck } from "./premium-icons";
 import { QrBlock } from "./qr-block";
 
+/** Marca gráfica: o logo do treinador (se enviado) ou o "M" premium padrão. */
+function PgMark({ brand, variant }: { brand: Brand; variant: "cover" | "sign" }) {
+  if (has(brand.logo)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- logo do treinador (data URL), embutido também na exportação HTML
+      <img src={brand.logo} alt={brand.nome} className={`pg-logo pg-logo--${variant}`} />
+    );
+  }
+  return <span className="pg-mark">M</span>;
+}
+
 function PageFoot({ brand, n, total }: { brand: Brand; n: number; total: number }) {
   return (
     <div className="pg-foot">
@@ -65,7 +76,10 @@ export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand
   return (
     <section className="premium__page pg-cover">
       <div className="pg-cover__top">
-        <div className="pg-brand"><span className="pg-mark">M</span><span>{brand.nome}</span></div>
+        <div className="pg-brand">
+          <PgMark brand={brand} variant="cover" />
+          {!has(brand.logo) && <span>{brand.nome}</span>}
+        </div>
         <div className="pg-cover__date">{date}</div>
       </div>
       <div className="pg-cover__mid">
@@ -261,7 +275,7 @@ export function EncerramentoPage({ state, brand, n, total }: { state: StrategySt
         aonde quer, da melhor forma possível.&rdquo;
       </p>
       <div className="pg-sign">
-        <span className="pg-mark">M</span>
+        <PgMark brand={brand} variant="sign" />
         <div><b>{brand.nome}</b><span>Montinho Training Strategy</span></div>
       </div>
       {contacts.length > 0 && <div className="pg-contacts">{contacts}</div>}

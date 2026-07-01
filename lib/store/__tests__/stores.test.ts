@@ -69,7 +69,7 @@ describe("historyStore", () => {
 describe("brandStore & aiStore", () => {
   it("marca tem padrão do Montinho e é editável", () => {
     expect(useBrandStore.getState().brand.nome).toBe("Montinho Personal Trainer");
-    useBrandStore.getState().setBrand({ nome: "Montinho", whatsapp: "119", site: "", instagram: "@x" });
+    useBrandStore.getState().setBrand({ nome: "Montinho", whatsapp: "119", site: "", instagram: "@x", logo: "" });
     expect(useBrandStore.getState().brand.instagram).toBe("@x");
   });
 
