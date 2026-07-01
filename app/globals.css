@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* =========================================================================
+   Montinho Training Strategy — Design System
+   Paleta: branco · preto · cinza · dourado. Minimalista, muito respiro.
+   Inspiração: Apple · Notion · Linear · Stripe · Vercel.
+   ========================================================================= */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: #ffffff;
+  --foreground: #0a0a0b;
+
+  --card: #ffffff;
+  --card-foreground: #0a0a0b;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0b;
+
+  --primary: #0a0a0b;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f4f4f6;
+  --secondary-foreground: #0a0a0b;
+
+  --muted: #f7f7f9;
+  --muted-foreground: #74747c;
+
+  --accent: #f4f4f6;
+  --accent-foreground: #0a0a0b;
+
+  /* dourado — apenas para destaque */
+  --gold: #b78b3a;
+  --gold-foreground: #ffffff;
+  --gold-soft: #faf5ea;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #ececef;
+  --input: #e6e7ea;
+  --ring: #b78b3a;
+
+  --surface: #ffffff;
+  --bg: #fbfbfd;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-bg: var(--bg);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--gold) 22%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
