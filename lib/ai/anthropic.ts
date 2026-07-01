@@ -195,3 +195,32 @@ export function aiRewriteText(
     `TEXTO ATUAL:\n${text}\n\nCONTEXTO DO ALUNO:\n${anamneseText(state)}`;
   return call(config, prompt, 600);
 }
+
+/**
+ * Aprimora uma seção: corrige português/gramática, melhora a escrita na voz do
+ * Montinho e pode enriquecer com informação complementar VÁLIDA — sem inventar
+ * dados do aluno nem mudar as decisões técnicas que o treinador já tomou.
+ */
+export function aiEnhanceText(
+  config: AiConfig,
+  title: string,
+  text: string,
+  state: StrategyState,
+): Promise<string> {
+  const prompt =
+    `Você é o Personal Trainer escrevendo a seção "${title}" do relatório para o seu ` +
+    "aluno. Aprimore o texto abaixo:\n" +
+    "1) Corrija todos os erros de português, ortografia, pontuação e gramática.\n" +
+    "2) Deixe a escrita mais clara, fluida e profissional, na voz de um Personal " +
+    "experiente falando direto com o aluno pelo WhatsApp: primeira pessoa, tom pessoal, " +
+    "parágrafos curtos.\n" +
+    "3) Você PODE acrescentar explicações complementares que agreguem valor e sejam " +
+    "tecnicamente corretas (o porquê de uma escolha, um cuidado importante, um incentivo).\n\n" +
+    "REGRAS: nunca invente dados específicos do aluno (números, medidas, diagnósticos, " +
+    "lesões) que não estejam no texto; nunca contrarie nem altere as decisões técnicas já " +
+    "tomadas pelo treinador; mantenha o mesmo formato — se houver listas com “✓” ou “•”, " +
+    "preserve esses marcadores. Responda APENAS com o texto aprimorado, sem comentários.\n\n" +
+    `TEXTO ATUAL:\n${text}\n\nCONTEXTO DO ALUNO (use só para dar precisão, não copie cru):\n` +
+    anamneseText(state);
+  return call(config, prompt, 900);
+}

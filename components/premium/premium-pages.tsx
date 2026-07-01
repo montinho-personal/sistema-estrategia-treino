@@ -2,18 +2,19 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import type { Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, studentDiagnosisData } from "@/lib/domain";
+import { reportClosing, reportIntro, reportSections, studentDiagnosisData } from "@/lib/domain";
+import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
 import { PgIcon, PgCheck } from "./premium-icons";
 import { QrBlock } from "./qr-block";
 
-function PageFoot({ brand, n }: { brand: Brand; n: number }) {
+function PageFoot({ brand, n, total }: { brand: Brand; n: number; total: number }) {
   return (
     <div className="pg-foot">
       <span>{brand.nome}</span>
       <span>Montinho Training Strategy</span>
-      <span>{n} / 5</span>
+      <span>{n} / {total}</span>
     </div>
   );
 }
@@ -83,7 +84,7 @@ export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand
   );
 }
 
-export function DiagnosticoPage({ state, brand }: { state: StrategyState; brand: Brand }) {
+export function DiagnosticoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const a = state.anamnese, x = state.answers;
   const disp = [has(a.diasSemana) ? `${a.diasSemana} dias/semana` : "", has(a.tempoSessao) ? `${a.tempoSessao} min` : ""].filter(Boolean).join(" · ");
   const d = studentDiagnosisData(state);
@@ -122,12 +123,12 @@ export function DiagnosticoPage({ state, brand }: { state: StrategyState; brand:
           para fazer sentido para você e para a sua realidade.
         </p>
       </div>
-      <PageFoot brand={brand} n={2} />
+      <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
 }
 
-export function EstrategiaPage({ state, brand }: { state: StrategyState; brand: Brand }) {
+export function EstrategiaPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const x = state.answers;
   const reps = has(x.intensidade_reps) ? `Repetições: ${val(x.intensidade_reps)}` : "";
   const tec = Array.isArray(x.intensidade_tecnicas) ? x.intensidade_tecnicas : [];
@@ -150,12 +151,12 @@ export function EstrategiaPage({ state, brand }: { state: StrategyState; brand: 
           ))}
         </div>
       </div>
-      <PageFoot brand={brand} n={3} />
+      <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
 }
 
-export function EvolucaoPage({ state, brand }: { state: StrategyState; brand: Brand }) {
+export function EvolucaoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const x = state.answers;
   const mobItens = Array.isArray(x.mobilidade_o_que) ? x.mobilidade_o_que.join(", ") : "";
   const itens = Array.isArray(x.acompanhamento_info) ? x.acompanhamento_info : [];
@@ -187,12 +188,63 @@ export function EvolucaoPage({ state, brand }: { state: StrategyState; brand: Br
         )}
         {has(x.acompanhamento_porque) && <p className="pg-muted">Isso me permite {lowerFirst(val(x.acompanhamento_porque))}</p>}
       </div>
-      <PageFoot brand={brand} n={4} />
+      <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
 }
 
-export function EncerramentoPage({ state, brand }: { state: StrategyState; brand: Brand }) {
+/* ---- Detalhamento completo: todo o relatório escrito, no estilo premium ---- */
+function renderBody(body: string, keyPrefix: string) {
+  const blocks = body
+    .split(/\n{2,}/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  return blocks.map((block, i) => {
+    const lines = block
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    const proseLines = lines.filter((l) => !/^[✓•]/.test(l));
+    const listLines = lines.filter((l) => /^[✓•]/.test(l));
+    return (
+      <div key={`${keyPrefix}-${i}`}>
+        {proseLines.map((l, j) => (
+          <p key={`p-${j}`} className="pg-report__p">{l}</p>
+        ))}
+        {listLines.length > 0 && (
+          <ul className="pg-report__list">
+            {listLines.map((l, j) => (
+              <li key={`l-${j}`}>
+                <span className="pg-tick"><PgCheck /></span>
+                {l.replace(/^[✓•]\s*/, "")}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  });
+}
+
+export function DetalhamentoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
+  const intro = reportIntro(state);
+  const sections: ReportSection[] = reportSections(state);
+  return (
+    <section className="premium__page pg-flow">
+      <h2 className="pg-h2">Sua estratégia, em detalhes</h2>
+      {has(intro) && <div className="pg-report__lead">{renderBody(intro, "intro")}</div>}
+      {sections.map((s) => (
+        <div key={s.id} className="pg-report__sec">
+          <h3 className="pg-report__t">{s.title}</h3>
+          {renderBody(s.body, s.id)}
+        </div>
+      ))}
+      <PageFoot brand={brand} n={n} total={total} />
+    </section>
+  );
+}
+
+export function EncerramentoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const contacts: ReactNode[] = [];
   if (has(brand.whatsapp)) contacts.push(<span key="w"><span className="pg-ic"><PgIcon name="chat" /></span>{brand.whatsapp}</span>);
   if (has(brand.site)) contacts.push(<span key="s"><span className="pg-ic"><PgIcon name="globe" /></span>{brand.site}</span>);
@@ -219,7 +271,7 @@ export function EncerramentoPage({ state, brand }: { state: StrategyState; brand
           {igLink && <QrBlock data={igLink} label="Instagram" />}
         </div>
       )}
-      <PageFoot brand={brand} n={5} />
+      <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
 }
