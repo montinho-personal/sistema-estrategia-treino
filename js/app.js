@@ -59,6 +59,12 @@
       desc: "Apresentação profissional em estrutura fixa, do objetivo à mensagem final — respondendo o porquê de cada decisão.",
       status: "now",
     },
+    {
+      id: "08",
+      title: "PDF premium",
+      desc: "Documento exclusivo de 5 páginas com capa, timeline, QR Codes e identidade dourada — exportável em PDF, WhatsApp e HTML.",
+      status: "now",
+    },
   ];
 
   var CHECK =

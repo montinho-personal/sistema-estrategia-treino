@@ -11,6 +11,7 @@ MTS.Store = (function () {
   var HIST_KEY = 'mts.history.v1';
   var PREF_KEY = 'mts.prefs.v1';
   var DNA_KEY = 'mts.dna.v1';
+  var BRAND_KEY = 'mts.brand.v1';
 
   var subs = [];
 
@@ -144,6 +145,16 @@ MTS.Store = (function () {
       } catch (e) {}
     },
     styleSamples: function () { try { return JSON.parse(localStorage.getItem(DNA_KEY)) || []; } catch (e) { return []; } },
-    clearStyle: function () { try { localStorage.removeItem(DNA_KEY); } catch (e) {} }
+    clearStyle: function () { try { localStorage.removeItem(DNA_KEY); } catch (e) {} },
+
+    /* ---- Identidade da marca (para o PDF premium) ---- */
+    getBrand: function () {
+      var def = { nome: 'Montinho Personal Trainer', whatsapp: '', site: '', instagram: '' };
+      var saved = {};
+      try { saved = JSON.parse(localStorage.getItem(BRAND_KEY)) || {}; } catch (e) {}
+      for (var k in saved) if (saved.hasOwnProperty(k)) def[k] = saved[k];
+      return def;
+    },
+    setBrand: function (b) { try { localStorage.setItem(BRAND_KEY, JSON.stringify(b || {})); } catch (e) {} }
   };
 })();

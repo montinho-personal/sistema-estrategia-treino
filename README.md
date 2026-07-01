@@ -167,6 +167,23 @@ aluno, em estrutura fixa e sempre respondendo *por quê*.
 - **Feito para o celular:** parágrafos curtos, listas e checklists; versão
   WhatsApp com emojis discretos e versão PDF para impressão.
 
+## Módulo 8 — PDF premium
+
+A entrega final: um documento exclusivo de **5 páginas** que transmite
+profissionalismo e faz o aluno sentir *“esse material foi feito para mim”*.
+
+- **Menos é mais.** Paleta preto/branco/cinza com **dourado só para destaque**,
+  muito espaço em branco, tipografia Inter — no estilo Apple/Linear/Stripe.
+- **5 páginas:** Capa (logo, aluno, data, frase de abertura) · Diagnóstico
+  Inicial (cards, checklist, “Nossa Filosofia”) · Estratégia (blocos + **timeline**
+  de evolução + badges de técnicas) · Evolução (mobilidade, progressão, checklist
+  do aluno) · Encerramento (mensagem exclusiva, assinatura, contatos e **QR Codes**
+  de WhatsApp e Instagram).
+- **Identidade da marca** configurável (botão **“Marca”**): nome, WhatsApp, site,
+  Instagram — usados na capa, no rodapé e nos QR Codes.
+- **Exportação:** PDF (impressão A4), **WhatsApp** e **HTML** (arquivo autônomo).
+- Excelente em celular, tablet, computador e impressão.
+
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
 
@@ -197,6 +214,8 @@ js/
   knowledge.js        Knowledge Base: entradas, matcher, adaptação por perfil, confiança
   voice.js            DNA do Montinho: voz pessoal, glossário, revisão de voz, insights
   report.js           Geração do relatório: estrutura fixa, diagnóstico ao aluno, WhatsApp/PDF
+  qr.js               QR Codes (WhatsApp/Instagram) para o PDF premium
+  premium.js          PDF premium: documento de 5 páginas, CSS próprio, export PDF/HTML
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
 .nojekyll             Serve os arquivos como estão no GitHub Pages
@@ -224,6 +243,7 @@ python3 -m http.server 8000
 | 05 | Biblioteca inteligente (justificativas automáticas, confiança, preferências) | ✅ Disponível |
 | 06 | DNA do Montinho (voz pessoal, linguagem simples, revisão de voz, aprendizado) | ✅ Disponível |
 | 07 | Geração do relatório (estrutura fixa, diagnóstico ao aluno, mensagem exclusiva) | ✅ Disponível |
+| 08 | PDF premium (5 páginas, capa, timeline, QR Codes, export PDF/WhatsApp/HTML) | ✅ Disponível |
 
 ---
 

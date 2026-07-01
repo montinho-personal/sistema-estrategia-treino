@@ -702,9 +702,9 @@
     var v1 = el('button', 'btn btn--primary', '1 · WhatsApp');
     v1.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'Texto do WhatsApp copiado.'); showWA(); });
     var v2 = el('button', 'btn btn--ghost', '2 · PDF Premium');
-    v2.addEventListener('click', function () { window.print(); });
+    v2.addEventListener('click', function () { MTS.Premium.open(state()); });
     var v3 = el('button', 'btn btn--ghost', '3 · Ambos');
-    v3.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'WhatsApp copiado. Gerando PDF...'); showWA(); setTimeout(function () { window.print(); }, 400); });
+    v3.addEventListener('click', function () { copyText(Report.whatsapp(state()), 'WhatsApp copiado.'); showWA(); MTS.Premium.open(state()); });
     vers.appendChild(v1); vers.appendChild(v2); vers.appendChild(v3);
     expCard.appendChild(vers);
     function showWA() { waPrev.style.display = 'block'; waPrev.textContent = Report.whatsapp(state()); }
@@ -958,6 +958,41 @@
   }
 
   /* =======================================================================
+     Marca — identidade e contatos usados no PDF premium
+     ======================================================================= */
+  function openBrandModal() {
+    var brand = Store.getBrand();
+    var back = el('div', 'modal-backdrop');
+    var m = el('div', 'modal');
+    m.appendChild(el('h3', null, 'Sua marca'));
+    m.appendChild(el('p', null, 'Estes dados aparecem na capa e no encerramento do PDF premium, incluindo os QR Codes. Ficam salvos apenas neste navegador.'));
+    var fields = [
+      ['nome', 'Nome / marca', 'Montinho Personal Trainer'],
+      ['whatsapp', 'WhatsApp (com DDI/DDD)', 'Ex.: +55 11 99999-9999'],
+      ['site', 'Site', 'Ex.: montinho.com.br'],
+      ['instagram', 'Instagram', 'Ex.: @montinhopersonal']
+    ];
+    var inputs = {};
+    fields.forEach(function (f) {
+      var fl = el('div', 'field'); fl.innerHTML = '<label for="br_' + f[0] + '">' + f[1] + '</label>';
+      var inp = el('input'); inp.id = 'br_' + f[0]; inp.placeholder = f[2]; inp.value = brand[f[0]] || '';
+      fl.appendChild(inp); m.appendChild(fl); inputs[f[0]] = inp;
+    });
+    var actions = el('div', 'modal__actions');
+    var cancel = el('button', 'btn btn--ghost', 'Cancelar'); cancel.addEventListener('click', close);
+    var save = el('button', 'btn btn--primary', 'Salvar');
+    save.addEventListener('click', function () {
+      Store.setBrand({ nome: inputs.nome.value.trim() || 'Montinho Personal Trainer', whatsapp: inputs.whatsapp.value.trim(), site: inputs.site.value.trim(), instagram: inputs.instagram.value.trim() });
+      close(); toast('Marca atualizada.');
+    });
+    actions.appendChild(cancel); actions.appendChild(save); m.appendChild(actions);
+    back.appendChild(m);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    modalRoot.appendChild(back);
+    function close() { modalRoot.innerHTML = ''; }
+  }
+
+  /* =======================================================================
      DNA do Montinho — memória viva do jeito de pensar e escrever
      ======================================================================= */
   function openDNAModal() {
@@ -1067,6 +1102,7 @@
   document.getElementById('aiPill').addEventListener('click', openAIModal);
   document.getElementById('btnLibrary').addEventListener('click', openLibraryModal);
   document.getElementById('btnDNA').addEventListener('click', openDNAModal);
+  document.getElementById('btnBrand').addEventListener('click', openBrandModal);
   document.getElementById('btnMemory').addEventListener('click', openMemoryModal);
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnReset').addEventListener('click', function () {

@@ -49,7 +49,7 @@ MTS.Report = (function () {
   }
 
   /* ---- Diagnóstico voltado ao aluno: resume, nunca assusta, mostra solução ---- */
-  function studentDiagnosis(state) {
+  function studentDiagnosisData(state) {
     var a = state.anamnese || {};
     var fortes = [], atencao = [];
     var sono = clean(a.sono).toLowerCase(), estresse = clean(a.estresse).toLowerCase();
@@ -67,6 +67,12 @@ MTS.Report = (function () {
     if (sono === 'ruim' || estresse === 'alto') atencao.push('nos dias de sono ou rotina mais puxados, vamos ajustar o esforço para respeitar sua recuperação');
     if (idade && idade >= 60) atencao.push('vamos priorizar a segurança das articulações e uma evolução gradual e sólida');
 
+    return { fortes: fortes, atencao: atencao };
+  }
+
+  function studentDiagnosis(state) {
+    var d = studentDiagnosisData(state);
+    var fortes = d.fortes, atencao = d.atencao;
     var body = [];
     if (fortes.length) {
       body.push('Você já tem pontos muito a seu favor:');
@@ -285,7 +291,7 @@ MTS.Report = (function () {
   function lowerFirst(s) { s = clean(s); return s ? s.charAt(0).toLowerCase() + s.slice(1) : s; }
 
   return {
-    diagnosis: diagnosis, studentDiagnosis: studentDiagnosis,
+    diagnosis: diagnosis, studentDiagnosis: studentDiagnosis, studentDiagnosisData: studentDiagnosisData,
     sections: sections, document: document, intro: intro, closing: closing,
     completion: completion, whatsapp: whatsapp
   };

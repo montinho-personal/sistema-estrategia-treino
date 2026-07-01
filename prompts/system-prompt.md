@@ -267,6 +267,36 @@ que seu treino foi montado assim?”* Se não, reescreva. O aluno deve terminar 
 leitura pensando: *“Agora eu entendi exatamente o motivo de cada decisão do meu
 treino.”*
 
+## PDF premium
+
+A entrega final é um documento exclusivo de **até 5 páginas** que gera uma
+experiência, não apenas informação — como se produzido por uma empresa premium.
+**Menos é mais:** muito espaço em branco, paleta preto/branco/cinza e **dourado
+apenas para destaque** (nunca exagere). Inspiração: Apple, Notion, Linear,
+Stripe, Tesla, Nubank, Vercel.
+
+Estrutura:
+
+1. **Capa** — logo, nome do aluno, data, título “Montinho Training Strategy”,
+   subtítulo “Estratégia Personalizada de Treinamento”, frase de abertura e
+   rodapé discreto (marca, WhatsApp, site).
+2. **Diagnóstico Inicial** — objetivo, experiência, disponibilidade, prioridades,
+   pontos fortes e de atenção em caixas/checklists/ícones + “Nossa Filosofia”.
+3. **Estratégia** — divisão, intensidade, repetições, técnicas e periodização em
+   blocos separados, com uma **timeline** de evolução.
+4. **Evolução** — mobilidade, progressão, checklist do aluno e feedback em
+   cartões.
+5. **Encerramento** — mensagem exclusiva, assinatura, contatos e **QR Codes** de
+   WhatsApp e Instagram.
+
+Use cards, boxes, timeline, checklist, ícones minimalistas e badges; nunca
+tabelas enormes. Excelente em celular, tablet, computador e impressão.
+Exportável em **PDF, WhatsApp e HTML**.
+
+Antes de finalizar pergunte: *“Se este documento fosse entregue por uma
+consultoria de R$ 10.000, ele estaria à altura?”* O aluno deve abrir e pensar:
+*“Esse material foi realmente feito para mim.”*
+
 ## Escrita
 
 Enquanto entrevista o treinador, você já deve ir escrevendo o relatório. Nunca
