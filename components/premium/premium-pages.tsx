@@ -40,7 +40,7 @@ function Card({ icon, label, value }: { icon: Parameters<typeof PgIcon>[0]["name
   );
 }
 
-function Block({ title, icon, value, detail, badges }: { title: string; icon: Parameters<typeof PgIcon>[0]["name"]; value: string; detail?: string; badges?: string[] }) {
+function Block({ title, icon, value, note, detail, badges }: { title: string; icon: Parameters<typeof PgIcon>[0]["name"]; value: string; note?: string; detail?: string; badges?: string[] }) {
   return (
     <div className="pg-block">
       <div className="pg-block__h">
@@ -48,6 +48,7 @@ function Block({ title, icon, value, detail, badges }: { title: string; icon: Pa
         {title}
       </div>
       {has(value) && <div className="pg-block__v">{value}</div>}
+      {has(note) && <div className="pg-block__note">{note}</div>}
       {has(detail) && <div className="pg-block__d">{detail}</div>}
       {badges && badges.length > 0 && (
         <div className="pg-badges">
@@ -152,7 +153,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
       <h2 className="pg-h2">Estratégia</h2>
       <div className="pg-blocks">
         <Block title="Divisão semanal" icon="calendar" value={val(x.divisao_qual)} detail={val(x.divisao_porque)} />
-        <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} detail={reps} badges={tec} />
+        <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} note={reps} detail={val(x.intensidade_porque)} badges={tec} />
       </div>
       <div className="pg-timeline">
         <div className="pg-timeline__t">A evolução do seu plano</div>

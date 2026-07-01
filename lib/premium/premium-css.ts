@@ -54,6 +54,7 @@ export const PREMIUM_CSS = [
   ".pg-block__ic{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:7px;background:#101114;color:#fff}",
   ".pg-block__ic svg{width:16px;height:16px}",
   ".pg-block__v{font-size:16px;font-weight:560;margin-top:10px}",
+  ".pg-block__note{font-size:13px;color:var(--pg-mut);margin-top:8px;font-weight:560}",
   ".pg-block__d{font-size:13.5px;color:var(--pg-mut);margin-top:6px;line-height:1.5}",
   ".pg-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}",
   ".pg-badge{font-size:11.5px;font-weight:560;padding:4px 10px;border-radius:999px;border:1px solid var(--pg-gold);color:var(--pg-gold)}",
