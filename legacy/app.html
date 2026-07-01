@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace — Montinho Training Strategy</title>
+  <meta name="description" content="Da anamnese à estratégia: análise, diagnóstico, entrevista guiada e relatório premium para o aluno." />
+  <meta name="theme-color" content="#0a0a0b" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230a0a0b'/><text x='16' y='22' font-size='18' font-family='Inter,sans-serif' font-weight='700' fill='white' text-anchor='middle'>M</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;480;520;560;600;620;640;660;680;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="css/workspace.css" />
+</head>
+<body>
+  <div class="ws">
+
+    <!-- NAV -->
+    <header class="nav is-scrolled" id="nav">
+      <div class="nav__inner">
+        <a class="brand" href="index.html" aria-label="Montinho Training Strategy">
+          <span class="brand__mark">M</span>
+          <span class="brand__name">Montinho <small>Training Strategy</small></span>
+        </a>
+        <nav class="nav__links" style="gap:10px">
+          <button class="ai-pill" id="aiPill" type="button" title="Assistente de IA (opcional)">
+            <span class="dot"></span><span id="aiPillLabel">IA desligada</span>
+          </button>
+          <button class="btn btn--ghost" id="btnLibrary" type="button">Biblioteca</button>
+          <button class="btn btn--ghost" id="btnDNA" type="button">DNA</button>
+          <button class="btn btn--ghost" id="btnBrand" type="button">Marca</button>
+          <button class="btn btn--ghost" id="btnMemory" type="button">Estratégia</button>
+          <button class="btn btn--ghost" id="btnHistory" type="button">Histórico</button>
+          <button class="btn btn--ghost" id="btnReset" type="button">Nova estratégia</button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- STEPPER -->
+    <div class="stepper">
+      <div class="stepper__inner" id="stepper"></div>
+    </div>
+
+    <!-- PAINEL -->
+    <main class="panel" id="panel" aria-live="polite"></main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/interview.js"></script>
+  <script src="js/memory.js"></script>
+  <script src="js/knowledge.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/premium.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/workspace.js"></script>
+</body>
+</html>
