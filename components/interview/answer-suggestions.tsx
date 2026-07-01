@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Plus } from "lucide-react";
+import { Sparkles, Loader2, Check } from "lucide-react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import { useAiStore } from "@/lib/store";
 import { aiSuggestAnswers } from "@/lib/ai/anthropic";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export function AnswerSuggestions({
@@ -26,6 +27,7 @@ export function AnswerSuggestions({
 }) {
   const aiConfig = useAiStore((s) => s.config);
   const [items, setItems] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
 
   async function generate() {
@@ -45,6 +47,7 @@ export function AnswerSuggestions({
         toast.error("Não consegui gerar sugestões agora. Tente novamente.");
       }
       setItems(sug);
+      setSelected(new Set());
     } catch (err) {
       toast.error("Falha ao gerar sugestões.", {
         description: err instanceof Error ? err.message : undefined,
@@ -54,9 +57,23 @@ export function AnswerSuggestions({
     }
   }
 
-  function insert(text: string) {
+  function toggle(i: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
+  function insertSelected() {
+    const chosen = items.filter((_, i) => selected.has(i));
+    if (chosen.length === 0) return;
     const current = value.trim();
-    onInsert(current ? `${current} ${text}` : text);
+    const addition = chosen.join(" ");
+    onInsert(current ? `${current} ${addition}` : addition);
+    setSelected(new Set());
+    toast.success(chosen.length === 1 ? "Motivo inserido." : `${chosen.length} motivos inseridos.`);
   }
 
   return (
@@ -75,21 +92,45 @@ export function AnswerSuggestions({
       </Button>
 
       {items.length > 0 && (
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3">
           <p className="text-[12.5px] text-muted-foreground">
-            Clique para inserir. Você pode escolher mais de uma e editar o texto depois.
+            Marque um ou mais motivos e clique em inserir. Você pode editar o texto depois.
           </p>
-          {items.map((s, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => insert(s)}
-              className="group flex items-start gap-2 rounded-[12px] border border-border bg-bg px-3.5 py-2.5 text-left text-[14px] leading-relaxed text-foreground/90 transition-colors hover:border-gold/50 hover:bg-gold-soft"
-            >
-              <Plus className="mt-0.5 size-4 shrink-0 text-gold" />
-              <span>{s}</span>
-            </button>
-          ))}
+          <div className="mt-2 grid gap-2">
+            {items.map((s, i) => {
+              const on = selected.has(i);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(i)}
+                  className={cn(
+                    "flex items-start gap-2.5 rounded-[12px] border px-3.5 py-2.5 text-left text-[14px] leading-relaxed transition-colors",
+                    on
+                      ? "border-gold/60 bg-gold-soft text-foreground"
+                      : "border-border bg-bg text-foreground/90 hover:border-gold/40 hover:bg-gold-soft/40",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 grid size-[18px] shrink-0 place-items-center rounded-[6px] border transition-colors",
+                      on ? "border-gold bg-gold text-gold-foreground" : "border-muted-foreground/40",
+                    )}
+                  >
+                    {on && <Check className="size-3" />}
+                  </span>
+                  <span>{s}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <Button className="mt-3 w-full" onClick={insertSelected} disabled={selected.size === 0}>
+            {selected.size > 0
+              ? `Inserir ${selected.size} ${selected.size === 1 ? "selecionado" : "selecionados"}`
+              : "Inserir selecionados"}
+          </Button>
         </div>
       )}
     </div>
