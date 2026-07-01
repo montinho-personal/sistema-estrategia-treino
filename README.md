@@ -69,7 +69,7 @@ npm run lint
 1. **Fundação** — scaffold, design system, Home. ✅
 2. **Domínio** — Zod + lógica portada (`lib/domain`) + 26 testes. ✅
 3. **Dados** — Zustand + persistência (`lib/store`) + 7 testes. ✅
-4. Fluxo (Nav, Stepper, Anamnese, Diagnóstico)
+4. **Fluxo** — Nav, Stepper, rotas, Anamnese (RHF+Zod) e Diagnóstico. ✅
 5. Entrevista + Memória (dashboard, sugestões, consistência)
 6. Biblioteca + DNA
 7. Relatório editor (preview = exportação)
