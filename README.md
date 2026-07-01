@@ -37,22 +37,62 @@ atingir o nível premium.
 
 ---
 
-## Este repositório — Módulo 1: Fundação & Identidade
+## Módulo 1 — Fundação & Identidade
 
-Esta entrega estabelece a base do produto: identidade de marca, princípios,
-posicionamento, o fluxo de trabalho e a filosofia de design premium (inspirada
-em Apple, Notion, Stripe, Tesla, Nubank, Linear e Vercel — muito espaço em
-branco, cor mínima, elegância).
+Estabelece a base do produto: identidade de marca, princípios, posicionamento,
+o fluxo de trabalho e a filosofia de design premium (inspirada em Apple, Notion,
+Stripe, Tesla, Nubank, Linear e Vercel — muito espaço em branco, cor mínima,
+elegância). Página de entrada em `index.html`.
 
-É uma página estática, sem etapa de build, pronta para o GitHub Pages.
+## Módulo 2 — O cérebro & a entrevista
+
+Traz o **workspace** (`app.html`): a ferramenta que operacionaliza o processo do
+system prompt, do primeiro dado à entrega.
+
+- **O cérebro.** O system prompt do consultor vive em
+  [`prompts/system-prompt.md`](prompts/system-prompt.md) (fonte da verdade,
+  legível) e espelhado em `js/config.js` (constante `SYSTEM_PROMPT`, usada em
+  tempo de execução).
+- **Anamnese.** Ficha de entrada do aluno, com autosave local.
+- **Diagnóstico.** Resumo executivo organizado a partir da anamnese, com pontos
+  de atenção e oportunidades. Nunca monta estratégia nesta etapa.
+- **Entrevista guiada.** Uma pergunta por vez, na ordem fixa dos 11 tópicos. A
+  cada decisão o sistema registra e pergunta o porquê (a *regra das decisões*),
+  e faz uma *análise crítica* frente à anamnese.
+- **Relatório em tempo real.** À medida que o treinador responde, o documento do
+  aluno é escrito — em linguagem clara, explicando o motivo de cada escolha.
+- **Versões finais.** Relatório editável, exportação para PDF (impressão) e
+  versão pronta para WhatsApp.
+
+O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
+apenas organiza e explica.**
+
+### Assistente de IA (opcional, bring-your-own-key)
+
+O workspace funciona 100% offline com a lógica determinística. Opcionalmente, o
+treinador pode ligar um assistente com a própria chave da API da Anthropic
+(salva apenas no navegador) para gerar o resumo executivo e reescrever seções em
+linguagem premium — executando o `SYSTEM_PROMPT`. A IA apenas potencializa;
+nunca decide.
 
 ### Estrutura
 
 ```
-index.html        Página de fundação (identidade, filosofia, fluxo, roadmap)
-css/app.css       Design system premium (tipografia, cor, espaço, dark mode)
-js/app.js         Conteúdo data-driven, scroll reveal e comportamento da nav
-.nojekyll         Serve os arquivos como estão no GitHub Pages
+index.html            Módulo 1 — página de fundação
+app.html              Módulo 2 — workspace (anamnese → diagnóstico → entrevista → relatório)
+prompts/
+  system-prompt.md    O cérebro do sistema (fonte da verdade)
+css/
+  app.css             Design system premium (tokens, tipografia, dark mode)
+  workspace.css        Estilos do workspace
+js/
+  app.js              Conteúdo e interações da landing
+  config.js           SYSTEM_PROMPT, schema da anamnese, 11 tópicos, regras de auditoria
+  store.js            Estado + persistência local (localStorage)
+  report.js           Diagnóstico, relatório e versão WhatsApp (determinístico)
+  ai.js               Camada de IA opcional (bring-your-own-key)
+  workspace.js        Orquestração da UI do workspace
+.nojekyll             Serve os arquivos como estão no GitHub Pages
 ```
 
 ### Rodando localmente
@@ -71,10 +111,10 @@ python3 -m http.server 8000
 | Módulo | Etapa | Status |
 | ------ | ----- | ------ |
 | 01 | Fundação & Identidade | ✅ Disponível |
-| 02 | Anamnese inteligente | Em breve |
-| 03 | Entrevista com o treinador | Em breve |
+| 02 | O cérebro & a entrevista (anamnese, diagnóstico, entrevista, relatório) | ✅ Disponível |
+| 03 | Análise crítica & ciência aprofundadas | Em breve |
 | 04 | Estratégia estruturada e editável | Em breve |
-| 05 | Entrega premium (Documento · PDF · WhatsApp) | Em breve |
+| 05 | Entrega premium com identidade visual completa | Em breve |
 
 ---
 

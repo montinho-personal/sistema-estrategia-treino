@@ -25,14 +25,14 @@
     },
     {
       id: "02",
-      title: "Anamnese inteligente",
-      desc: "Ficha de entrada do aluno: objetivo, histórico, lesões, rotina e disponibilidade.",
-      status: "next",
+      title: "O cérebro & a entrevista",
+      desc: "System prompt do consultor, anamnese, diagnóstico e entrevista guiada que vira relatório em tempo real.",
+      status: "now",
     },
     {
       id: "03",
-      title: "Entrevista com o treinador",
-      desc: "Perguntas que estruturam o raciocínio do Personal antes de qualquer conclusão.",
+      title: "Análise crítica & ciência",
+      desc: "Auditoria de cada decisão frente à anamnese, com as metodologias dos maiores especialistas.",
       status: "next",
     },
     {
