@@ -67,7 +67,7 @@ npm run lint
 ## Fases
 
 1. **Fundação** — scaffold, design system, Home. ✅
-2. Domínio (Zod + lógica portada + testes)
+2. **Domínio** — Zod + lógica portada (`lib/domain`) + 26 testes. ✅
 3. Dados (Zustand + persistência)
 4. Fluxo (Nav, Stepper, Anamnese, Diagnóstico)
 5. Entrevista + Memória (dashboard, sugestões, consistência)
