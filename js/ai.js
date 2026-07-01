@@ -77,21 +77,22 @@ MTS.AI = (function () {
     return rows.join('\n') || '(sem respostas ainda)';
   }
 
-  function rewriteSection(topic, state) {
+  /* Reescreve uma seção já montada, mantendo o conteúdo e melhorando a voz. */
+  function rewriteText(title, text, state) {
     var prompt =
-      'O treinador definiu o bloco "' + topic.name + '" para o aluno abaixo. ' +
-      'Reescreva como uma seção do relatório, falando DIRETAMENTE com o aluno, de forma ' +
-      'clara, humana e didática (2 a 4 frases). Explique o porquê. Não invente nada além ' +
-      'do que o treinador decidiu.\n\n' +
-      'DECISÕES DO TREINADOR:\n' + topicAnswersText(topic, state) + '\n\n' +
+      'Reescreva a seção "' + title + '" do relatório de treino abaixo, falando DIRETAMENTE ' +
+      'com o aluno, na voz de um Personal experiente pelo WhatsApp: primeira pessoa, tom ' +
+      'pessoal, linguagem simples, parágrafos curtos. Mantenha exatamente as mesmas decisões ' +
+      'e informações — não invente nada novo, apenas melhore a escrita.\n\n' +
+      'TEXTO ATUAL:\n' + text + '\n\n' +
       'CONTEXTO DO ALUNO:\n' + anamneseText(state.anamnese || {});
-    return call(prompt, 500);
+    return call(prompt, 600);
   }
 
   return {
     isConfigured: isConfigured,
     defaultModel: DEFAULT_MODEL,
     diagnose: diagnose,
-    rewriteSection: rewriteSection
+    rewriteText: rewriteText
   };
 })();

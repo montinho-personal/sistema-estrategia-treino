@@ -646,7 +646,8 @@
     var comp = Report.completion(s);
     var wrap = el('div');
     wrap.appendChild(head('relatorio', 'Relatório',
-      'Revise, ajuste o texto de cada seção e gere as versões finais para o aluno.'));
+      'Uma apresentação profissional que responde ao aluno: qual é o objetivo, por que o treino ' +
+      'foi montado assim e como vamos chegar lá. Revise, ajuste e gere as versões finais.'));
 
     var split = el('div', 'split');
 
@@ -778,9 +779,10 @@
   }
 
   function aiRewrite(id, btn) {
-    var topic = MTS.TOPICS.filter(function (t) { return t.id === id; })[0];
+    var sec = Report.sections(state()).filter(function (s) { return s.id === id; })[0];
+    if (!sec) return;
     var original = btn.textContent; btn.textContent = '...'; btn.disabled = true;
-    AI.rewriteSection(topic, state()).then(function (text) {
+    AI.rewriteText(sec.title, sec.body, state()).then(function (text) {
       Store.setOverride(id, text); renderRelatorio(); toast('Seção reescrita pela IA.');
     }).catch(function (err) { btn.textContent = original; btn.disabled = false; toast('Falha na IA: ' + err.message); });
   }

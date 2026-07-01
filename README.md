@@ -146,6 +146,27 @@ escrito pelo próprio Renato — nunca por uma IA.
   adaptação, explica cada decisão…) e personaliza a comunicação — acessível pelo
   botão **“DNA”**. Nunca substitui a ciência.
 
+## Módulo 7 — Geração do relatório
+
+Transforma as decisões da entrevista numa **apresentação profissional** para o
+aluno, em estrutura fixa e sempre respondendo *por quê*.
+
+- **Três perguntas.** Todo relatório responde: qual é o meu objetivo, por que
+  meu treino foi montado assim e como vamos chegar lá.
+- **Estrutura fixa (nunca alterada):** Abertura · Objetivo · Diagnóstico · Nossa
+  Estratégia · Divisão · Intensidade · Periodização · Mobilidade · Progressão ·
+  Seu Papel no Processo · Mensagem Final.
+- **Diagnóstico para o aluno.** Resume a anamnese (nunca copia): pontos fortes,
+  pontos de atenção e potencial — sem assustar, sempre com solução.
+- **Intensidade explicada.** Cada recurso (falha, RIR, cadência, drop-set…) é
+  explicado, nunca apenas listado.
+- **Seu papel = checklist.** O que o treinador precisa receber toda semana.
+- **Mensagem final exclusiva**, adaptada ao perfil (atleta → performance,
+  emagrecimento → consistência, idoso → saúde, hipertrofia → construção
+  muscular).
+- **Feito para o celular:** parágrafos curtos, listas e checklists; versão
+  WhatsApp com emojis discretos e versão PDF para impressão.
+
 O princípio nº 1 é respeitado em todo o fluxo: **o treinador decide, o sistema
 apenas organiza e explica.**
 
@@ -175,7 +196,7 @@ js/
   memory.js           Memória estratégica: estrutura por área, status do dashboard, sugestões
   knowledge.js        Knowledge Base: entradas, matcher, adaptação por perfil, confiança
   voice.js            DNA do Montinho: voz pessoal, glossário, revisão de voz, insights
-  report.js           Diagnóstico, relatório e versão WhatsApp (determinístico, com biblioteca)
+  report.js           Geração do relatório: estrutura fixa, diagnóstico ao aluno, WhatsApp/PDF
   ai.js               Camada de IA opcional (bring-your-own-key)
   workspace.js        Orquestração da UI do workspace
 .nojekyll             Serve os arquivos como estão no GitHub Pages
@@ -202,6 +223,7 @@ python3 -m http.server 8000
 | 04 | Memória estratégica & dashboard (painel, sugestões, histórico) | ✅ Disponível |
 | 05 | Biblioteca inteligente (justificativas automáticas, confiança, preferências) | ✅ Disponível |
 | 06 | DNA do Montinho (voz pessoal, linguagem simples, revisão de voz, aprendizado) | ✅ Disponível |
+| 07 | Geração do relatório (estrutura fixa, diagnóstico ao aluno, mensagem exclusiva) | ✅ Disponível |
 
 ---
 

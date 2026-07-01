@@ -53,6 +53,12 @@
       desc: "A voz do Renato em cada relatório: linguagem simples, tom pessoal, revisão de voz e memória que aprende o seu jeito.",
       status: "now",
     },
+    {
+      id: "07",
+      title: "Geração do relatório",
+      desc: "Apresentação profissional em estrutura fixa, do objetivo à mensagem final — respondendo o porquê de cada decisão.",
+      status: "now",
+    },
   ];
 
   var CHECK =
