@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import type { Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeRows, volumeTotal } from "@/lib/domain";
+import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
@@ -154,7 +154,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
   const reps = has(x.intensidade_reps) ? `Repetições: ${val(x.intensidade_reps)}` : "";
   const tec = Array.isArray(x.intensidade_tecnicas) ? x.intensidade_tecnicas : [];
   const steps = timelineSteps(x.periodizacao_fases);
-  const vrows = volumeRows(state);
+  const vlines = volumeLines(state);
   const vtot = volumeTotal(state);
   return (
     <section className="premium__page">
@@ -172,21 +172,21 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
         />
         <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} note={reps} detail={val(x.intensidade_porque)} badges={tec} />
       </div>
-      {vrows.length > 0 && (
+      {vlines.length > 0 && (
         <div className="pg-voltable">
           <div className="pg-voltable__t">Volume semanal de séries</div>
           <table className="pg-vol">
             <thead>
-              <tr><th>Grupo muscular</th><th>Séries / semana</th></tr>
+              <tr><th>Grupo muscular</th><th>Séries / semana</th><th>% do total</th></tr>
             </thead>
             <tbody>
-              {vrows.map((r, i) => (
-                <tr key={i}><td>{r.grupo}</td><td>{r.series}</td></tr>
+              {vlines.map((r, i) => (
+                <tr key={i}><td>{r.grupo}</td><td>{r.series}</td><td>{r.pct != null ? `${r.pct}%` : "—"}</td></tr>
               ))}
             </tbody>
             {vtot != null && (
               <tfoot>
-                <tr><td>Total</td><td>{vtot} séries</td></tr>
+                <tr><td>Total</td><td>{vtot} séries</td><td>100%</td></tr>
               </tfoot>
             )}
           </table>

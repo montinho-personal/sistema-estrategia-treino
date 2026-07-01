@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 
 import type { VolumeRow } from "@/lib/domain/schema";
 import { useStrategyStore } from "@/lib/store";
@@ -34,6 +34,22 @@ export function VolumeEditor() {
     setVolume(volume.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const add = (grupo = "") => setVolume([...volume, { grupo, series: "" }]);
   const remove = (i: number) => setVolume(volume.filter((_, idx) => idx !== i));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= volume.length) return;
+    const next = volume.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    setVolume(next);
+  };
+
+  const pctOf = (series: string): string => {
+    const n = parseInt(series, 10);
+    if (total == null || Number.isNaN(n) || total === 0) return "";
+    return `${Math.round((n / total) * 100)}%`;
+  };
+
+  const ctrlCls =
+    "grid size-8 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-40";
 
   const restantes = SUGESTOES.filter(
     (g) => !volume.some((r) => r.grupo.trim().toLowerCase() === g.toLowerCase()),
@@ -51,26 +67,55 @@ export function VolumeEditor() {
 
       {volume.length > 0 && (
         <div className="mt-3 space-y-2">
-          {volume.map((r, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <Input
-                className="flex-1"
-                placeholder="Grupo (ex.: Peito)"
-                value={r.grupo}
-                onChange={(e) => update(i, { grupo: e.target.value })}
-              />
-              <Input
-                className="w-24"
-                inputMode="numeric"
-                placeholder="Séries"
-                value={r.series}
-                onChange={(e) => update(i, { series: e.target.value })}
-              />
-              <Button variant="ghost" size="icon" aria-label="Remover" onClick={() => remove(i)}>
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          ))}
+          {volume.map((r, i) => {
+            const pct = pctOf(r.series);
+            return (
+              <div key={i} className="flex items-center gap-1.5">
+                <Input
+                  className="flex-1"
+                  placeholder="Grupo (ex.: Peito)"
+                  value={r.grupo}
+                  onChange={(e) => update(i, { grupo: e.target.value })}
+                />
+                <Input
+                  className="w-16"
+                  inputMode="numeric"
+                  placeholder="Séries"
+                  value={r.series}
+                  onChange={(e) => update(i, { series: e.target.value })}
+                />
+                <span className="w-9 shrink-0 text-right text-[12.5px] tabular-nums text-muted-foreground">
+                  {pct}
+                </span>
+                <button
+                  type="button"
+                  className={ctrlCls}
+                  aria-label="Mover para cima"
+                  disabled={i === 0}
+                  onClick={() => move(i, -1)}
+                >
+                  <ChevronUp className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className={ctrlCls}
+                  aria-label="Mover para baixo"
+                  disabled={i === volume.length - 1}
+                  onClick={() => move(i, 1)}
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  className={`${ctrlCls} hover:border-red-300 hover:text-red-500`}
+                  aria-label="Remover"
+                  onClick={() => remove(i)}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 

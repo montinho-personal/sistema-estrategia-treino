@@ -99,7 +99,7 @@ export const PREMIUM_CSS = [
   ".pg-voltable__t{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-mut);margin-bottom:12px}",
   ".pg-vol{width:100%;border-collapse:collapse;font-size:14px}",
   ".pg-vol th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-mut);padding:0 0 10px;border-bottom:1px solid var(--pg-line)}",
-  ".pg-vol th:last-child,.pg-vol td:last-child{text-align:right}",
+  ".pg-vol th:not(:first-child),.pg-vol td:not(:first-child){text-align:right}",
   ".pg-vol td{padding:10px 0;border-bottom:1px solid var(--pg-line);color:#33343a}",
   ".pg-vol tbody tr:last-child td{border-bottom:1px solid var(--pg-line)}",
   ".pg-vol tfoot td{font-weight:680;color:var(--pg-ink);border-bottom:none;padding-top:12px}",
