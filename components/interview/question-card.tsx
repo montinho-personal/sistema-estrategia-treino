@@ -18,8 +18,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AnswerControl } from "./answer-control";
+import { AnswerSuggestions } from "./answer-suggestions";
 import { ConsistencyNotes } from "./consistency-notes";
 import { KbEntryCard } from "@/components/knowledge/kb-entry-card";
+
+/** Converte o valor de uma resposta em texto legível para dar contexto à IA. */
+function answerToText(value: AnswerValue | undefined): string {
+  if (Array.isArray(value)) return value.join(", ");
+  return typeof value === "string" ? value : "";
+}
 
 const ADAPTIVE_HINT = "✦ pergunta adaptada";
 
@@ -93,6 +100,16 @@ export function QuestionCard({
       <div className="mt-5">
         <Label>{isWhy ? "O porquê (será explicado ao aluno em linguagem simples)" : "Sua resposta"}</Label>
         <AnswerControl question={question} value={state.answers[question.id]} onChange={onAnswer} />
+        {isWhy && (
+          <AnswerSuggestions
+            question={question.prompt}
+            topicName={topic.name}
+            mainAnswer={answerToText(state.answers[topic.mainQ])}
+            state={state}
+            value={answerToText(state.answers[question.id])}
+            onInsert={onAnswer}
+          />
+        )}
       </div>
 
       <ConsistencyNotes notes={notes} onReview={onReview} onKeep={onKeep} />
