@@ -23,11 +23,16 @@ interface StrategyActions {
   setStep: (step: Step) => void;
   setCurrentQ: (id: string | null) => void;
   patch: (partial: Partial<StrategyState>) => void;
-  loadSnapshot: (data: StrategySnapshotData) => void;
+  loadSnapshot: (data: StrategySnapshotData, sourceId?: string | null) => void;
   reset: () => void;
 }
 
-export type StrategyStore = StrategyState & StrategyActions;
+/** Id do snapshot atualmente carregado (para atualizar no histórico). */
+interface StrategyMeta {
+  sourceId: string | null;
+}
+
+export type StrategyStore = StrategyState & StrategyMeta & StrategyActions;
 
 const stamp = () => new Date().toISOString();
 
@@ -35,6 +40,7 @@ export const useStrategyStore = create<StrategyStore>()(
   persist(
     (set) => ({
       ...createStrategyState(),
+      sourceId: null,
 
       setAnamnese: (field, value) =>
         set((s) => ({ anamnese: { ...s.anamnese, [field]: value }, updatedAt: stamp() })),
@@ -60,9 +66,10 @@ export const useStrategyStore = create<StrategyStore>()(
 
       patch: (partial) => set({ ...partial, updatedAt: stamp() }),
 
-      loadSnapshot: (data) =>
+      loadSnapshot: (data, sourceId = null) =>
         set({
           ...createStrategyState(),
+          sourceId,
           anamnese: data.anamnese ?? {},
           answers: data.answers ?? {},
           overrides: data.overrides ?? {},
@@ -71,7 +78,7 @@ export const useStrategyStore = create<StrategyStore>()(
           updatedAt: stamp(),
         }),
 
-      reset: () => set({ ...createStrategyState(), updatedAt: stamp() }),
+      reset: () => set({ ...createStrategyState(), sourceId: null, updatedAt: stamp() }),
     }),
     {
       name: "mts.strategy.v3",
