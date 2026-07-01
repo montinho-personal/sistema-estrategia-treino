@@ -1,5 +1,5 @@
 import { SYSTEM_PROMPT, ANAMNESE_SECTIONS } from "@/lib/domain";
-import type { StrategyState } from "@/lib/domain/schema";
+import type { StrategyState, Anamnese } from "@/lib/domain/schema";
 import type { AiConfig } from "@/lib/store";
 import { DEFAULT_AI_MODEL } from "@/lib/store";
 
@@ -60,6 +60,124 @@ export function aiDiagnose(config: AiConfig, state: StrategyState): Promise<stri
     "divisão, exercícios nem periodização.\n\nANAMNESE:\n" +
     anamneseText(state);
   return call(config, prompt, 700);
+}
+
+/**
+ * Envia um bloco de conteúdo (texto + documento/PDF) com um system prompt
+ * específico. Usado pela importação de anamnese a partir de PDF.
+ */
+type ContentBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "document";
+      source: { type: "base64"; media_type: "application/pdf"; data: string };
+    };
+
+async function callWithContent(
+  config: AiConfig,
+  system: string,
+  content: ContentBlock[],
+  maxTokens: number,
+): Promise<string> {
+  const res = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": config.key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: config.model || DEFAULT_AI_MODEL,
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: "user", content }],
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`API ${res.status}: ${t.slice(0, 200)}`);
+  }
+  const data: MessagesResponse = await res.json();
+  const block = (data.content ?? []).find((b) => b.type === "text");
+  return block?.text?.trim() ?? "";
+}
+
+/** Lista os campos da anamnese (com opções válidas) para guiar a extração. */
+function anamneseFieldGuide(): string {
+  const lines: string[] = [];
+  for (const section of ANAMNESE_SECTIONS) {
+    for (const f of section.fields) {
+      let line = `- "${f.id}" (${f.label})`;
+      if (f.type === "select" && f.options?.length) {
+        line += ` — use EXATAMENTE uma destas opções: ${f.options.join(" | ")}`;
+      } else if (f.type === "number") {
+        line += " — apenas o número";
+      }
+      lines.push(line);
+    }
+  }
+  return lines.join("\n");
+}
+
+const ANAMNESE_FIELD_IDS = new Set<string>(
+  ANAMNESE_SECTIONS.flatMap((s) => s.fields.map((f) => f.id)),
+);
+
+/** Extrai um objeto JSON de uma resposta, tolerando cercas de código e texto ao redor. */
+function extractJsonObject(text: string): Record<string, unknown> {
+  let t = text.trim();
+  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) t = fenced[1].trim();
+  const start = t.indexOf("{");
+  const end = t.lastIndexOf("}");
+  if (start !== -1 && end > start) t = t.slice(start, end + 1);
+  const parsed = JSON.parse(t) as unknown;
+  if (!parsed || typeof parsed !== "object") return {};
+  return parsed as Record<string, unknown>;
+}
+
+const EXTRACT_SYSTEM =
+  "Você é um assistente que extrai dados estruturados de documentos de anamnese " +
+  "e avaliações físicas para um Personal Trainer. Seja fiel ao documento: nunca " +
+  "invente informações que não estejam escritas nele. Não decide estratégia de " +
+  "treino — apenas organiza o que já está no PDF.";
+
+/**
+ * Lê um PDF de anamnese (em base64, sem o prefixo data:) e devolve os campos da
+ * ficha que puderam ser identificados. O treinador sempre revisa o resultado.
+ */
+export async function aiExtractAnamnese(
+  config: AiConfig,
+  pdfBase64: string,
+): Promise<Partial<Anamnese>> {
+  const prompt =
+    "Este PDF é a anamnese/avaliação de um aluno. Extraia as informações e " +
+    "preencha os campos listados abaixo. Responda APENAS com um objeto JSON " +
+    "válido (sem texto antes ou depois, sem cercas de código), mapeando o id do " +
+    "campo para o valor extraído. Inclua somente os campos que você conseguir " +
+    "determinar a partir do documento; omita os demais. Para campos com opções, " +
+    "use exatamente uma das opções indicadas. Não invente nada.\n\nCAMPOS:\n" +
+    anamneseFieldGuide();
+
+  const raw = await callWithContent(
+    config,
+    EXTRACT_SYSTEM,
+    [
+      { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
+      { type: "text", text: prompt },
+    ],
+    3000,
+  );
+
+  const parsed = extractJsonObject(raw);
+  const out: Partial<Anamnese> = {};
+  for (const [k, v] of Object.entries(parsed)) {
+    if (!ANAMNESE_FIELD_IDS.has(k) || v == null) continue;
+    const value = String(v).trim();
+    if (value) out[k as keyof Anamnese] = value;
+  }
+  return out;
 }
 
 /** Reescreve uma seção mantendo as decisões, melhorando a voz do Montinho. */
