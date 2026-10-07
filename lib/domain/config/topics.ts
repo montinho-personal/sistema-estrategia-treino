@@ -1,5 +1,6 @@
 import type { Topic } from "../types";
 import type { Answers } from "../schema/answers";
+import { DIVISAO_DETAILS, INTENSIDADE_DETAILS, INTENSIDADE_HINTS, PRIORIDADE_DETAILS } from "./option-details";
 
 /** Modelo de periodização preferido do treinador (aparece primeiro, com selo). */
 export const PERIODIZACAO_PADRAO =
@@ -80,6 +81,7 @@ export const TOPICS: Topic[] = [
         placeholder: "Ex.: Mesociclo de especialização de 3 semanas",
         options: Object.keys(PRIORIDADE_ESTRATEGIAS),
         hints: PRIORIDADE_ESTRATEGIAS,
+        details: PRIORIDADE_DETAILS,
         condition: (_a, ans) => prioridadeGrupos(ans).length > 0,
       },
     ],
@@ -102,6 +104,7 @@ export const TOPICS: Topic[] = [
           ABCD: "4 treinos diferentes · cada grupo 1–2x/semana",
           ABCDE: "5 treinos, um grupo por dia · cada grupo 1x/semana",
         },
+        details: DIVISAO_DETAILS,
       },
       { id: "divisao_porque", prompt: "Por que escolheu essa divisão?", type: "textarea", why: true, optional: true },
       { id: "divisao_vantagens", prompt: "Quais vantagens ela oferece para este aluno?", type: "textarea", optional: true, label: "Vantagens para você" },
@@ -116,6 +119,8 @@ export const TOPICS: Topic[] = [
         id: "intensidade_estrategia", prompt: "Qual estratégia de intensidade será utilizada?", type: "choice", allowOther: true,
         placeholder: "Escreva a estratégia",
         options: ["Pirâmide crescente", "Pirâmide decrescente", "Carga fixa", "Dupla progressão", "Top Set", "Back Off", "Cluster"],
+        hints: INTENSIDADE_HINTS,
+        details: INTENSIDADE_DETAILS,
       },
       { id: "intensidade_porque", prompt: "Por que escolheu essa estratégia?", type: "textarea", why: true, optional: true },
       {
