@@ -57,3 +57,16 @@ describe("entrevista mínima com opções", () => {
     expect(obj.find((x) => x.id === "progressao")!.body).toMatch(/Progressão dupla/);
   });
 });
+
+describe("explicações 'Quando usar e vantagens'", () => {
+  it("toda opção das perguntas com explicação tem o seu texto", () => {
+    const ids = ["periodizacao_fases", "divisao_qual", "intensidade_estrategia", "prioridade_estrategias"];
+    for (const id of ids) {
+      const q = TOPICS.flatMap((t) => t.questions).find((x) => x.id === id)!;
+      for (const opt of q.options ?? []) {
+        expect(q.details?.[opt], `${id}: "${opt}" sem explicação`).toBeDefined();
+        expect(q.details![opt].vantagens.length).toBeGreaterThan(0);
+      }
+    }
+  });
+});
