@@ -46,7 +46,7 @@ export const CONSISTENCY_RULES: ConsistencyRule[] = [
       : undefined,
   (a, ans) => {
     const d = toInt(a.diasSemana);
-    return d && d <= 3 && /(abcde|5x|6x|ppl|push.?pull.?legs|a-?b-?c-?d-?e)/i.test(String(ans.divisao_qual ?? ""))
+    return d && d <= 3 && /(abcde|5x|6x|ppl|push\W*pull\W*legs|a-?b-?c-?d-?e)/i.test(String(ans.divisao_qual ?? ""))
       ? { id: "c_freq_divisao", topic: "divisao", text: `A divisão parece pedir frequência alta, mas a disponibilidade é de ${d} dia(s)/semana. Gostaria de rever ou manter?` }
       : undefined;
   },

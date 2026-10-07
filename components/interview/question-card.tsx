@@ -35,26 +35,49 @@ function answerToText(value: AnswerValue | undefined): string {
 
 const ADAPTIVE_HINT = "✦ pergunta adaptada";
 
+/** Objetivo da anamnese → opção equivalente da entrevista. */
+const OBJETIVO_ANAMNESE: Record<string, string> = {
+  Performance: "Força e performance",
+  "Competição": "Preparação para competição",
+};
+
+/** Opção sugerida a partir da anamnese (hoje: o objetivo principal). */
+function suggestedOption(question: Question, state: StrategyState): string | undefined {
+  if (question.id !== "objetivo_principal") return undefined;
+  const o = String(state.anamnese.objetivo ?? "").trim();
+  if (!o) return undefined;
+  const opt = OBJETIVO_ANAMNESE[o] ?? o;
+  return question.options?.includes(opt) ? opt : undefined;
+}
+
 /** Uma pergunta complementar (porquê, opcional ou adaptativa) dentro do expansor. */
 function ExtraQuestion({
   state,
   q,
   topic,
   onAnswerId,
+  inline = false,
 }: {
   state: StrategyState;
   q: Question;
   topic: Topic;
   onAnswerId: (id: string, value: AnswerValue) => void;
+  /** Exibido direto no card (pergunta em destaque), fora do "Aprofundar". */
+  inline?: boolean;
 }) {
   const isWhy = Boolean(q.why);
   return (
-    <div className="rounded-lg border border-border bg-surface p-3.5">
-      <Label className="flex items-start gap-2 text-[13.5px]">
-        {isWhy && <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-gold" />}
-        {q.label ?? q.prompt}
-      </Label>
-      <AnswerControl question={q} value={state.answers[q.id]} onChange={(v) => onAnswerId(q.id, v)} />
+    <div className={inline ? "mt-6 border-t border-border pt-5" : "rounded-lg border border-border bg-surface p-3.5"}>
+      {inline ? (
+        <p className="text-[16px] font-semibold tracking-[-0.01em]">{q.prompt}</p>
+      ) : (
+        <Label className="flex items-start gap-2 text-[13.5px]">
+          {isWhy && <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-gold" />}
+          {q.label ?? q.prompt}
+        </Label>
+      )}
+      {q.hint && <p className="mt-1 text-[12.5px] text-muted-foreground">{q.hint}</p>}
+      <AnswerControl key={q.id} question={q} value={state.answers[q.id]} onChange={(v) => onAnswerId(q.id, v)} />
       {isWhy && (
         <AnswerSuggestions
           question={q.prompt}
@@ -111,8 +134,11 @@ export function QuestionCard({
 }) {
   const isWhy = Boolean(question.why);
   const kbEntries = knowledgeForTopic(state, topic.id);
-  const extras = extraQuestionsForTopic(topic, state);
+  const allExtras = extraQuestionsForTopic(topic, state);
+  const inlineExtras = allExtras.filter((q) => q.inline);
+  const extras = allExtras.filter((q) => !q.inline);
   const extrasAnswered = extras.filter((q) => has(state.answers[q.id])).length;
+  const suggested = suggestedOption(question, state);
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-md sm:p-8">
@@ -147,8 +173,14 @@ export function QuestionCard({
 
       <div className="mt-5">
         <Label>{isWhy ? "O porquê (será explicado ao aluno em linguagem simples)" : "Sua resposta"}</Label>
-        <AnswerControl question={question} value={state.answers[question.id]} onChange={onAnswer} />
-        {isWhy && (
+        <AnswerControl
+          key={question.id}
+          question={question}
+          value={state.answers[question.id]}
+          onChange={onAnswer}
+          suggested={suggested}
+        />
+        {(isWhy || question.suggest) && (
           <AnswerSuggestions
             question={question.prompt}
             topicName={topic.name}
@@ -164,6 +196,10 @@ export function QuestionCard({
           </div>
         )}
       </div>
+
+      {inlineExtras.map((q) => (
+        <ExtraQuestion key={q.id} state={state} q={q} topic={topic} onAnswerId={onAnswerId} inline />
+      ))}
 
       {extras.length > 0 && (
         <details className="group mt-5 overflow-hidden rounded-xl border border-dashed border-border bg-background/40">
