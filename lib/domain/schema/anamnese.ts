@@ -12,6 +12,7 @@ export const AnamneseSchema = z
     sexo: z.string(),
     modalidade: z.string(),
     objetivo: z.string(),
+    prioridadeMuscular: z.string(),
     experiencia: z.string(),
     historico: z.string(),
     diasSemana: z.string(),

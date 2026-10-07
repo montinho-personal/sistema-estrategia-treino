@@ -76,7 +76,7 @@ export const TOPICS: Topic[] = [
       {
         id: "prioridade_estrategias", prompt: "Como vamos priorizar esses grupos?", type: "multi", allowOther: true, optional: true, inline: true,
         label: "Estratégias de priorização",
-        hint: "As táticas mais usadas pelos grandes treinadores (Israetel/RP, Schoenfeld, Helms, Rambod…). Marque quantas quiser.",
+        hint: "As táticas mais usadas pelos grandes treinadores (Israetel/RP, Schoenfeld, Helms, Rambod…).",
         placeholder: "Ex.: Mesociclo de especialização de 3 semanas",
         options: Object.keys(PRIORIDADE_ESTRATEGIAS),
         hints: PRIORIDADE_ESTRATEGIAS,

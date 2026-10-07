@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -12,6 +13,8 @@ import {
   progress,
   consistency,
   knowledgeForTopic,
+  missingPrefill,
+  essentialItems,
 } from "@/lib/domain";
 import { ADAPTIVE } from "@/lib/domain/config";
 import { low } from "@/lib/domain/util";
@@ -31,6 +34,19 @@ export function InterviewWorkspace() {
   const acknowledge = useStrategyStore((s) => s.acknowledge);
   const prefs = usePreferencesStore((s) => s.prefs);
   const learnPreference = usePreferencesStore((s) => s.learnPreference);
+  const anamnese = useStrategyStore((s) => s.anamnese);
+  const patch = useStrategyStore((s) => s.patch);
+
+  // O que já está na anamnese chega marcado na entrevista (sem sobrescrever
+  // respostas do treinador). Se a entrevista ainda não começou, ela abre no
+  // tópico 1 para o treinador conferir o que veio preenchido.
+  useEffect(() => {
+    const st = useStrategyStore.getState();
+    const missing = missingPrefill(st);
+    if (Object.keys(missing).length === 0) return;
+    const first = essentialItems(st)[0]?.q.id ?? null;
+    patch({ answers: { ...st.answers, ...missing }, currentQ: st.currentQ ?? first });
+  }, [anamnese, patch]);
 
   const curId = currentId(state);
   const item = curId ? itemById(state, curId) : null;

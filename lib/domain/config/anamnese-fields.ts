@@ -18,6 +18,7 @@ export const ANAMNESE_SECTIONS: AnamneseSectionDef[] = [
     title: "Objetivo & experiência",
     fields: [
       { id: "objetivo", label: "Objetivo principal", type: "select", options: ["Hipertrofia", "Emagrecimento", "Performance", "Saúde e qualidade de vida", "Reabilitação", "Competição"] },
+      { id: "prioridadeMuscular", label: "Grupos musculares que quer priorizar", type: "text", placeholder: "Ex.: glúteos e costas" },
       { id: "experiencia", label: "Experiência de treino", type: "select", options: ["Iniciante", "Intermediário", "Avançado", "Atleta"] },
       { id: "historico", label: "Histórico de treino", type: "textarea", placeholder: "Há quanto tempo treina, o que já fez, resultados anteriores..." },
     ],
