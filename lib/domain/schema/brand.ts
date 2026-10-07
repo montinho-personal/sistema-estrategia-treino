@@ -12,6 +12,14 @@ export const BrandSchema = z.object({
 
 export type Brand = z.infer<typeof BrandSchema>;
 
+/** Logo oficial do Montinho — usado sempre que nenhum outro foi enviado. */
+export const DEFAULT_LOGO = "/brand/montinho-logo.png";
+
+/** Logo a exibir: o enviado pelo treinador ou o oficial. */
+export function brandLogo(brand: Pick<Brand, "logo">): string {
+  return brand.logo?.trim() ? brand.logo : DEFAULT_LOGO;
+}
+
 export const DEFAULT_BRAND: Brand = {
   nome: "Montinho Personal Trainer",
   whatsapp: "",

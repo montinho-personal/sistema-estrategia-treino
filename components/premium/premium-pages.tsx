@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
-import type { Brand } from "@/lib/domain/schema/brand";
+import { brandLogo, type Brand } from "@/lib/domain/schema/brand";
 import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal, parseRichBlocks, inlineSegments } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
@@ -10,15 +10,12 @@ import { whatsappLink, instagramLink } from "@/lib/premium/links";
 import { PgIcon, PgCheck } from "./premium-icons";
 import { QrBlock } from "./qr-block";
 
-/** Marca gráfica: o logo do treinador (se enviado) ou o "M" premium padrão. */
+/** Marca gráfica: o logo enviado pelo treinador ou o logo oficial do Montinho. */
 function PgMark({ brand, variant }: { brand: Brand; variant: "cover" | "sign" }) {
-  if (has(brand.logo)) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element -- logo do treinador (data URL), embutido também na exportação HTML
-      <img src={brand.logo} alt={brand.nome} className={`pg-logo pg-logo--${variant}`} />
-    );
-  }
-  return <span className="pg-mark">M</span>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- logo (data URL ou /brand), embutido também na exportação HTML
+    <img src={brandLogo(brand)} alt={brand.nome} className={`pg-logo pg-logo--${variant}`} />
+  );
 }
 
 function PageFoot({ brand, n, total }: { brand: Brand; n: number; total: number }) {
@@ -92,7 +89,6 @@ export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand
       <div className="pg-cover__top">
         <div className="pg-brand">
           <PgMark brand={brand} variant="cover" />
-          {!has(brand.logo) && <span>{brand.nome}</span>}
         </div>
         <div className="pg-cover__date">{date}</div>
       </div>
