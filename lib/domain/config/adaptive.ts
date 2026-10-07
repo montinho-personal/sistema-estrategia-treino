@@ -27,7 +27,7 @@ export const ADAPTIVE: AdaptiveQuestion[] = [
     prompt: "Como será a estratégia de gasto energético (déficit, NEAT, cardio) neste ciclo?",
   },
   {
-    id: "adapt_hipertrofia", topic: "intensidade", label: "Volume de treino", optional: true, type: "textarea",
+    id: "adapt_hipertrofia", topic: "intensidade", label: "Volume de treino", optional: true, inline: true, type: "textarea",
     when: (a) => low(a.objetivo) === "hipertrofia",
     prompt: "Qual será o volume semanal (séries por grupo) e como ele progride ao longo do ciclo?",
   },

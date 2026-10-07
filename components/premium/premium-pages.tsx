@@ -5,6 +5,7 @@ import type { Brand } from "@/lib/domain/schema/brand";
 import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal, parseRichBlocks, inlineSegments } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
+import { prioridadeGrupos } from "@/lib/domain/config";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
 import { PgIcon, PgCheck } from "./premium-icons";
 import { QrBlock } from "./qr-block";
@@ -162,10 +163,21 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
   const steps = timelineSteps(x.periodizacao_fases);
   const vlines = volumeLines(state);
   const vtot = volumeTotal(state);
+  const grupos = prioridadeGrupos(x);
+  const taticas = Array.isArray(x.prioridade_estrategias) ? x.prioridade_estrategias : [];
   return (
     <section className="premium__page">
       <h2 className="pg-h2">Estratégia</h2>
       <div className="pg-blocks">
+        {grupos.length > 0 && (
+          <Block
+            title="Prioridade muscular"
+            icon="star"
+            value={grupos.join(", ")}
+            detail={taticas.length ? "Como vamos priorizar esses grupos:" : undefined}
+            badges={taticas}
+          />
+        )}
         <Block
           title="Divisão semanal"
           icon="calendar"

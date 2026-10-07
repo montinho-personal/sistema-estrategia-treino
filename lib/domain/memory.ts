@@ -47,7 +47,8 @@ export function buildMemory(state: StrategyState): MemorySection[] {
     ] },
     { emoji: "🎯", title: "Objetivo", editTopic: "objetivo", rows: [
       ["Objetivo principal", val(x.objetivo_principal)], ["Objetivos secundários", val(x.objetivo_secundario)],
-      ["Prioridades musculares", val(x.objetivo_prioridade)], ["Prazo", val(x.objetivo_prazo)],
+      ["Prioridades musculares", val(x.objetivo_prioridade)], ["Estratégias de priorização", val(x.prioridade_estrategias)],
+      ["Prazo", val(x.objetivo_prazo)],
       ["Motivo", val(x.objetivo_porque)],
     ] },
     { emoji: "🧠", title: "Filosofia", editTopic: "filosofia", rows: [

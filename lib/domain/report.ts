@@ -1,4 +1,4 @@
-import { TOPICS, ANAMNESE_RULES } from "./config";
+import { TOPICS, ANAMNESE_RULES, SEM_PRIORIDADE, PRIORIDADE_ESTRATEGIAS } from "./config";
 import { requiredMissing } from "./interview";
 import { personalLead } from "./voice";
 import { knowledgeForTopic, explainKnowledge, kbById } from "./knowledge";
@@ -18,6 +18,21 @@ function sentence(s: unknown): string {
 }
 function joinP(parts: string[]): string {
   return parts.filter(has).join("\n\n");
+}
+
+/** Itens de uma resposta (lista de opções ou texto único). */
+function items(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
+  return has(v) ? [val(v)] : [];
+}
+/** "a, b e c" — itens em minúscula inicial, para caber numa frase. */
+function humanList(list: string[]): string {
+  const xs = list.map((x) => lowerFirst(x));
+  return xs.length <= 1 ? (xs[0] ?? "") : `${xs.slice(0, -1).join(", ")} e ${xs[xs.length - 1]}`;
+}
+/** Lista de verificação ("✓ item") — vira lista no PDF e no WhatsApp. */
+function checklist(list: string[]): string {
+  return list.map((x) => `✓ ${x}`).join("\n");
 }
 function kb(state: StrategyState, topicId: string, max = 2): string[] {
   return knowledgeForTopic(state, topicId)
@@ -129,8 +144,19 @@ function objetivoSection(state: StrategyState): ReportSection {
   const A = state.answers, a = state.anamnese;
   const p: string[] = [];
   if (has(A.objetivo_principal)) p.push(sentence(`${personalLead("objetivo")} ${val(A.objetivo_principal)}`));
-  if (has(A.objetivo_secundario)) p.push(`Como objetivo secundário, também vamos trabalhar ${sentence(A.objetivo_secundario)}`);
-  if (has(A.objetivo_prioridade)) p.push(`Com atenção especial para ${sentence(A.objetivo_prioridade)}`);
+  if (has(A.objetivo_secundario)) p.push(`Como objetivo secundário, também vamos trabalhar ${sentence(humanList(items(A.objetivo_secundario)))}`);
+  const prioridade = items(A.objetivo_prioridade);
+  const grupos = prioridade.filter((g) => g !== SEM_PRIORIDADE);
+  if (grupos.length) {
+    p.push(`Com atenção especial para ${sentence(humanList(grupos))}`);
+    const taticas = items(A.prioridade_estrategias);
+    if (taticas.length) {
+      p.push("Para dar prioridade a esses grupos, vou usar estas estratégias:");
+      p.push(checklist(taticas.map((t) => (PRIORIDADE_ESTRATEGIAS[t] ? `${t} — ${PRIORIDADE_ESTRATEGIAS[t]}` : t))));
+    }
+  } else if (prioridade.includes(SEM_PRIORIDADE)) {
+    p.push("Neste ciclo, vamos desenvolver todos os grupos musculares em equilíbrio, sem uma prioridade específica.");
+  }
   if (has(A.objetivo_prazo)) p.push(`A previsão para esta etapa é de ${sentence(A.objetivo_prazo)}`);
   if (has(A.objetivo_porque)) p.push(`Escolhi esse foco porque ${sentence(lowerFirst(A.objetivo_porque))}`);
   p.push(comoAjuda(a.objetivo));
@@ -146,15 +172,23 @@ function estrategiaSection(state: StrategyState): ReportSection {
   const p: string[] = [];
   if (has(A.filosofia_frase)) p.push(sentence(`${personalLead("filosofia")} “${val(A.filosofia_frase)}”`));
   p.push("Cada escolha do seu treino tem um motivo — nada aqui é por acaso. Abaixo eu te explico a lógica de cada parte.");
-  const ex: string[] = [];
-  if (has(A.exercicios_logica)) ex.push(`Na seleção dos exercícios, ${lowerFirst(val(A.exercicios_logica))}`);
-  if (has(A.exercicios_prioridade)) ex.push(`com prioridade para ${val(A.exercicios_prioridade)}`);
-  if (has(A.exercicios_proibido)) ex.push(`e evitando ${val(A.exercicios_proibido)}`);
-  if (ex.length) p.push(sentence(ex.join(", ")));
+  if (Array.isArray(A.exercicios_logica) && A.exercicios_logica.length) {
+    p.push(personalLead("exercicios") ?? "Na seleção dos seus exercícios, segui esta lógica:");
+    p.push(checklist(items(A.exercicios_logica)));
+    if (has(A.exercicios_obrigatorio)) p.push(sentence(`Os exercícios-chave do seu plano são: ${val(A.exercicios_obrigatorio)}`));
+    if (has(A.exercicios_proibido)) p.push(sentence(`E vamos evitar ${val(A.exercicios_proibido)}`));
+  } else {
+    const ex: string[] = [];
+    if (has(A.exercicios_logica)) ex.push(`Na seleção dos exercícios, ${lowerFirst(val(A.exercicios_logica))}`);
+    if (has(A.exercicios_prioridade)) ex.push(`com prioridade para ${val(A.exercicios_prioridade)}`);
+    if (has(A.exercicios_proibido)) ex.push(`e evitando ${val(A.exercicios_proibido)}`);
+    if (ex.length) p.push(sentence(ex.join(", ")));
+  }
   if (has(A.adapt_dor)) p.push(sentence(A.adapt_dor));
   if (has(A.adapt_reab)) p.push(sentence(A.adapt_reab));
   if (val(A.cardio_have) === "Sim" || has(A.cardio_detalhe)) {
-    const c = `Sobre o trabalho aeróbico, ${has(A.cardio_detalhe) ? lowerFirst(val(A.cardio_detalhe)) : "ele entra de forma estratégica no seu plano"}`;
+    const det = Array.isArray(A.cardio_detalhe) ? humanList(items(A.cardio_detalhe)) : lowerFirst(val(A.cardio_detalhe));
+    const c = `Sobre o trabalho aeróbico, ${det || "ele entra de forma estratégica no seu plano"}`;
     p.push(sentence(c));
     if (has(A.adapt_emagrecimento)) p.push(sentence(A.adapt_emagrecimento));
   }
@@ -212,7 +246,12 @@ function mobilidadeSection(state: StrategyState): ReportSection {
 function progressaoSection(state: StrategyState): ReportSection {
   const A = state.answers;
   const p: string[] = [];
-  if (has(A.progressao_como)) p.push(sentence(`${personalLead("progressao")} ${val(A.progressao_como)}`));
+  if (Array.isArray(A.progressao_como) && A.progressao_como.length) {
+    p.push(personalLead("progressao") ?? "A progressão vai seguir estas regras:");
+    p.push(checklist(items(A.progressao_como)));
+  } else if (has(A.progressao_como)) {
+    p.push(sentence(`${personalLead("progressao")} ${val(A.progressao_como)}`));
+  }
   if (has(A.progressao_porque)) p.push(`Pensei assim porque ${sentence(lowerFirst(A.progressao_porque))}`);
   p.push("O combinado é simples: a gente só avança quando você domina a etapa atual. Assim sua evolução é segura e constante, e você sempre sabe qual é o próximo passo.");
   return { id: "progressao", title: "As regras da sua progressão", body: joinP(p) };
@@ -296,7 +335,7 @@ export interface Completion {
 export function completion(state: StrategyState): Completion {
   const missing = requiredMissing(state).length;
   let reqPerTopic = 0;
-  for (const t of TOPICS) reqPerTopic += (t.mainQ ? 1 : 0) + (t.whyQ ? 1 : 0);
+  for (const t of TOPICS) reqPerTopic += t.mainQ ? 1 : 0;
   const done = reqPerTopic - missing;
   return {
     done,

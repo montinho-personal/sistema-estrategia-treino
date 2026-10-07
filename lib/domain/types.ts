@@ -31,6 +31,14 @@ export interface Question {
   label?: string;
   hint?: string;
   why?: boolean;
+  /** choice/multi: mostra a opção "Outra" com campo de texto livre. */
+  allowOther?: boolean;
+  /** choice/multi: descrição curta por opção (exibe as opções em cartões). */
+  hints?: Record<string, string>;
+  /** Complemento exibido direto no card (fora do "Aprofundar"). */
+  inline?: boolean;
+  /** Mostra sugestões de resposta da IA abaixo do campo. */
+  suggest?: boolean;
   condition?: (a: Anamnese, ans: Answers) => boolean;
 }
 
