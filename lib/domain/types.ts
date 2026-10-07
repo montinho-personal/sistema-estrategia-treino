@@ -21,6 +21,12 @@ export interface AnamneseSectionDef {
 /* ---- Entrevista ---- */
 export type QuestionType = "text" | "textarea" | "choice" | "multi";
 
+/** Explicação de uma opção: quando usar e quais as vantagens. */
+export interface OptionDetail {
+  quando: string;
+  vantagens: string[];
+}
+
 export interface Question {
   id: string;
   prompt: string;
@@ -35,6 +41,10 @@ export interface Question {
   allowOther?: boolean;
   /** choice/multi: descrição curta por opção (exibe as opções em cartões). */
   hints?: Record<string, string>;
+  /** choice/multi: explicação expansível por opção ("Quando usar e vantagens"). */
+  details?: Record<string, OptionDetail>;
+  /** choice/multi: opção preferida do treinador — ganha o selo "seu padrão". */
+  featured?: string;
   /** Complemento exibido direto no card (fora do "Aprofundar"). */
   inline?: boolean;
   /** Mostra sugestões de resposta da IA abaixo do campo. */

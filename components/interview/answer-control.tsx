@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, ChevronDown, Info } from "lucide-react";
 
-import type { Question } from "@/lib/domain/types";
+import type { OptionDetail, Question } from "@/lib/domain/types";
 import type { AnswerValue } from "@/lib/domain/schema/answers";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+/** Opção destacada e o selo exibido ao lado dela. */
+export interface Suggestion {
+  value: string;
+  label: string;
+}
 
 /** Opções longas (frases, fases) ficam melhores em cartões do que em chips. */
 const CARD_THRESHOLD = 40;
@@ -22,7 +28,7 @@ export function AnswerControl({
   value: AnswerValue | undefined;
   onChange: (value: AnswerValue) => void;
   /** Opção sugerida (ex.: vinda da anamnese) — ganha um destaque discreto. */
-  suggested?: string;
+  suggested?: Suggestion;
 }) {
   if (question.type === "choice" || question.type === "multi") {
     return <OptionsControl question={question} value={value} onChange={onChange} suggested={suggested} />;
@@ -52,9 +58,12 @@ function OptionsControl({
   question: Question;
   value: AnswerValue | undefined;
   onChange: (value: AnswerValue) => void;
-  suggested?: string;
+  suggested?: Suggestion;
 }) {
   const opts = question.options ?? [];
+  /** Selo da opção: "seu padrão" (preferida do treinador) ou a sugestão recebida. */
+  const markOf = (opt: string) =>
+    question.featured === opt ? "seu padrão" : suggested?.value === opt ? suggested.label : undefined;
   const multi = question.type === "multi";
   const arr = Array.isArray(value) ? value : typeof value === "string" && value !== "" ? [value] : [];
   const selected = arr.filter((v) => opts.includes(v));
@@ -109,9 +118,10 @@ function OptionsControl({
               key={opt}
               label={opt}
               hint={question.hints?.[opt]}
+              detail={question.details?.[opt]}
               on={selected.includes(opt)}
               multi={multi}
-              suggested={suggested === opt}
+              mark={markOf(opt)}
               onClick={() => toggle(opt)}
             />
           ))}
@@ -131,7 +141,7 @@ function OptionsControl({
         <>
           <div className="flex flex-wrap gap-2">
             {opts.map((opt) => (
-              <Chip key={opt} on={selected.includes(opt)} suggested={suggested === opt} onClick={() => toggle(opt)}>
+              <Chip key={opt} on={selected.includes(opt)} mark={markOf(opt)} onClick={() => toggle(opt)}>
                 {opt}
               </Chip>
             ))}
@@ -150,12 +160,12 @@ function OptionsControl({
 
 function Chip({
   on,
-  suggested,
+  mark,
   onClick,
   children,
 }: {
   on: boolean;
-  suggested?: boolean;
+  mark?: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
@@ -168,13 +178,13 @@ function Chip({
         "rounded-full border px-3.5 py-2 text-[13.5px] font-medium transition-colors",
         on
           ? "border-transparent bg-primary text-primary-foreground"
-          : suggested
+          : mark
             ? "border-gold/60 bg-gold-soft text-foreground"
             : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground",
       )}
     >
       {children}
-      {suggested && !on && <span className="ml-1.5 text-[11px] font-semibold text-gold">anamnese</span>}
+      {mark && !on && <span className="ml-1.5 text-[11px] font-semibold text-gold">{mark}</span>}
     </button>
   );
 }
@@ -182,20 +192,23 @@ function Chip({
 function OptionCard({
   label,
   hint,
+  detail,
   on,
   multi,
-  suggested,
+  mark,
   onClick,
   children,
 }: {
   label: string;
   hint?: string;
+  detail?: OptionDetail;
   on: boolean;
   multi: boolean;
-  suggested?: boolean;
+  mark?: string;
   onClick: () => void;
   children?: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
     <div
       role="button"
@@ -210,7 +223,7 @@ function OptionCard({
       }}
       className={cn(
         "flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 text-left transition-colors",
-        on ? "border-gold bg-gold-soft" : suggested ? "border-gold/50" : "border-border hover:border-gold/60",
+        on ? "border-gold bg-gold-soft" : mark ? "border-gold/50" : "border-border hover:border-gold/60",
       )}
     >
       <span
@@ -224,10 +237,47 @@ function OptionCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[14px] font-medium leading-snug">
+          {mark && (
+            <span className="mr-1.5 inline-block rounded-full bg-gold px-2 py-0.5 align-[2px] text-[10.5px] font-semibold uppercase tracking-[0.04em] text-white">
+              {mark}
+            </span>
+          )}
           {label}
-          {suggested && !on && <span className="ml-1.5 text-[11px] font-semibold text-gold">anamnese</span>}
         </span>
         {hint && <span className="mt-0.5 block text-[12.5px] leading-snug text-muted-foreground">{hint}</span>}
+        {detail && (
+          <>
+            <button
+              type="button"
+              aria-expanded={open}
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen((v) => !v);
+              }}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-1 text-[12px] font-medium text-foreground hover:border-gold/60"
+            >
+              <Info className="size-3.5 text-gold" />
+              Quando usar e vantagens
+              <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
+            </button>
+            {open && (
+              <span
+                className="mt-2 block cursor-auto rounded-lg border border-border bg-surface p-3 text-[12.5px] leading-relaxed"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.06em] text-gold">Quando usar</span>
+                <span className="mt-0.5 block text-foreground">{detail.quando}</span>
+                <span className="mt-2.5 block text-[11px] font-semibold uppercase tracking-[0.06em] text-gold">Vantagens</span>
+                {detail.vantagens.map((v) => (
+                  <span key={v} className="mt-1 flex gap-1.5 text-foreground">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-gold" strokeWidth={3} />
+                    {v}
+                  </span>
+                ))}
+              </span>
+            )}
+          </>
+        )}
         {children}
       </span>
     </div>
