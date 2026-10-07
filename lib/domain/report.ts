@@ -126,6 +126,7 @@ export function studentDiagnosis(state: StrategyState): string {
 function comoAjuda(objetivo: unknown): string {
   const o = low(objetivo);
   if (o === "hipertrofia") return "A musculação é o principal caminho para construir massa muscular de forma consistente e visível.";
+  if (o === "recomposição corporal") return "A musculação é o que permite ganhar músculo enquanto você perde gordura — ela é o coração da recomposição corporal.";
   if (o === "emagrecimento") return "A musculação acelera seu metabolismo e preserva seus músculos enquanto você perde gordura — é o que garante um emagrecimento com qualidade.";
   if (o === "performance" || o === "competição") return "A musculação constrói a base de força e resistência que a sua modalidade exige.";
   if (o === "saúde e qualidade de vida") return "A musculação melhora sua disposição, sua postura e sua saúde no dia a dia.";
@@ -312,6 +313,8 @@ export function reportClosing(state: StrategyState): string {
   const exp = low(a.experiencia);
   if (exp === "atleta" || o === "performance" || o === "competição")
     return "Cada detalhe deste plano foi pensado para elevar o seu rendimento. Confie no processo, execute com qualidade, e vamos buscar juntos a sua melhor performance.";
+  if (o === "recomposição corporal")
+    return "Recompor o corpo é construir músculo e perder gordura ao mesmo tempo — e isso pede constância, não pressa. A balança pode mudar devagar, mas o espelho e as medidas vão mostrar a evolução. Confie no processo que eu ajusto tudo com você no caminho.";
   if (o === "emagrecimento")
     return "Emagrecer com saúde é sobre consistência, não pressa. Não precisa ser perfeito — precisa ser constante. Faça a sua parte nos treinos e no dia a dia, que os resultados vão aparecer, e eu estarei com você em cada etapa.";
   if (idade && idade >= 60)

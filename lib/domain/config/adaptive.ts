@@ -23,12 +23,12 @@ export const ADAPTIVE: AdaptiveQuestion[] = [
   },
   {
     id: "adapt_emagrecimento", topic: "cardio", label: "Gasto energético", optional: true, type: "textarea",
-    when: (a) => low(a.objetivo) === "emagrecimento",
+    when: (a) => ["emagrecimento", "recomposição corporal"].includes(low(a.objetivo)),
     prompt: "Como será a estratégia de gasto energético (déficit, NEAT, cardio) neste ciclo?",
   },
   {
     id: "adapt_hipertrofia", topic: "intensidade", label: "Volume de treino", optional: true, inline: true, type: "textarea",
-    when: (a) => low(a.objetivo) === "hipertrofia",
+    when: (a) => ["hipertrofia", "recomposição corporal"].includes(low(a.objetivo)),
     prompt: "Qual será o volume semanal (séries por grupo) e como ele progride ao longo do ciclo?",
   },
   {

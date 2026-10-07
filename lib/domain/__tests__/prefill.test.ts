@@ -36,3 +36,16 @@ describe("pré-preenchimento pela anamnese", () => {
     expect(isFromAnamnese(makeState(anam, { objetivo_prioridade: ["Costas", "Peito"] }), "objetivo_prioridade")).toBe(false);
   });
 });
+
+describe("recomposição corporal", () => {
+  it("vem marcada na entrevista e ativa volume + gasto energético", async () => {
+    const { plan } = await import("../interview");
+    const { reportClosing } = await import("../report");
+    const s = makeState({ objetivo: "Recomposição corporal" });
+    expect(anamnesePrefill(s).objetivo_principal).toBe("Recomposição corporal");
+    const ids = plan(s).map((it) => it.q.id);
+    expect(ids).toContain("adapt_hipertrofia");
+    expect(ids).toContain("adapt_emagrecimento");
+    expect(reportClosing(s)).toMatch(/recompor/i);
+  });
+});
