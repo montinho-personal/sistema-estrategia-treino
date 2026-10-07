@@ -449,7 +449,9 @@ const WA_EMOJI: Record<string, string> = {
 };
 
 export function reportWhatsapp(state: StrategyState): string {
-  const lines: string[] = ["*Sua estratégia de treino* 💪", "", toWhatsappText(reportIntro(state))];
+  const titulo = val(state.anamnese.tituloPlano);
+  const header = titulo ? `📋 *${titulo}*` : "*Sua estratégia de treino* 💪";
+  const lines: string[] = [header, "", toWhatsappText(reportIntro(state))];
   for (const s of reportSections(state)) {
     lines.push("");
     lines.push(`*${WA_EMOJI[s.id] ? `${WA_EMOJI[s.id]} ` : ""}${s.title}*`);
