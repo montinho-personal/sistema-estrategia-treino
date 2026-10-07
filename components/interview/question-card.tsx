@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, CornerDownRight } from "lucide-react";
 import {
   questionsForTopic,
   extraQuestionsForTopic,
+  isFromAnamnese,
   knowledgeForTopic,
   type Question,
   type Topic,
@@ -180,6 +181,11 @@ export function QuestionCard({
           onChange={onAnswer}
           suggested={suggested}
         />
+        {isFromAnamnese(state, question.id) && (
+          <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+            <span className="text-gold">✦</span> Preenchido a partir da anamnese — altere se precisar.
+          </p>
+        )}
         {(isWhy || question.suggest) && (
           <AnswerSuggestions
             question={question.prompt}
