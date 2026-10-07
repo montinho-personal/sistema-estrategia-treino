@@ -15,7 +15,7 @@ export function Stepper() {
   );
 
   return (
-    <div className="sticky top-[57px] z-40 border-b border-border bg-bg/80 backdrop-blur-xl backdrop-saturate-150">
+    <div data-sticky style={{ top: "var(--nav-h, 57px)" }} className="sticky z-40 border-b border-border bg-bg/80 backdrop-blur-xl backdrop-saturate-150">
       <nav className="mx-auto flex max-w-6xl items-center gap-1.5 overflow-x-auto px-6 py-3">
         {STEP_META.map((s, i) => {
           const active = i === activeIndex;

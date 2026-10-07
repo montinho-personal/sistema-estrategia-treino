@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 
@@ -8,6 +8,10 @@ import { motion, useReducedMotion } from "framer-motion";
 export function StepFade({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
+  // Cada etapa começa do topo (o Next mantinha parte da rolagem anterior).
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [pathname]);
   if (reduce) return <>{children}</>;
   return (
     <motion.div
