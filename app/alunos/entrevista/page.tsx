@@ -11,7 +11,7 @@ export default function EntrevistaPage() {
       <StepHeader
         step="entrevista"
         title="Entrevista"
-        description="Uma conversa, uma pergunta por vez. Cada resposta vira uma seção do relatório — e o sistema pergunta o porquê para explicar ao aluno."
+        description="Uma decisão essencial por tópico — rápido e direto. Quer detalhar o porquê? É só abrir “Aprofundar”; o que ficar em branco, a IA e a Biblioteca preenchem no relatório."
       />
       <Hydrated fallback={<PanelSkeleton rows={2} />}>
         <InterviewWorkspace />

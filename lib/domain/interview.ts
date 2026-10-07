@@ -35,7 +35,7 @@ export function questionsForTopic(topic: Topic, state: StrategyState): Question[
   return list;
 }
 
-/** Plano completo da entrevista na ordem dos tópicos. */
+/** Plano completo da entrevista na ordem dos tópicos (todas as perguntas). */
 export function plan(state: StrategyState): PlanItem[] {
   const out: PlanItem[] = [];
   for (const topic of TOPICS) {
@@ -44,28 +44,49 @@ export function plan(state: StrategyState): PlanItem[] {
   return out;
 }
 
+/**
+ * Entrevista mínima: apenas a pergunta ESSENCIAL (principal) de cada tópico.
+ * É sobre esta lista que a navegação e o progresso da entrevista acontecem —
+ * os "porquês" e detalhes viram complementos opcionais (a IA + Biblioteca
+ * preenchem o que o treinador deixar em branco).
+ */
+export function essentialItems(state: StrategyState): PlanItem[] {
+  const out: PlanItem[] = [];
+  for (const topic of TOPICS) {
+    const qs = questionsForTopic(topic, state);
+    const main = qs.find((q) => q.id === topic.mainQ) ?? qs[0];
+    if (main) out.push({ q: main, topic });
+  }
+  return out;
+}
+
+/** Perguntas complementares de um tópico (porquê, opcionais e adaptativas). */
+export function extraQuestionsForTopic(topic: Topic, state: StrategyState): Question[] {
+  return questionsForTopic(topic, state).filter((q) => q.id !== topic.mainQ);
+}
+
 export function isAnswered(q: Question, state: StrategyState): boolean {
   return has(state.answers[q.id]);
 }
 
 export function progress(state: StrategyState): Progress {
-  const p = plan(state);
+  const p = essentialItems(state);
   const answered = p.filter((it) => isAnswered(it.q, state)).length;
   return { answered, total: p.length, pct: p.length ? Math.round((answered / p.length) * 100) : 0 };
 }
 
-/** Perguntas obrigatórias faltando, por tópico (principal + porquê). */
+/**
+ * Perguntas obrigatórias faltando: apenas a principal de cada tópico. Os
+ * "porquês" deixaram de ser obrigatórios — a IA + Biblioteca os geram quando o
+ * treinador não escreve. Assim a entrevista fica mínima sem perder o relatório.
+ */
 export function requiredMissing(state: StrategyState): MissingItem[] {
   const missing: MissingItem[] = [];
   for (const topic of TOPICS) {
-    const reqIds: string[] = [];
-    if (topic.mainQ) reqIds.push(topic.mainQ);
-    if (topic.whyQ) reqIds.push(topic.whyQ);
-    for (const id of reqIds) {
-      if (!has(state.answers[id])) {
-        const q = topic.questions.find((x) => x.id === id);
-        missing.push({ topic, q, id });
-      }
+    if (!topic.mainQ) continue;
+    if (!has(state.answers[topic.mainQ])) {
+      const q = topic.questions.find((x) => x.id === topic.mainQ);
+      missing.push({ topic, q, id: topic.mainQ });
     }
   }
   return missing;
@@ -76,11 +97,11 @@ export function isComplete(state: StrategyState): boolean {
 }
 
 function ids(state: StrategyState): string[] {
-  return plan(state).map((it) => it.q.id);
+  return essentialItems(state).map((it) => it.q.id);
 }
 
 export function firstUnanswered(state: StrategyState): string | null {
-  const p = plan(state);
+  const p = essentialItems(state);
   for (const it of p) if (!isAnswered(it.q, state)) return it.q.id;
   return p.length ? p[0].q.id : null;
 }

@@ -78,6 +78,7 @@ export function InterviewWorkspace() {
       notes={consistency(state)}
       prefs={prefs}
       onAnswer={(value) => setAnswer(question.id, value)}
+      onAnswerId={(id, value) => setAnswer(id, value)}
       onPrev={() => prevId && setCurrentQ(prevId)}
       onAdvance={advance}
       onReview={jumpTopic}
