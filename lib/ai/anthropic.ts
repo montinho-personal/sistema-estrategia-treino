@@ -128,15 +128,35 @@ const ANAMNESE_FIELD_IDS = new Set<string>(
   ANAMNESE_SECTIONS.flatMap((s) => s.fields.map((f) => f.id)),
 );
 
-/** Extrai um objeto JSON de uma resposta, tolerando cercas de código e texto ao redor. */
-function extractJsonObject(text: string): Record<string, unknown> {
+/**
+ * Isola o trecho JSON de uma resposta do modelo. Tolera cercas de código
+ * fechadas (```json ... ```) OU não fechadas — caso em que a resposta foi
+ * truncada — além de texto ao redor.
+ */
+function jsonSlice(text: string, open: "{" | "[", close: "}" | "]"): string {
   let t = text.trim();
   const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) t = fenced[1].trim();
-  const start = t.indexOf("{");
-  const end = t.lastIndexOf("}");
-  if (start !== -1 && end > start) t = t.slice(start, end + 1);
-  const parsed = JSON.parse(t) as unknown;
+  if (fenced) {
+    t = fenced[1].trim();
+  } else {
+    // cerca de abertura sem fechamento (resposta cortada): remove o prefixo
+    t = t.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  }
+  const start = t.indexOf(open);
+  if (start > 0) t = t.slice(start);
+  const end = t.lastIndexOf(close);
+  if (end >= 0) t = t.slice(0, end + 1);
+  return t;
+}
+
+/** Extrai um objeto JSON de uma resposta, tolerando cercas de código e texto ao redor. */
+function extractJsonObject(text: string): Record<string, unknown> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonSlice(text, "{", "}"));
+  } catch {
+    throw new Error("A IA devolveu uma resposta incompleta ou fora do formato. Tente novamente — se o PDF for muito grande, divida-o.");
+  }
   if (!parsed || typeof parsed !== "object") return {};
   return parsed as Record<string, unknown>;
 }
@@ -158,10 +178,11 @@ export async function aiExtractAnamnese(
   const prompt =
     "Este PDF é a anamnese/avaliação de um aluno. Extraia as informações e " +
     "preencha os campos listados abaixo. Responda APENAS com um objeto JSON " +
-    "válido (sem texto antes ou depois, sem cercas de código), mapeando o id do " +
-    "campo para o valor extraído. Inclua somente os campos que você conseguir " +
-    "determinar a partir do documento; omita os demais. Para campos com opções, " +
-    "use exatamente uma das opções indicadas. Não invente nada.\n\nCAMPOS:\n" +
+    "válido: comece a resposta com { e termine com } — sem nenhum texto antes " +
+    "ou depois e sem cercas de código. Mapeie o id do campo para o valor " +
+    "extraído. Seja conciso nos valores. Inclua somente os campos que você " +
+    "conseguir determinar a partir do documento; omita os demais. Para campos " +
+    "com opções, use exatamente uma das opções indicadas. Não invente nada.\n\nCAMPOS:\n" +
     anamneseFieldGuide();
 
   const raw = await callWithContent(
@@ -171,7 +192,7 @@ export async function aiExtractAnamnese(
       { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
       { type: "text", text: prompt },
     ],
-    3000,
+    8000,
   );
 
   const parsed = extractJsonObject(raw);
@@ -186,14 +207,8 @@ export async function aiExtractAnamnese(
 
 /** Extrai um array de strings de uma resposta, tolerando cercas de código e texto ao redor. */
 function extractStringArray(text: string): string[] {
-  let t = text.trim();
-  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) t = fenced[1].trim();
-  const start = t.indexOf("[");
-  const end = t.lastIndexOf("]");
-  if (start !== -1 && end > start) t = t.slice(start, end + 1);
   try {
-    const parsed = JSON.parse(t) as unknown;
+    const parsed = JSON.parse(jsonSlice(text, "[", "]")) as unknown;
     if (Array.isArray(parsed)) {
       return parsed.map((x) => String(x).trim()).filter(Boolean).slice(0, 6);
     }
@@ -229,14 +244,8 @@ export async function aiSuggestAnswers(
 
 /** Extrai um array de objetos de volume ({grupo, series}) de uma resposta JSON. */
 function extractVolumeArray(text: string): VolumeRow[] {
-  let t = text.trim();
-  const fenced = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) t = fenced[1].trim();
-  const s = t.indexOf("[");
-  const e = t.lastIndexOf("]");
-  if (s !== -1 && e > s) t = t.slice(s, e + 1);
   try {
-    const arr = JSON.parse(t) as unknown;
+    const arr = JSON.parse(jsonSlice(text, "[", "]")) as unknown;
     if (!Array.isArray(arr)) return [];
     return arr
       .map((o) => {
