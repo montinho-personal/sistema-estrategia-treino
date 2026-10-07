@@ -82,6 +82,14 @@ export const INTENSIDADE_HINTS: Record<string, string> = {
   "Top Set": "Uma série principal mais pesada",
   "Back Off": "Séries mais leves depois da série principal",
   Cluster: "Pausas curtas dentro da série",
+  "Bi-set": "Dois exercícios do mesmo músculo, sem descanso entre eles",
+  "Super-série (antagonistas)": "Dois exercícios de grupos opostos, alternados sem descanso",
+  Circuito: "Vários exercícios em sequência, com pouco ou nenhum descanso",
+  "Rest-pause": "Pausas curtas (10–20s) para somar mais repetições na mesma série",
+  "Isometria no pico de contração": "Segura 2–3s no ponto de maior contração de cada repetição",
+  "Repetições explosivas": "Fase concêntrica rápida e potente",
+  "Ênfase na fase negativa": "Descida controlada e lenta (3–4s) em cada repetição",
+  "21s": "7 reps parciais embaixo + 7 em cima + 7 completas",
 };
 
 export const INTENSIDADE_DETAILS: Record<string, OptionDetail> = {
@@ -139,6 +147,70 @@ export const INTENSIDADE_DETAILS: Record<string, OptionDetail> = {
       "Mais repetições com carga alta.",
       "Mantém a qualidade da execução até o fim.",
       "Útil para quebrar platôs.",
+    ],
+  },
+  "Bi-set": {
+    quando: "Grupos prioritários, fases de intensificação, ou para aumentar o volume sem aumentar muito o tempo de treino.",
+    vantagens: [
+      "Dois exercícios do mesmo músculo, sem descanso entre eles — mais fadiga metabólica.",
+      "Economiza tempo de treino.",
+      "Ótimo para dar um último empurrão no grupo prioritário, no fim da sessão.",
+    ],
+  },
+  "Super-série (antagonistas)": {
+    quando: "Treinos mais curtos, ou para treinar grupos opostos (ex.: bíceps e tríceps) na mesma sequência.",
+    vantagens: [
+      "Um grupo descansa enquanto o outro trabalha — economiza tempo sem perder qualidade.",
+      "Mantém o treino dinâmico e energético.",
+      "Boa estratégia para sessões com pouco tempo disponível.",
+    ],
+  },
+  Circuito: {
+    quando: "Emagrecimento, condicionamento, ou alunos que preferem treinos dinâmicos, com pouco tempo parado.",
+    vantagens: [
+      "Mais gasto calórico pelo pouco descanso entre exercícios.",
+      "Treino dinâmico, que motiva e engaja.",
+      "Soma condicionamento cardiovascular dentro da musculação.",
+    ],
+  },
+  "Rest-pause": {
+    quando: "Alunos avançados, fim da sessão, ou quando o tempo de treino é curto mas se quer intensidade alta.",
+    vantagens: [
+      "Mais repetições efetivas com a mesma carga.",
+      "Muito eficiente: mais estímulo em pouco tempo.",
+      "Ótimo para quebrar platôs.",
+    ],
+  },
+  "Isometria no pico de contração": {
+    quando: "Alunos com dificuldade de sentir o músculo trabalhando, ou isoladores em fases de intensificação.",
+    vantagens: [
+      "Aumenta o tempo sob tensão no ponto de maior contração.",
+      "Melhora a conexão mente-músculo.",
+      "Fácil de aplicar em qualquer exercício: basta segurar 2 a 3 segundos no topo do movimento.",
+    ],
+  },
+  "Repetições explosivas": {
+    quando: "Força e potência, atletas, ou fases de intensificação com cargas moderadas.",
+    vantagens: [
+      "Recruta mais fibras de contração rápida.",
+      "Desenvolve potência, essencial para esportes e saltos.",
+      "Quebra a monotonia do treino.",
+    ],
+  },
+  "Ênfase na fase negativa": {
+    quando: "Alunos avançados, ou para aumentar o estímulo sem aumentar a carga.",
+    vantagens: [
+      "A descida controlada (3 a 4 segundos) gera forte estímulo de hipertrofia.",
+      "Reduz o risco de lesão por movimentos descontrolados.",
+      "Pode ser usada em qualquer exercício, sem equipamento extra.",
+    ],
+  },
+  "21s": {
+    quando: "Isoladores como rosca bíceps ou elevação lateral, fases de intensificação, ou para fechar a sessão de um grupo prioritário.",
+    vantagens: [
+      "7 repetições na metade inferior + 7 na metade superior + 7 completas — fadiga o músculo em todos os ângulos.",
+      "Técnica clássica, fácil de explicar ao aluno.",
+      "Boa forma de encerrar a série de um grupo prioritário.",
     ],
   },
 };

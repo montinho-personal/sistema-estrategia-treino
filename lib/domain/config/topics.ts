@@ -143,9 +143,13 @@ export const TOPICS: Topic[] = [
     lead: "A forma como vamos trabalhar o esforço nos treinos é", mainQ: "intensidade_estrategia", whyQ: "intensidade_porque",
     questions: [
       {
-        id: "intensidade_estrategia", prompt: "Qual estratégia de intensidade será utilizada?", type: "choice", allowOther: true,
+        id: "intensidade_estrategia", prompt: "Quais estratégias de intensidade serão utilizadas?", type: "multi", allowOther: true,
         placeholder: "Escreva a estratégia",
-        options: ["Pirâmide crescente", "Pirâmide decrescente", "Carga fixa", "Dupla progressão", "Top Set", "Back Off", "Cluster"],
+        options: [
+          "Pirâmide crescente", "Pirâmide decrescente", "Carga fixa", "Dupla progressão", "Top Set", "Back Off", "Cluster",
+          "Bi-set", "Super-série (antagonistas)", "Circuito", "Rest-pause", "Isometria no pico de contração",
+          "Repetições explosivas", "Ênfase na fase negativa", "21s",
+        ],
         hints: INTENSIDADE_HINTS,
         details: INTENSIDADE_DETAILS,
       },
