@@ -10,6 +10,8 @@ export interface AnamneseFieldDef {
   type: FieldType;
   options?: string[];
   placeholder?: string;
+  /** Instrução extra para a IA encontrar este campo ao importar um PDF. */
+  extractHint?: string;
 }
 
 export interface AnamneseSectionDef {

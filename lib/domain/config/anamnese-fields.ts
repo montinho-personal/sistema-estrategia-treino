@@ -27,8 +27,14 @@ export const ANAMNESE_SECTIONS: AnamneseSectionDef[] = [
     id: "disponibilidade",
     title: "Disponibilidade & rotina",
     fields: [
-      { id: "diasSemana", label: "Dias disponíveis por semana", type: "number", placeholder: "Ex.: 4" },
-      { id: "tempoSessao", label: "Tempo por sessão (min)", type: "number", placeholder: "Ex.: 60" },
+      {
+        id: "diasSemana", label: "Dias disponíveis por semana", type: "number", placeholder: "Ex.: 4",
+        extractHint: "quantos dias por semana o aluno pode treinar. Procure mesmo dentro de respostas em texto corrido, não só em um campo isolado (ex.: \"consigo ir 4x por semana\" → 4; \"de segunda a sexta\" → 5; \"três ou quatro dias\" → 4, o maior).",
+      },
+      {
+        id: "tempoSessao", label: "Tempo por sessão (min)", type: "number", placeholder: "Ex.: 60",
+        extractHint: "duração de cada sessão, em MINUTOS. Converta horas para minutos (ex.: \"1 hora\" → 60; \"1h30\" → 90; \"45 min\" → 45). Procure mesmo dentro de respostas em texto corrido.",
+      },
       { id: "rotina", label: "Rotina", type: "textarea", placeholder: "Trabalho, horários, viagens, quando consegue treinar..." },
     ],
   },
