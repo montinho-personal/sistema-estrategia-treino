@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 export const AnamneseSchema = z
   .object({
+    tituloPlano: z.string(),
     nome: z.string(),
     idade: z.string(),
     sexo: z.string(),

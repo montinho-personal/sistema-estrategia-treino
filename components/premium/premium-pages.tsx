@@ -78,8 +78,14 @@ function timelineSteps(fases: unknown): string[] {
 export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand }) {
   const a = state.anamnese;
   const nome = val(a.nome) || "Seu aluno";
+  const titulo = val(a.tituloPlano) || "Estratégia de Treinamento";
   const date = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
-  const foot = [brand.nome, has(brand.whatsapp) ? `WhatsApp ${brand.whatsapp}` : "", brand.site].filter(Boolean).join("   ·   ");
+  const foot = [
+    brand.nome,
+    has(brand.whatsapp) ? `WhatsApp ${brand.whatsapp}` : "",
+    brand.site,
+    has(brand.instagram) ? brand.instagram.replace(/^@?/, "@") : "",
+  ].filter(Boolean).join("   ·   ");
   return (
     <section className="premium__page pg-cover">
       <div className="pg-cover__top">
@@ -93,7 +99,7 @@ export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand
         <div className="pg-eyebrow">Planejamento exclusivo</div>
         <div className="pg-cover__name">{nome}</div>
         <div className="pg-rule" />
-        <h1 className="pg-cover__title">Montinho Training Strategy</h1>
+        <h1 className="pg-cover__title">{titulo}</h1>
         <div className="pg-cover__sub">Estratégia Personalizada de Treinamento</div>
         <p className="pg-cover__phrase">
           &ldquo;Este planejamento foi desenvolvido exclusivamente para os seus objetivos, a sua rotina
