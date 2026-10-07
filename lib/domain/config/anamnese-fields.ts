@@ -6,6 +6,7 @@ export const ANAMNESE_SECTIONS: AnamneseSectionDef[] = [
     id: "identificacao",
     title: "Identificação",
     fields: [
+      { id: "tituloPlano", label: "Nome do treino", type: "text", placeholder: "Ex.: Operação Bumbum na Nuca" },
       { id: "nome", label: "Nome do aluno", type: "text", placeholder: "Ex.: Marina Souza" },
       { id: "idade", label: "Idade", type: "number", placeholder: "Ex.: 34" },
       { id: "sexo", label: "Sexo", type: "select", options: ["Masculino", "Feminino", "Prefiro não informar"] },
