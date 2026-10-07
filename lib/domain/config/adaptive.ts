@@ -27,11 +27,6 @@ export const ADAPTIVE: AdaptiveQuestion[] = [
     prompt: "Como será a estratégia de gasto energético (déficit, NEAT, cardio) neste ciclo?",
   },
   {
-    id: "adapt_hipertrofia", topic: "intensidade", label: "Volume de treino", optional: true, inline: true, type: "textarea",
-    when: (a) => ["hipertrofia", "recomposição corporal"].includes(low(a.objetivo)),
-    prompt: "Qual será o volume semanal (séries por grupo) e como ele progride ao longo do ciclo?",
-  },
-  {
     id: "adapt_reab", topic: "exercicios", label: "Limitações da reabilitação", optional: true, type: "textarea",
     when: (a) => low(a.objetivo) === "reabilitação",
     prompt: "Quais limitações e amplitudes seguras devem ser respeitadas nesta fase de reabilitação?",

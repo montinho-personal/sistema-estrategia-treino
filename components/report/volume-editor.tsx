@@ -185,21 +185,24 @@ export function VolumeEditor() {
           {volume.map((r, i) => {
             const pct = pctOf(r.series);
             return (
-              <div key={i} className="flex items-center gap-1.5">
+              <div
+                key={i}
+                className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border/60 p-2 sm:flex-nowrap sm:border-0 sm:p-0"
+              >
                 <Input
-                  className="flex-1"
+                  className="min-w-0 basis-full sm:basis-0 sm:flex-1"
                   placeholder="Grupo (ex.: Peito)"
                   value={r.grupo}
                   onChange={(e) => update(i, { grupo: e.target.value })}
                 />
                 <Input
-                  className="w-16"
+                  className="w-20 sm:w-16"
                   inputMode="numeric"
                   placeholder="Séries"
                   value={r.series}
                   onChange={(e) => update(i, { series: e.target.value })}
                 />
-                <span className="w-9 shrink-0 text-right text-[12.5px] tabular-nums text-muted-foreground">
+                <span className="mr-auto w-9 shrink-0 text-right text-[12.5px] tabular-nums text-muted-foreground sm:mr-0">
                   {pct}
                 </span>
                 <button

@@ -25,8 +25,8 @@ import { ConsistencyNotes } from "./consistency-notes";
 import { KbEntryCard } from "@/components/knowledge/kb-entry-card";
 import { VolumeEditor } from "@/components/report/volume-editor";
 
-/** Pergunta cuja resposta é a tabela de volume semanal. */
-const VOLUME_QUESTION_ID = "adapt_hipertrofia";
+/** Tópico em que a tabela de volume semanal aparece, logo abaixo da pergunta. */
+const VOLUME_TOPIC_ID = "volume";
 
 /** Converte o valor de uma resposta em texto legível para dar contexto à IA. */
 function answerToText(value: AnswerValue | undefined): string {
@@ -88,11 +88,6 @@ function ExtraQuestion({
           value={answerToText(state.answers[q.id])}
           onInsert={(v) => onAnswerId(q.id, v)}
         />
-      )}
-      {q.id === VOLUME_QUESTION_ID && (
-        <div className="mt-3">
-          <VolumeEditor />
-        </div>
       )}
     </div>
   );
@@ -196,7 +191,7 @@ export function QuestionCard({
             onInsert={onAnswer}
           />
         )}
-        {question.id === VOLUME_QUESTION_ID && (
+        {topic.id === VOLUME_TOPIC_ID && (
           <div className="mt-4">
             <VolumeEditor />
           </div>

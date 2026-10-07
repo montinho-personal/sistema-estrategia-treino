@@ -229,3 +229,45 @@ export const PRIORIDADE_DETAILS: Record<string, OptionDetail> = {
     ],
   },
 };
+
+export const FREQUENCIA_PRIORITARIOS = "Prioritários 2–3x · demais 1–2x";
+
+export const FREQUENCIA_HINTS: Record<string, string> = {
+  "1x por semana": "Cada grupo em um dia da semana",
+  "2x por semana": "Cada grupo em dois dias · a mais indicada para hipertrofia",
+  "3x por semana": "Alta frequência · ideal para Full Body",
+  [FREQUENCIA_PRIORITARIOS]: "Frequência maior só para o foco",
+};
+
+export const FREQUENCIA_DETAILS: Record<string, OptionDetail> = {
+  "1x por semana": {
+    quando: "Divisões em que cada dia é de um grupo (ABCDE), sessões longas por grupo, ou manutenção de grupos que não são prioridade.",
+    vantagens: [
+      "Muito volume e foco total em cada sessão.",
+      "Recuperação longa para cada grupo.",
+    ],
+  },
+  "2x por semana": {
+    quando: "A maioria dos casos de hipertrofia e recomposição — Upper/Lower, Full Body 2x, PPL 6x.",
+    vantagens: [
+      "É a frequência com melhor evidência para hipertrofia.",
+      "Divide o volume em sessões de mais qualidade e menos fadiga.",
+      "Bom equilíbrio entre estímulo e recuperação.",
+    ],
+  },
+  "3x por semana": {
+    quando: "Full Body 3x, grupos prioritários, ou iniciantes aprendendo os movimentos.",
+    vantagens: [
+      "Mais estímulos na semana com pouco volume em cada sessão.",
+      "Mais prática dos movimentos — a técnica evolui rápido.",
+      "Ótima para dar foco a um grupo prioritário.",
+    ],
+  },
+  [FREQUENCIA_PRIORITARIOS]: {
+    quando: "Quando há grupos prioritários e o tempo de treino na semana é limitado.",
+    vantagens: [
+      "Concentra a energia no que mais importa.",
+      "Mantém os demais grupos sem regredir.",
+    ],
+  },
+};

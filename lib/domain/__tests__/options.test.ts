@@ -70,3 +70,23 @@ describe("explicações 'Quando usar e vantagens'", () => {
     }
   });
 });
+
+describe("tópico Volume semanal", () => {
+  it("aparece para qualquer objetivo, logo depois da divisão", () => {
+    for (const objetivo of ["Hipertrofia", "Emagrecimento", "Saúde e qualidade de vida", "Reabilitação", ""]) {
+      const ids = essentialItems(makeState({ objetivo })).map((it) => it.q.id);
+      expect(ids.indexOf("volume_frequencia")).toBe(ids.indexOf("divisao_qual") + 1);
+    }
+  });
+
+  it("relatório explica a frequência e a evolução do volume", () => {
+    const div = reportDocument(makeState({}, {
+      volume_frequencia: "Prioritários 2–3x · demais 1–2x",
+      volume_progressao: ["+1 a 2 séries por grupo a cada bloco"],
+    })).find((x) => x.id === "divisao")!.body;
+    expect(div).toMatch(/prioritários serão treinados 2 a 3 vezes/);
+    expect(div).toMatch(/✓ \+1 a 2 séries por grupo a cada bloco/);
+    const simples = reportDocument(makeState({}, { volume_frequencia: "2x por semana" })).find((x) => x.id === "divisao")!.body;
+    expect(simples).toMatch(/Cada grupo muscular será treinado 2x por semana\./);
+  });
+});

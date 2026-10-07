@@ -98,6 +98,7 @@ export const PREMIUM_CSS = [
   ".pg-timeline__why{font-size:13.5px;color:var(--pg-mut);line-height:1.55;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--pg-line)}",
   ".pg-voltable{border:1px solid var(--pg-line);border-radius:12px;padding:20px 22px;margin-top:8px}",
   ".pg-voltable__t{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pg-mut);margin-bottom:12px}",
+  ".pg-voltable__freq{font-size:13px;color:var(--pg-mut);margin:-4px 0 12px}",
   ".pg-vol{width:100%;border-collapse:collapse;font-size:14px}",
   ".pg-vol th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--pg-mut);padding:0 0 10px;border-bottom:1px solid var(--pg-line)}",
   ".pg-vol th:not(:first-child),.pg-vol td:not(:first-child){text-align:right}",
