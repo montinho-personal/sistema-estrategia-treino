@@ -115,6 +115,8 @@ function anamneseFieldGuide(): string {
       let line = `- "${f.id}" (${f.label})`;
       if (f.type === "select" && f.options?.length) {
         line += ` — use EXATAMENTE uma destas opções: ${f.options.join(" | ")}`;
+      } else if (f.extractHint) {
+        line += ` — ${f.extractHint}`;
       } else if (f.type === "number") {
         line += " — apenas o número";
       }
@@ -177,12 +179,15 @@ export async function aiExtractAnamnese(
 ): Promise<Partial<Anamnese>> {
   const prompt =
     "Este PDF é a anamnese/avaliação de um aluno. Extraia as informações e " +
-    "preencha os campos listados abaixo. Responda APENAS com um objeto JSON " +
-    "válido: comece a resposta com { e termine com } — sem nenhum texto antes " +
-    "ou depois e sem cercas de código. Mapeie o id do campo para o valor " +
-    "extraído. Seja conciso nos valores. Inclua somente os campos que você " +
-    "conseguir determinar a partir do documento; omita os demais. Para campos " +
-    "com opções, use exatamente uma das opções indicadas. Não invente nada.\n\nCAMPOS:\n" +
+    "preencha os campos listados abaixo. Leia o documento INTEIRO com atenção: " +
+    "várias respostas aparecem dentro de textos corridos (parágrafos, respostas " +
+    "abertas), não só em campos isolados do formulário — procure em todo o " +
+    "conteúdo antes de considerar um campo ausente. Responda APENAS com um " +
+    "objeto JSON válido: comece a resposta com { e termine com } — sem nenhum " +
+    "texto antes ou depois e sem cercas de código. Mapeie o id do campo para o " +
+    "valor extraído. Seja conciso nos valores. Inclua somente os campos que " +
+    "você conseguir determinar a partir do documento; omita os demais. Para " +
+    "campos com opções, use exatamente uma das opções indicadas. Não invente nada.\n\nCAMPOS:\n" +
     anamneseFieldGuide();
 
   const raw = await callWithContent(
