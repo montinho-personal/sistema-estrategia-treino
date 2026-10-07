@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { ImageUp, Trash2 } from "lucide-react";
 
-import type { Brand } from "@/lib/domain/schema/brand";
+import { brandLogo, type Brand } from "@/lib/domain/schema/brand";
 import { useBrandStore } from "@/lib/store";
 import {
   Dialog,
@@ -90,14 +90,8 @@ export function BrandDialog({ trigger }: { trigger: ReactNode }) {
             <Label>Logo</Label>
             <div className="mt-1 flex items-center gap-3 rounded-[12px] border border-border bg-bg p-3">
               <div className="grid size-14 flex-none place-items-center overflow-hidden rounded-[10px] border border-border bg-surface">
-                {draft.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- preview local (data URL)
-                  <img src={draft.logo} alt="Prévia do logo" className="max-h-full max-w-full object-contain" />
-                ) : (
-                  <span className="grid size-8 place-items-center rounded-[8px] bg-primary text-[15px] font-bold text-primary-foreground">
-                    M
-                  </span>
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element -- preview local (data URL ou logo oficial) */}
+                <img src={brandLogo(draft)} alt="Prévia do logo" className="max-h-full max-w-full object-contain p-1" />
               </div>
               <div className="min-w-0 flex-1">
                 <input
@@ -109,7 +103,7 @@ export function BrandDialog({ trigger }: { trigger: ReactNode }) {
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()}>
-                    <ImageUp className="size-4" /> {draft.logo ? "Trocar logo" : "Enviar logo"}
+                    <ImageUp className="size-4" /> Trocar logo
                   </Button>
                   {draft.logo && (
                     <Button
@@ -118,12 +112,12 @@ export function BrandDialog({ trigger }: { trigger: ReactNode }) {
                       size="sm"
                       onClick={() => setDraft((d) => ({ ...d, logo: "" }))}
                     >
-                      <Trash2 className="size-4" /> Remover
+                      <Trash2 className="size-4" /> Voltar ao oficial
                     </Button>
                   )}
                 </div>
                 <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground">
-                  PNG, JPG ou SVG (máx. 1 MB). Aparece na capa e na assinatura do PDF. Sem logo, usamos o “M”.
+                  PNG, JPG ou SVG (máx. 1 MB). Aparece na capa e na assinatura do PDF. Sem envio, usamos o logo oficial do Montinho.
                 </p>
               </div>
             </div>
