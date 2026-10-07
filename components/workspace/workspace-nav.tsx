@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
@@ -16,6 +17,20 @@ import { HistoryDialog } from "@/components/history/history-dialog";
 export function WorkspaceNav() {
   const router = useRouter();
   const reset = useStrategyStore((s) => s.reset);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // A altura do menu muda (no celular ele quebra em duas linhas): publica a
+  // altura real para a barra de etapas grudar logo abaixo dele.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () =>
+      document.documentElement.style.setProperty("--nav-h", `${Math.round(el.getBoundingClientRect().height)}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   function novaEstrategia() {
     if (confirm("Começar uma nova estratégia? Os dados atuais deste navegador serão apagados.")) {
@@ -25,7 +40,7 @@ export function WorkspaceNav() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl backdrop-saturate-150">
+    <header ref={headerRef} data-sticky className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-3">
         <Link href="/" aria-label="Início">
           <BrandLockup />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -19,6 +19,7 @@ import {
 import { ADAPTIVE } from "@/lib/domain/config";
 import { low } from "@/lib/domain/util";
 import { useStrategyStore, usePreferencesStore } from "@/lib/store";
+import { scrollToElement } from "@/lib/scroll";
 import { Button } from "@/components/ui/button";
 import { QuestionCard } from "./question-card";
 import { SidePanel } from "./side-panel";
@@ -50,6 +51,17 @@ export function InterviewWorkspace() {
 
   const curId = currentId(state);
   const item = curId ? itemById(state, curId) : null;
+
+  // Ao trocar de pergunta (avançar, voltar ou pular de tópico), leva a tela
+  // até o topo do card — não fica parada lá embaixo, onde estava o botão.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const lastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastId.current !== null && lastId.current !== curId && cardRef.current) {
+      scrollToElement(cardRef.current);
+    }
+    lastId.current = curId;
+  }, [curId]);
 
   if (!curId || !item) {
     return (
@@ -104,7 +116,7 @@ export function InterviewWorkspace() {
   );
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+    <div ref={cardRef} className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
       {reduce ? (
         card
       ) : (
