@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CornerDownRight } from "lucide-react";
 
 import {
   questionsForTopic,
+  extraQuestionsForTopic,
   knowledgeForTopic,
   type Question,
   type Topic,
@@ -34,6 +35,45 @@ function answerToText(value: AnswerValue | undefined): string {
 
 const ADAPTIVE_HINT = "✦ pergunta adaptada";
 
+/** Uma pergunta complementar (porquê, opcional ou adaptativa) dentro do expansor. */
+function ExtraQuestion({
+  state,
+  q,
+  topic,
+  onAnswerId,
+}: {
+  state: StrategyState;
+  q: Question;
+  topic: Topic;
+  onAnswerId: (id: string, value: AnswerValue) => void;
+}) {
+  const isWhy = Boolean(q.why);
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3.5">
+      <Label className="flex items-start gap-2 text-[13.5px]">
+        {isWhy && <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-gold" />}
+        {q.label ?? q.prompt}
+      </Label>
+      <AnswerControl question={q} value={state.answers[q.id]} onChange={(v) => onAnswerId(q.id, v)} />
+      {isWhy && (
+        <AnswerSuggestions
+          question={q.prompt}
+          topicName={topic.name}
+          mainAnswer={answerToText(state.answers[topic.mainQ])}
+          state={state}
+          value={answerToText(state.answers[q.id])}
+          onInsert={(v) => onAnswerId(q.id, v)}
+        />
+      )}
+      {q.id === VOLUME_QUESTION_ID && (
+        <div className="mt-3">
+          <VolumeEditor />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function QuestionCard({
   state,
   question,
@@ -45,6 +85,7 @@ export function QuestionCard({
   notes,
   prefs,
   onAnswer,
+  onAnswerId,
   onPrev,
   onAdvance,
   onReview,
@@ -61,6 +102,7 @@ export function QuestionCard({
   notes: ConsistencyNote[];
   prefs: Record<string, unknown>;
   onAnswer: (value: AnswerValue) => void;
+  onAnswerId: (id: string, value: AnswerValue) => void;
   onPrev: () => void;
   onAdvance: () => void;
   onReview: (topicId: string) => void;
@@ -69,6 +111,8 @@ export function QuestionCard({
 }) {
   const isWhy = Boolean(question.why);
   const kbEntries = knowledgeForTopic(state, topic.id);
+  const extras = extraQuestionsForTopic(topic, state);
+  const extrasAnswered = extras.filter((q) => has(state.answers[q.id])).length;
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-md sm:p-8">
@@ -120,6 +164,27 @@ export function QuestionCard({
           </div>
         )}
       </div>
+
+      {extras.length > 0 && (
+        <details className="group mt-5 overflow-hidden rounded-xl border border-dashed border-border bg-background/40">
+          <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-[13.5px] font-medium text-foreground [&::-webkit-details-marker]:hidden">
+            <span className="text-gold">✦</span>
+            Aprofundar este tópico
+            <span className="font-normal text-muted-foreground">— porquê e detalhes (opcional)</span>
+            <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-[11.5px] text-muted-foreground">
+              {extrasAnswered}/{extras.length}
+            </span>
+          </summary>
+          <div className="grid gap-3 border-t border-border px-4 py-4">
+            <p className="text-[12.5px] text-muted-foreground">
+              Deixe em branco e a IA + Biblioteca escrevem por você. Preencha só o que quiser destacar.
+            </p>
+            {extras.map((q) => (
+              <ExtraQuestion key={q.id} state={state} q={q} topic={topic} onAnswerId={onAnswerId} />
+            ))}
+          </div>
+        </details>
+      )}
 
       <ConsistencyNotes notes={notes} onReview={onReview} onKeep={onKeep} />
 
