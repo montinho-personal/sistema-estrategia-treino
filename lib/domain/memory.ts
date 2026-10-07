@@ -63,7 +63,7 @@ export function buildMemory(state: StrategyState): MemorySection[] {
       ["Falha", inArr(tec, "Falha")], ["RIR", inArr(tec, "RIR")], ["RPE", inArr(tec, "RPE")],
       ["Cadência", inArr(tec, "Cadência")], ["Tempo sob tensão", inArr(tec, "Tempo sob tensão")],
       ["Isometrias", inArr(tec, "Isometria")], ["Técnicas avançadas", anyIn(tec, ["Drop-set", "Rest-pause", "Cluster"])],
-      ["Volume semanal", val(x.adapt_hipertrofia)], ["Motivo da escolha", val(x.intensidade_porque)],
+      ["Volume semanal", val(x.volume_frequencia) || val(x.adapt_hipertrofia)], ["Motivo da escolha", val(x.intensidade_porque)],
     ] },
     { emoji: "📈", title: "Periodização", editTopic: "periodizacao", rows: [
       ["Fases, objetivos e duração", val(x.periodizacao_fases)], ["Justificativa", val(x.periodizacao_porque)],

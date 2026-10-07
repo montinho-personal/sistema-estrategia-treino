@@ -1,6 +1,9 @@
 import type { Topic } from "../types";
 import type { Answers } from "../schema/answers";
-import { DIVISAO_DETAILS, INTENSIDADE_DETAILS, INTENSIDADE_HINTS, PRIORIDADE_DETAILS } from "./option-details";
+import {
+  DIVISAO_DETAILS, INTENSIDADE_DETAILS, INTENSIDADE_HINTS, PRIORIDADE_DETAILS,
+  FREQUENCIA_DETAILS, FREQUENCIA_HINTS, FREQUENCIA_PRIORITARIOS,
+} from "./option-details";
 
 /** Modelo de periodização preferido do treinador (aparece primeiro, com selo). */
 export const PERIODIZACAO_PADRAO =
@@ -112,7 +115,31 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "intensidade", n: 4, name: "Estratégia de intensidade", title: "A intensidade dos treinos",
+    id: "volume", n: 4, name: "Volume semanal", title: "O volume do seu treino",
+    lead: "", mainQ: "volume_frequencia", whyQ: "volume_porque",
+    questions: [
+      {
+        id: "volume_frequencia", prompt: "Com que frequência cada grupo muscular será treinado?", type: "choice", allowOther: true,
+        hint: "Logo abaixo, preencha as séries semanais de cada grupo — digitando, colando a tabela ou enviando um print.",
+        placeholder: "Ex.: Glúteos 3x, demais 2x por semana",
+        options: ["1x por semana", "2x por semana", "3x por semana", FREQUENCIA_PRIORITARIOS],
+        hints: FREQUENCIA_HINTS,
+        details: FREQUENCIA_DETAILS,
+      },
+      {
+        id: "volume_progressao", prompt: "Como o volume vai evoluir ao longo do ciclo?", type: "multi", allowOther: true, optional: true, label: "Evolução do volume",
+        placeholder: "Ex.: +2 séries de glúteo a cada 3 semanas",
+        options: [
+          "Mantém o volume durante o ciclo", "+1 a 2 séries por grupo a cada bloco",
+          "Aumenta só nos grupos prioritários", "Começa no volume mínimo e sobe aos poucos",
+          "Reduz o volume no deload", "Ajusta pela recuperação do aluno",
+        ],
+      },
+      { id: "volume_porque", prompt: "Por que definiu esse volume?", type: "textarea", why: true, optional: true },
+    ],
+  },
+  {
+    id: "intensidade", n: 5, name: "Estratégia de intensidade", title: "A intensidade dos treinos",
     lead: "A forma como vamos trabalhar o esforço nos treinos é", mainQ: "intensidade_estrategia", whyQ: "intensidade_porque",
     questions: [
       {
@@ -136,7 +163,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "periodizacao", n: 5, name: "Periodização", title: "A evolução ao longo do tempo",
+    id: "periodizacao", n: 6, name: "Periodização", title: "A evolução ao longo do tempo",
     lead: "Ao longo das próximas semanas, o plano vai evoluir assim:", mainQ: "periodizacao_fases", whyQ: "periodizacao_porque",
     questions: [
       {
@@ -215,7 +242,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "mobilidade", n: 6, name: "Mobilidade", title: "Aquecimento e mobilidade",
+    id: "mobilidade", n: 7, name: "Mobilidade", title: "Aquecimento e mobilidade",
     lead: "Antes de cada treino, a preparação do seu corpo será", mainQ: "mobilidade_o_que", whyQ: "mobilidade_porque",
     questions: [
       {
@@ -227,7 +254,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "exercicios", n: 7, name: "Estratégia dos exercícios", title: "A escolha dos exercícios",
+    id: "exercicios", n: 8, name: "Estratégia dos exercícios", title: "A escolha dos exercícios",
     lead: "A seleção dos seus exercícios seguiu esta lógica:", mainQ: "exercicios_logica", whyQ: "exercicios_porque",
     questions: [
       {
@@ -246,7 +273,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "cardio", n: 8, name: "Cardio", title: "O cardio no seu plano",
+    id: "cardio", n: 9, name: "Cardio", title: "O cardio no seu plano",
     lead: "O trabalho aeróbico (cardio) entra assim no seu plano:", mainQ: "cardio_have", whyQ: "cardio_porque",
     questions: [
       { id: "cardio_have", prompt: "Haverá cardio neste ciclo?", type: "choice", options: ["Sim", "Não"] },
@@ -260,7 +287,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "progressao", n: 9, name: "Progressão", title: "Como você vai progredir",
+    id: "progressao", n: 10, name: "Progressão", title: "Como você vai progredir",
     lead: "Para você continuar evoluindo, a progressão será", mainQ: "progressao_como", whyQ: "progressao_porque",
     questions: [
       {
@@ -277,7 +304,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "acompanhamento", n: 10, name: "Acompanhamento", title: "O que vamos acompanhar juntos",
+    id: "acompanhamento", n: 11, name: "Acompanhamento", title: "O que vamos acompanhar juntos",
     lead: "Para acompanhar sua evolução de perto, vamos registrar", mainQ: "acompanhamento_info", whyQ: "acompanhamento_porque",
     questions: [
       {
@@ -289,7 +316,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "filosofia", n: 11, name: "Filosofia da estratégia", title: "A filosofia do seu treino",
+    id: "filosofia", n: 12, name: "Filosofia da estratégia", title: "A filosofia do seu treino",
     lead: "A ideia que guia todo o seu treino é", mainQ: "filosofia_frase", whyQ: null,
     questions: [
       {
@@ -308,7 +335,7 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
-    id: "mensagem", n: 12, name: "Mensagem final", title: "Uma mensagem para você",
+    id: "mensagem", n: 13, name: "Mensagem final", title: "Uma mensagem para você",
     lead: "", mainQ: "mensagem_final", whyQ: null,
     questions: [
       {

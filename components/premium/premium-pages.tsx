@@ -189,6 +189,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
       {vlines.length > 0 && (
         <div className="pg-voltable">
           <div className="pg-voltable__t">Volume semanal de séries</div>
+          {has(x.volume_frequencia) && <p className="pg-voltable__freq">Frequência: {val(x.volume_frequencia)}</p>}
           <table className="pg-vol">
             <thead>
               <tr><th>Grupo muscular</th><th>Séries / semana</th><th>% do total</th></tr>

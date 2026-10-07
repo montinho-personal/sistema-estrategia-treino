@@ -1,4 +1,5 @@
 import { TOPICS, ANAMNESE_RULES, SEM_PRIORIDADE, PRIORIDADE_ESTRATEGIAS } from "./config";
+import { FREQUENCIA_PRIORITARIOS } from "./config/option-details";
 import { requiredMissing } from "./interview";
 import { personalLead } from "./voice";
 import { knowledgeForTopic, explainKnowledge, kbById } from "./knowledge";
@@ -140,6 +141,13 @@ const TECH_MAP: Record<string, string> = {
   "Drop-set": "drop_set", "Rest-pause": "rest_pause", Cluster: "cluster",
 };
 
+/** Frequência por grupo em linguagem de aluno. */
+function frequenciaFrase(freq: string): string {
+  if (/^\dx por semana$/.test(freq)) return `Cada grupo muscular será treinado ${freq}.`;
+  if (freq === FREQUENCIA_PRIORITARIOS) return "Os grupos prioritários serão treinados 2 a 3 vezes por semana, e os demais, 1 a 2 vezes.";
+  return sentence(`Frequência de treino por grupo: ${freq}`);
+}
+
 /* =============================== seções =============================== */
 function objetivoSection(state: StrategyState): ReportSection {
   const A = state.answers, a = state.anamnese;
@@ -204,6 +212,14 @@ function divisaoSection(state: StrategyState): ReportSection {
   if (has(A.divisao_vantagens)) p.push(`Na prática, ela te dá ${sentence(lowerFirst(A.divisao_vantagens))}`);
   if (has(A.divisao_adaptacoes)) p.push(sentence(A.divisao_adaptacoes));
   if (has(a.objetivo)) p.push(`Isso conversa direto com o seu objetivo de ${low(a.objetivo)}.`);
+  const freq = val(A.volume_frequencia);
+  if (freq) p.push(frequenciaFrase(freq));
+  const vprog = items(A.volume_progressao);
+  if (vprog.length) {
+    p.push("Ao longo do ciclo, o volume de séries vai evoluir assim:");
+    p.push(checklist(vprog));
+  }
+  if (has(A.volume_porque)) p.push(`Defini esse volume porque ${sentence(lowerFirst(A.volume_porque))}`);
   for (const t of kb(state, "divisao", 1)) p.push(t);
   return { id: "divisao", title: "Como seus treinos estão divididos", body: joinP(p) };
 }

@@ -44,7 +44,7 @@ describe("recomposição corporal", () => {
     const s = makeState({ objetivo: "Recomposição corporal" });
     expect(anamnesePrefill(s).objetivo_principal).toBe("Recomposição corporal");
     const ids = plan(s).map((it) => it.q.id);
-    expect(ids).toContain("adapt_hipertrofia");
+    expect(ids).toContain("volume_frequencia");
     expect(ids).toContain("adapt_emagrecimento");
     expect(reportClosing(s)).toMatch(/recompor/i);
   });
