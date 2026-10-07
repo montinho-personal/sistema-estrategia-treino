@@ -18,7 +18,7 @@ import { has } from "@/lib/domain/util";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { AnswerControl } from "./answer-control";
+import { AnswerControl, type Suggestion } from "./answer-control";
 import { AnswerSuggestions } from "./answer-suggestions";
 import { ConsistencyNotes } from "./consistency-notes";
 import { KbEntryCard } from "@/components/knowledge/kb-entry-card";
@@ -42,12 +42,12 @@ const OBJETIVO_ANAMNESE: Record<string, string> = {
 };
 
 /** Opção sugerida a partir da anamnese (hoje: o objetivo principal). */
-function suggestedOption(question: Question, state: StrategyState): string | undefined {
+function suggestedOption(question: Question, state: StrategyState): Suggestion | undefined {
   if (question.id !== "objetivo_principal") return undefined;
   const o = String(state.anamnese.objetivo ?? "").trim();
   if (!o) return undefined;
   const opt = OBJETIVO_ANAMNESE[o] ?? o;
-  return question.options?.includes(opt) ? opt : undefined;
+  return question.options?.includes(opt) ? { value: opt, label: "anamnese" } : undefined;
 }
 
 /** Uma pergunta complementar (porquê, opcional ou adaptativa) dentro do expansor. */

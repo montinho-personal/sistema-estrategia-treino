@@ -1,6 +1,10 @@
 import type { Topic } from "../types";
 import type { Answers } from "../schema/answers";
 
+/** Modelo de periodização preferido do treinador (aparece primeiro, com selo). */
+export const PERIODIZACAO_PADRAO =
+  "Fase 1 · Adaptação (4 sem); Fase 2 · Intensificação (4 sem); Fase 3 · Consolidação (4 sem)";
+
 /** Opção de "sem prioridade" na escolha de grupos musculares. */
 export const SEM_PRIORIDADE = "Sem prioridade (equilíbrio geral)";
 
@@ -133,7 +137,9 @@ export const TOPICS: Topic[] = [
       {
         id: "periodizacao_fases", prompt: "Como o planejamento vai evoluir ao longo das semanas?", type: "choice", allowOther: true,
         placeholder: "Ex.: Fase 1 (4 sem) adaptação; Fase 2 (4 sem) acúmulo; Fase 3 (3 sem) intensificação; deload",
+        featured: PERIODIZACAO_PADRAO,
         options: [
+          PERIODIZACAO_PADRAO,
           "Adaptação (4 sem); Acúmulo de volume (4 sem); Intensificação (3 sem); Deload (1 sem)",
           "Base técnica (3 sem); Hipertrofia (5 sem); Força (3 sem); Deload (1 sem)",
           "Volume (4 sem); Deload (1 sem); Volume maior (4 sem); Deload (1 sem)",
@@ -141,11 +147,63 @@ export const TOPICS: Topic[] = [
           "Linear: a carga sobe aos poucos toda semana; deload a cada 4–6 semanas",
         ],
         hints: {
+          [PERIODIZACAO_PADRAO]: "3 fases de 4 semanas · 12 semanas",
           "Adaptação (4 sem); Acúmulo de volume (4 sem); Intensificação (3 sem); Deload (1 sem)": "Clássica em blocos · 12 semanas",
           "Base técnica (3 sem); Hipertrofia (5 sem); Força (3 sem); Deload (1 sem)": "Hipertrofia com fase final de força",
           "Volume (4 sem); Deload (1 sem); Volume maior (4 sem); Deload (1 sem)": "Ondas de acúmulo com recuperação",
           "Ondulatória: alterna semanas de volume e de intensidade; deload a cada 4ª semana": "Variação constante de estímulo",
           "Linear: a carga sobe aos poucos toda semana; deload a cada 4–6 semanas": "Simples e eficaz · ótima para iniciantes",
+        },
+        details: {
+          [PERIODIZACAO_PADRAO]: {
+            quando: "Início de ciclo, aluno novo ou retomando os treinos, e objetivos de hipertrofia ou recomposição — quando você quer previsibilidade e uma reavaliação a cada 4 semanas.",
+            vantagens: [
+              "Começa seguro: técnica refinada e cargas de referência antes de apertar.",
+              "A intensificação acontece com o corpo já adaptado, com menos risco de lesão.",
+              "A consolidação fixa os ganhos antes de trocar o estímulo.",
+              "Fácil de explicar ao aluno e de acompanhar: cada fase tem um começo, meio e fim claros.",
+            ],
+          },
+          "Adaptação (4 sem); Acúmulo de volume (4 sem); Intensificação (3 sem); Deload (1 sem)": {
+            quando: "Alunos intermediários ou avançados com 12 semanas pela frente e foco em hipertrofia.",
+            vantagens: [
+              "O volume sobe de forma planejada — é a fase em que mais se cresce.",
+              "A carga aumenta depois, com o aluno já condicionado para o volume.",
+              "O deload planejado previne estagnação e fadiga acumulada.",
+            ],
+          },
+          "Base técnica (3 sem); Hipertrofia (5 sem); Força (3 sem); Deload (1 sem)": {
+            quando: "Quem quer ganhar massa e também ficar mais forte, com boa técnica nos exercícios principais.",
+            vantagens: [
+              "A massa construída na fase de hipertrofia vira força na fase final.",
+              "A troca de estímulo entre as fases mantém a motivação alta.",
+              "Ótima antes de testar cargas ou iniciar um ciclo de força.",
+            ],
+          },
+          "Volume (4 sem); Deload (1 sem); Volume maior (4 sem); Deload (1 sem)": {
+            quando: "Alunos avançados que respondem bem a volume alto, quando a recuperação é o fator que mais limita.",
+            vantagens: [
+              "Deloads frequentes permitem empurrar mais volume com segurança.",
+              "Reduz o risco de excesso de treino (overreaching).",
+              "Progressão clara: cada onda é um pouco mais exigente que a anterior.",
+            ],
+          },
+          "Ondulatória: alterna semanas de volume e de intensidade; deload a cada 4ª semana": {
+            quando: "Intermediários e avançados que estagnaram com rotina linear, quem gosta de variedade, ou quando força e hipertrofia andam juntas.",
+            vantagens: [
+              "Alterna estímulos e deixa o treino menos monótono.",
+              "Estudos mostram resultados iguais ou um pouco melhores de força que o modelo linear.",
+              "Ajuda a controlar a fadiga ao longo das semanas.",
+            ],
+          },
+          "Linear: a carga sobe aos poucos toda semana; deload a cada 4–6 semanas": {
+            quando: "Iniciantes, retorno após pausa, ou alunos com poucos dias de treino na semana.",
+            vantagens: [
+              "Simples de seguir e de medir a evolução.",
+              "Iniciantes progridem rápido só com o aumento gradual de carga.",
+              "Menos complexidade para o aluno — foco em técnica e constância.",
+            ],
+          },
         },
       },
       { id: "periodizacao_porque", prompt: "Por que decidiu fazer essa periodização?", type: "textarea", why: true, optional: true },
