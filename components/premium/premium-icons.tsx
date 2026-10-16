@@ -8,6 +8,7 @@ const PATHS: Record<string, ReactElement> = {
   star: <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.2l5.9-.9z" />,
   dumbbell: <path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11" />,
   trend: <path d="M3 17l6-6 4 4 7-7M14 8h6v6" />,
+  pulse: <path d="M3 12h4l2-5 4 10 2-5h6" />,
   mobility: (<><circle cx="12" cy="5" r="2" /><path d="M12 8v6M8 21l4-7 4 7M6 11h12" /></>),
   chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z" />,
   globe: (<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" /></>),
