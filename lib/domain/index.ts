@@ -9,3 +9,4 @@ export * from "./voice";
 export * from "./report";
 export * from "./prefill";
 export * from "./insights";
+export * from "./similar";
