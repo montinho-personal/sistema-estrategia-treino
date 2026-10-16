@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NoteList } from "@/components/common/notes";
 import { RichText } from "@/components/common/rich-text";
+import { CycleCompare } from "./cycle-compare";
 
 const fmtData = (iso?: string) =>
   iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
@@ -161,6 +162,15 @@ export function PainelView() {
             {loading ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
             {analysis ? "Atualizar análise" : "Gerar análise da minha metodologia"}
           </Button>
+        </Card>
+      )}
+
+      {temDados && (
+        <Card
+          title="Comparar ciclos do mesmo aluno"
+          hint="Escolha o aluno e dois ciclos: veja o que mudou no perfil, nas decisões e no volume — e gere a mensagem do novo ciclo."
+        >
+          <CycleCompare />
         </Card>
       )}
 
