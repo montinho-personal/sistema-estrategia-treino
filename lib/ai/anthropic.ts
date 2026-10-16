@@ -404,3 +404,21 @@ export function aiMethodologyReport(config: AiConfig, principios: string): Promi
     `DADOS DAS ESTRATÉGIAS:\n${dados || "(nenhuma estratégia salva ainda)"}`;
   return call(config, prompt, 1800);
 }
+
+/**
+ * Comparar ciclos: mensagem de WhatsApp para o aluno explicando o que muda no
+ * novo ciclo em relação ao anterior — sem inventar motivos que não estejam
+ * nos dados (quando não houver motivo escrito, explica o benefício da mudança).
+ */
+export function aiCycleMessage(config: AiConfig, nome: string, comparacao: string): Promise<string> {
+  const prompt =
+    `Escreva uma mensagem curta de WhatsApp do Personal Trainer para o aluno ${nome || "aluno"}, ` +
+    "apresentando o NOVO CICLO de treino e explicando o que muda em relação ao ciclo anterior, e por quê. " +
+    "Primeira pessoa, tom próximo, linguagem simples, 5 a 9 linhas curtas. Comece reconhecendo a evolução " +
+    "do aluno; destaque as 2 a 4 mudanças mais importantes; diga o que se mantém, se fizer sentido; termine " +
+    "com um incentivo. Use os motivos escritos pelo treinador quando existirem; quando não houver, explique " +
+    "de forma geral o benefício daquela mudança — nunca invente dados do aluno (peso, medidas, lesões). " +
+    "Pode usar *negrito* do WhatsApp com moderação; sem títulos e sem listas longas. Responda só com a mensagem.\n\n" +
+    `COMPARAÇÃO ENTRE OS CICLOS:\n${comparacao}`;
+  return call(config, withMemory(prompt), 700);
+}

@@ -104,7 +104,7 @@ export function objetivoDe(r: StrategyRecord): string {
 }
 
 /** Perguntas de escolha (opções clicáveis) — as que dá para comparar entre estratégias. */
-function choiceQuestions() {
+export function decisionQuestions(): { id: string; label: string; multi: boolean }[] {
   const out: { id: string; label: string; multi: boolean }[] = [];
   for (const t of TOPICS) {
     for (const q of t.questions) {
@@ -147,7 +147,7 @@ export function analyzeHistory(records: StrategyRecord[]): HistoryInsights {
   const experiencias = tally(records.map((r) => itemsOf(r.anamnese.experiencia)), total);
 
   const escolhas: QuestionStats[] = [];
-  for (const q of choiceQuestions()) {
+  for (const q of decisionQuestions()) {
     const lists = records.map((r) => itemsOf(r.answers[q.id])).filter((l) => l.length > 0);
     if (!lists.length) continue;
     escolhas.push({ id: q.id, label: q.label, multi: q.multi, answered: lists.length, top: tally(lists, lists.length) });
