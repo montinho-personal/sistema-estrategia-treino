@@ -9,10 +9,10 @@ import { STEP_META } from "@/lib/workspace/steps";
 
 export function Stepper() {
   const pathname = usePathname();
-  const activeIndex = Math.max(
-    0,
-    STEP_META.findIndex((s) => pathname.startsWith(s.path)),
-  );
+  const found = STEP_META.findIndex((s) => pathname.startsWith(s.path));
+  // Fora das 5 etapas (ex.: Painel do treinador) a barra de etapas não aparece.
+  if (found === -1 && pathname !== "/alunos") return null;
+  const activeIndex = Math.max(0, found);
 
   return (
     <div data-sticky style={{ top: "var(--nav-h, 57px)" }} className="sticky z-40 border-b border-border bg-bg/80 backdrop-blur-xl backdrop-saturate-150">

@@ -1,7 +1,14 @@
-import { SYSTEM_PROMPT, ANAMNESE_SECTIONS } from "@/lib/domain";
+import {
+  SYSTEM_PROMPT,
+  ANAMNESE_SECTIONS,
+  analyzeHistory,
+  insightsText,
+  trainerMemoryText,
+  writingSamples,
+} from "@/lib/domain";
 import type { StrategyState, Anamnese, VolumeRow } from "@/lib/domain/schema";
 import type { AiConfig } from "@/lib/store";
-import { DEFAULT_AI_MODEL } from "@/lib/store";
+import { DEFAULT_AI_MODEL, useDnaStore, useHistoryStore } from "@/lib/store";
 
 /**
  * Camada de IA opcional (bring-your-own-key). Executa o SYSTEM_PROMPT — o
@@ -51,6 +58,36 @@ function anamneseText(state: StrategyState): string {
   return rows.join("\n") || "(anamnese ainda vazia)";
 }
 
+/**
+ * Memória do treinador: princípios que ele escreveu, padrões das estratégias
+ * salvas no histórico e exemplos da escrita dele. A IA não aprende sozinha
+ * (cada chamada começa do zero) — é esta memória, enviada junto, que faz as
+ * respostas ficarem cada vez mais parecidas com o jeito dele de pensar.
+ */
+export function trainerMemory(): string {
+  try {
+    const snapshots = useHistoryStore.getState().snapshots;
+    const dna = useDnaStore.getState();
+    return trainerMemoryText({
+      insights: analyzeHistory(snapshots),
+      principios: dna.principles,
+      amostras: writingSamples(snapshots, dna.samples.map((x) => x.t)),
+    });
+  } catch {
+    return "";
+  }
+}
+
+function withMemory(prompt: string): string {
+  const mem = trainerMemory();
+  if (!mem) return prompt;
+  return (
+    `${prompt}\n\nMEMÓRIA DO TREINADOR — use para alinhar a resposta ao jeito como ele pensa, ` +
+    "decide e escreve. Os dados do aluno atual sempre têm prioridade sobre os padrões; " +
+    `não mencione esta memória no texto.\n${mem}`
+  );
+}
+
 /** Passo 2/3 — análise técnica + resumo executivo (não monta estratégia). */
 export function aiDiagnose(config: AiConfig, state: StrategyState): Promise<string> {
   const prompt =
@@ -59,7 +96,7 @@ export function aiDiagnose(config: AiConfig, state: StrategyState): Promise<stri
     "pontos de atenção, riscos e oportunidades. NÃO monte estratégia, não sugira " +
     "divisão, exercícios nem periodização.\n\nANAMNESE:\n" +
     anamneseText(state);
-  return call(config, prompt, 700);
+  return call(config, withMemory(prompt), 700);
 }
 
 /**
@@ -243,7 +280,7 @@ export async function aiSuggestAnswers(
     "prontas para usar. Não invente dados específicos do aluno que não estejam no contexto. " +
     "Responda APENAS com um array JSON de strings, sem comentários.\n\n" +
     `PERGUNTA: ${question}\n\nCONTEXTO DO ALUNO:\n${context}`;
-  const raw = await call(config, prompt, 800);
+  const raw = await call(config, withMemory(prompt), 800);
   return extractStringArray(raw);
 }
 
@@ -308,7 +345,7 @@ export function aiRewriteText(
     "pessoal, linguagem simples, parágrafos curtos. Mantenha exatamente as mesmas " +
     "decisões e informações — não invente nada novo, apenas melhore a escrita.\n\n" +
     `TEXTO ATUAL:\n${text}\n\nCONTEXTO DO ALUNO:\n${anamneseText(state)}`;
-  return call(config, prompt, 600);
+  return call(config, withMemory(prompt), 600);
 }
 
 /**
@@ -337,5 +374,33 @@ export function aiEnhanceText(
     "preserve esses marcadores. Responda APENAS com o texto aprimorado, sem comentários.\n\n" +
     `TEXTO ATUAL:\n${text}\n\nCONTEXTO DO ALUNO (use só para dar precisão, não copie cru):\n` +
     anamneseText(state);
-  return call(config, prompt, 900);
+  return call(config, withMemory(prompt), 900);
+}
+
+/**
+ * Painel do treinador: a IA lê o cruzamento de todas as estratégias salvas e
+ * escreve um relatório da metodologia do treinador (padrões, pontos cegos,
+ * oportunidades). Baseia-se só nos dados — não inventa números.
+ */
+export function aiMethodologyReport(config: AiConfig, principios: string): Promise<string> {
+  const snapshots = useHistoryStore.getState().snapshots;
+  const dados = insightsText(analyzeHistory(snapshots));
+  const prompt =
+    "Você é um consultor sênior de metodologia de treinamento analisando o trabalho do " +
+    "Personal Trainer Renato (Montinho). Abaixo está o cruzamento estatístico das estratégias " +
+    "que ele montou para os alunos. Escreva um RELATÓRIO DA METODOLOGIA DELE, falando direto " +
+    "com ele (\"você\"), em português, com estas seções:\n" +
+    "**Sua metodologia em uma frase**\n" +
+    "**O que você faz muito bem**\n" +
+    "**Padrões nas suas escolhas** (cite os números)\n" +
+    "**Pontos cegos e riscos** (só o que os dados sustentam)\n" +
+    "**Oportunidades para evoluir** (práticas e específicas)\n" +
+    "**Perguntas para você refletir** (2 ou 3)\n\n" +
+    "Regras: baseie-se SOMENTE nos dados abaixo; nunca invente números; se a amostra for " +
+    "pequena (menos de 5 estratégias), diga isso com clareza e trate as conclusões como " +
+    "hipóteses; leve em conta os princípios que ele definiu; seja direto e prático. Formato: " +
+    "cada título em **negrito** numa linha própria, itens começando com \"• \", sem tabelas.\n\n" +
+    (principios.trim() ? `PRINCÍPIOS QUE ELE DEFINIU:\n${principios.trim()}\n\n` : "") +
+    `DADOS DAS ESTRATÉGIAS:\n${dados || "(nenhuma estratégia salva ainda)"}`;
+  return call(config, prompt, 1800);
 }

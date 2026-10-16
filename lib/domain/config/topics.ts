@@ -119,7 +119,7 @@ export const TOPICS: Topic[] = [
     lead: "", mainQ: "volume_frequencia", whyQ: "volume_porque",
     questions: [
       {
-        id: "volume_frequencia", prompt: "Com que frequência cada grupo muscular será treinado?", type: "choice", allowOther: true,
+        id: "volume_frequencia", prompt: "Com que frequência cada grupo muscular será treinado?", type: "choice", allowOther: true, label: "Frequência por grupo",
         hint: "Logo abaixo, preencha as séries semanais de cada grupo — digitando, colando a tabela ou enviando um print.",
         placeholder: "Ex.: Glúteos 3x, demais 2x por semana",
         options: ["1x por semana", "2x por semana", "3x por semana", FREQUENCIA_PRIORITARIOS],
@@ -282,7 +282,7 @@ export const TOPICS: Topic[] = [
     questions: [
       { id: "cardio_have", prompt: "Haverá cardio neste ciclo?", type: "choice", options: ["Sim", "Não"] },
       {
-        id: "cardio_detalhe", prompt: "Como será o cardio?", type: "multi", allowOther: true, inline: true, label: "Como será",
+        id: "cardio_detalhe", prompt: "Como será o cardio?", type: "multi", allowOther: true, inline: true, label: "Detalhes do cardio",
         placeholder: "Ex.: Bike 25 min após o treino de pernas",
         options: ["2x/semana", "3x/semana", "4x ou mais/semana", "20–30 min", "30–45 min", "Zona 2 (leve, dá para conversar)", "Intervalado (HIIT)", "Após a musculação", "Em dias separados", "Caminhada / passos diários"],
         condition: (_a, ans) => ans.cardio_have === "Sim",

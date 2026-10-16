@@ -47,6 +47,9 @@ export function WorkspaceNav() {
         </Link>
         <div className="flex flex-wrap items-center justify-end gap-1.5">
           <AiDialog />
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/alunos/painel">Painel</Link>
+          </Button>
           <LibraryDialog trigger={<Button variant="ghost" size="sm">Biblioteca</Button>} />
           <DnaDialog trigger={<Button variant="ghost" size="sm">DNA</Button>} />
           <BrandDialog trigger={<Button variant="ghost" size="sm">Marca</Button>} />
