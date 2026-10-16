@@ -6,7 +6,7 @@ export { useBrandStore } from "./brand-store";
 export { usePreferencesStore, toPrefList } from "./preferences-store";
 
 export { useDnaStore } from "./dna-store";
-export type { StyleSample } from "./dna-store";
+export type { StyleSample, MethodologyAnalysis } from "./dna-store";
 
 export { useHistoryStore } from "./history-store";
 export type { StrategySnapshot } from "./history-store";

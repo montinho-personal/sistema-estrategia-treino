@@ -6,6 +6,9 @@ import { firstName } from "@/lib/domain/util";
 import { jsonStorage } from "./storage";
 import type { StrategySnapshotData } from "./strategy-store";
 
+/** Quantas estratégias o histórico guarda (base do painel e da memória da IA). */
+export const HISTORY_LIMIT = 200;
+
 export interface StrategySnapshot extends StrategySnapshotData {
   id: string;
   nome: string;
@@ -37,7 +40,7 @@ export const useHistoryStore = create<HistoryStore>()(
           overrides: structuredClone(state.overrides),
           volume: structuredClone(state.volume),
         };
-        set((s) => ({ snapshots: [snap, ...s.snapshots].slice(0, 50) }));
+        set((s) => ({ snapshots: [snap, ...s.snapshots].slice(0, HISTORY_LIMIT) }));
         return snap;
       },
       updateSnapshot: (id, state) => {

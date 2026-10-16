@@ -17,6 +17,8 @@ import type { AnswerValue } from "@/lib/domain/schema/answers";
 import type { Progress } from "@/lib/domain/interview";
 import { has } from "@/lib/domain/util";
 import { cn } from "@/lib/utils";
+import { historySuggestion } from "@/lib/domain/insights";
+import { useHistoryStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { AnswerControl, type Suggestion } from "./answer-control";
@@ -43,6 +45,17 @@ const OBJETIVO_ANAMNESE: Record<string, string> = {
 };
 
 /** Opção sugerida a partir da anamnese (hoje: o objetivo principal). */
+/**
+ * O que o treinador costuma escolher nesta pergunta em alunos com o mesmo
+ * objetivo (a partir das estratégias salvas) — vira o selo "você costuma".
+ */
+function useHistoryMark(question: Question, state: StrategyState): Suggestion | undefined {
+  const snapshots = useHistoryStore((s) => s.snapshots);
+  if (question.type !== "choice" && question.type !== "multi") return undefined;
+  const h = historySuggestion(snapshots, state.anamnese, question.id, question.options);
+  return h ? { value: h.value, label: `você costuma · ${h.count}/${h.of}` } : undefined;
+}
+
 function suggestedOption(question: Question, state: StrategyState): Suggestion | undefined {
   if (question.id !== "objetivo_principal") return undefined;
   const o = String(state.anamnese.objetivo ?? "").trim();
@@ -67,6 +80,7 @@ function ExtraQuestion({
   inline?: boolean;
 }) {
   const isWhy = Boolean(q.why);
+  const historyMark = useHistoryMark(q, state);
   return (
     <div className={inline ? "mt-6 border-t border-border pt-5" : "rounded-lg border border-border bg-surface p-3.5"}>
       {inline ? (
@@ -78,7 +92,13 @@ function ExtraQuestion({
         </Label>
       )}
       {q.hint && <p className="mt-1 text-[12.5px] text-muted-foreground">{q.hint}</p>}
-      <AnswerControl key={q.id} question={q} value={state.answers[q.id]} onChange={(v) => onAnswerId(q.id, v)} />
+      <AnswerControl
+        key={q.id}
+        question={q}
+        value={state.answers[q.id]}
+        onChange={(v) => onAnswerId(q.id, v)}
+        suggested={historyMark}
+      />
       {isWhy && (
         <AnswerSuggestions
           question={q.prompt}
@@ -134,7 +154,8 @@ export function QuestionCard({
   const inlineExtras = allExtras.filter((q) => q.inline);
   const extras = allExtras.filter((q) => !q.inline);
   const extrasAnswered = extras.filter((q) => has(state.answers[q.id])).length;
-  const suggested = suggestedOption(question, state);
+  const historyMark = useHistoryMark(question, state);
+  const suggested = suggestedOption(question, state) ?? historyMark;
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-md sm:p-8">
