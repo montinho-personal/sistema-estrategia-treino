@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
@@ -15,14 +15,17 @@ import {
   knowledgeForTopic,
   missingPrefill,
   essentialItems,
+  isFromAnamnese,
+  similarStrategies,
 } from "@/lib/domain";
 import { ADAPTIVE } from "@/lib/domain/config";
-import { low } from "@/lib/domain/util";
-import { useStrategyStore, usePreferencesStore } from "@/lib/store";
+import { has, low } from "@/lib/domain/util";
+import { useStrategyStore, usePreferencesStore, useHistoryStore } from "@/lib/store";
 import { scrollToElement } from "@/lib/scroll";
 import { Button } from "@/components/ui/button";
 import { QuestionCard } from "./question-card";
 import { SidePanel } from "./side-panel";
+import { SimilarStart } from "./similar-start";
 
 const ADAPTIVE_IDS = new Set(ADAPTIVE.map((a) => a.id));
 
@@ -51,6 +54,16 @@ export function InterviewWorkspace() {
 
   const curId = currentId(state);
   const item = curId ? itemById(state, curId) : null;
+
+  // "Começar a partir de uma estratégia parecida": só enquanto a entrevista
+  // não começou (as únicas respostas são as que vieram da anamnese).
+  const snapshots = useHistoryStore((s) => s.snapshots);
+  const [baseDismissed, setBaseDismissed] = useState(false);
+  const fresh = Object.entries(state.answers).every(([id, v]) => !has(v) || isFromAnamnese(state, id));
+  const matches = useMemo(
+    () => (fresh && !baseDismissed ? similarStrategies(snapshots, state.anamnese) : []),
+    [fresh, baseDismissed, snapshots, state.anamnese],
+  );
 
   // Ao trocar de pergunta (avançar, voltar ou pular de tópico), leva a tela
   // até o topo do card — não fica parada lá embaixo, onde estava o botão.
@@ -116,6 +129,8 @@ export function InterviewWorkspace() {
   );
 
   return (
+    <>
+    {matches.length > 0 && <SimilarStart matches={matches} onDismiss={() => setBaseDismissed(true)} />}
     <div ref={cardRef} className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
       {reduce ? (
         card
@@ -131,5 +146,6 @@ export function InterviewWorkspace() {
       )}
       <SidePanel state={state} currentTopicId={topic.id} onJumpTopic={jumpTopic} />
     </div>
+    </>
   );
 }
