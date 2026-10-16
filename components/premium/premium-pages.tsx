@@ -185,6 +185,15 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
           ]}
         />
         <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} note={reps} detail={val(x.intensidade_porque)} badges={tec} />
+        {(has(x.cardio_have) || has(x.cardio_detalhe)) && (
+          <Block
+            title="Cardio"
+            icon="pulse"
+            value={val(x.cardio_have) === "Não" ? "Sem cardio neste ciclo" : val(x.cardio_detalhe) || "Cardio incluído no plano"}
+            detail={val(x.cardio_porque)}
+            extras={[{ label: "Gasto energético", value: val(x.adapt_emagrecimento) }]}
+          />
+        )}
       </div>
       {vlines.length > 0 && (
         <div className="pg-voltable">
