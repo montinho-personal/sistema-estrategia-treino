@@ -59,8 +59,8 @@ export function CycleCompare() {
       <p className="text-[14px] leading-relaxed text-muted-foreground">
         Nenhum aluno tem 2 ciclos salvos ainda. Para registrar um novo ciclo: abra a estratégia anterior em{" "}
         <b>Histórico</b> (ou use <b>“Começar a partir de uma estratégia parecida”</b>, que reconhece o mesmo aluno),
-        ajuste o que muda e, no relatório, toque em <b>“Salvar como novo (cópia)”</b> — não em “Atualizar”, que
-        substitui o ciclo anterior.
+        ajuste o que muda e gere o relatório — ele entra no histórico como novo ciclo e o anterior fica guardado.
+        Ciclos antigos que você já enviou podem entrar pelo <b>Histórico → Importar relatório antigo</b>.
       </p>
     );
   }

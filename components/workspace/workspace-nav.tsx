@@ -7,7 +7,7 @@ import { RefreshCw } from "lucide-react";
 
 import { BrandLockup } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
-import { useStrategyStore } from "@/lib/store";
+import { hasUnsavedWork, unsavedWarning, useStrategyStore } from "@/lib/store";
 import { AiDialog } from "@/components/ai/ai-dialog";
 import { LibraryDialog } from "@/components/knowledge/library-dialog";
 import { DnaDialog } from "@/components/dna/dna-dialog";
@@ -33,7 +33,10 @@ export function WorkspaceNav() {
   }, []);
 
   function novaEstrategia() {
-    if (confirm("Começar uma nova estratégia? Os dados atuais deste navegador serão apagados.")) {
+    const msg = hasUnsavedWork()
+      ? `${unsavedWarning()}\n\nComeçar uma nova mesmo assim?`
+      : "Começar uma nova estratégia? Tudo o que você já salvou continua no Histórico.";
+    if (confirm(msg)) {
       reset();
       router.push("/alunos/anamnese");
     }

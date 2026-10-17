@@ -11,27 +11,12 @@ import { ANAMNESE_SECTIONS } from "@/lib/domain/config";
 import type { AnamneseFieldDef } from "@/lib/domain/types";
 import { useStrategyStore, useAiStore } from "@/lib/store";
 import { aiExtractAnamnese } from "@/lib/ai/anthropic";
+import { MAX_PDF_BYTES, fileToBase64 } from "@/lib/file";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
-
-const MAX_PDF_BYTES = 32 * 1024 * 1024; // limite da API (32 MB)
-
-/** Lê o arquivo como base64 puro (sem o prefixo data:). */
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result);
-      const comma = result.indexOf(",");
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.onerror = () => reject(new Error("Falha ao ler o arquivo."));
-    reader.readAsDataURL(file);
-  });
-}
 
 export function AnamneseForm() {
   const patch = useStrategyStore((s) => s.patch);
