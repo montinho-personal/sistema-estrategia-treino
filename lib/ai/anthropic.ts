@@ -2,10 +2,13 @@ import {
   SYSTEM_PROMPT,
   ANAMNESE_SECTIONS,
   analyzeHistory,
+  importQuestionGuide,
   insightsText,
+  sanitizeImportedStrategy,
   trainerMemoryText,
   writingSamples,
 } from "@/lib/domain";
+import type { ImportedStrategy } from "@/lib/domain";
 import type { StrategyState, Anamnese, VolumeRow } from "@/lib/domain/schema";
 import type { AiConfig } from "@/lib/store";
 import { DEFAULT_AI_MODEL, useDnaStore, useHistoryStore } from "@/lib/store";
@@ -245,6 +248,54 @@ export async function aiExtractAnamnese(
     if (value) out[k as keyof Anamnese] = value;
   }
   return out;
+}
+
+const IMPORT_SYSTEM =
+  "Você reconstrói estratégias de treino a partir de relatórios que um Personal Trainer " +
+  "já entregou aos alunos (PDF ou texto de WhatsApp gerados pela ferramenta dele). Seja " +
+  "fiel ao relatório: nunca invente decisões, números ou motivos que não estejam escritos nele.";
+
+/**
+ * Importar relatório antigo: lê o relatório entregue ao aluno (PDF em base64,
+ * sem o prefixo data:, ou o texto da versão WhatsApp) e reconstrói a estratégia
+ * — perfil, decisões, porquês e volume. O treinador revisa antes de salvar.
+ */
+export async function aiImportReport(
+  config: AiConfig,
+  input: { pdfBase64: string } | { text: string },
+): Promise<ImportedStrategy> {
+  const prompt =
+    "Este é um relatório de estratégia de treino que já foi entregue a um aluno. Reconstrua a " +
+    "estratégia a partir dele. Leia o documento INTEIRO. Responda APENAS com um objeto JSON " +
+    "válido — comece com { e termine com }, sem texto antes ou depois e sem cercas de código — " +
+    "neste formato:\n" +
+    '{"data": "AAAA-MM-DD", "anamnese": {"<id do campo>": "valor"}, ' +
+    '"respostas": {"<id da pergunta>": "texto" ou ["opção", "opção"]}, ' +
+    '"volume": [{"grupo": "Peito", "series": 12}]}\n\n' +
+    "REGRAS:\n" +
+    "- data: a data que aparece no relatório (geralmente na capa); omita se não houver.\n" +
+    "- Escolha única: use EXATAMENTE o texto de uma das opções listadas quando o relatório " +
+    "corresponder a ela; se disser outra coisa, escreva um texto curto com o que está no relatório.\n" +
+    "- Múltipla escolha: array com as opções listadas que aparecem no relatório, com o texto " +
+    "exato da opção; o que não corresponder a nenhuma opção entra como texto curto.\n" +
+    "- Perguntas de texto (porquês, vantagens, adaptações, mensagem final): copie o trecho do " +
+    "relatório que responde à pergunta, sem reescrever. O relatório fala direto com o aluno; as " +
+    "explicações de cada tema respondem às perguntas de texto do mesmo tópico.\n" +
+    "- volume: cada grupo muscular com o número de séries semanais (número inteiro); ignore totais e percentuais.\n" +
+    "- Omita tudo o que não aparecer no relatório. Não invente nada.\n\n" +
+    `CAMPOS DA ANAMNESE:\n${anamneseFieldGuide()}\n\n` +
+    `PERGUNTAS DA ESTRATÉGIA:${importQuestionGuide()}`;
+
+  const content: ContentBlock[] =
+    "pdfBase64" in input
+      ? [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: input.pdfBase64 } },
+          { type: "text", text: prompt },
+        ]
+      : [{ type: "text", text: `RELATÓRIO (versão WhatsApp):\n${input.text}\n\n---\n\n${prompt}` }];
+
+  const raw = await callWithContent(config, IMPORT_SYSTEM, content, 12000);
+  return sanitizeImportedStrategy(extractJsonObject(raw));
 }
 
 /** Extrai um array de strings de uma resposta, tolerando cercas de código e texto ao redor. */

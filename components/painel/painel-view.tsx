@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Download, Loader2, Sparkles, Upload } from "lucide-react";
+import { Download, FileUp, Loader2, Sparkles, Upload } from "lucide-react";
 
 import { analyzeHistory, type Count } from "@/lib/domain";
 import { useAiStore, useDnaStore, useHistoryStore } from "@/lib/store";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NoteList } from "@/components/common/notes";
 import { RichText } from "@/components/common/rich-text";
+import { HistoryDialog } from "@/components/history/history-dialog";
 import { CycleCompare } from "./cycle-compare";
 
 const fmtData = (iso?: string) =>
@@ -119,13 +120,23 @@ export function PainelView() {
         <div className="rounded-2xl border border-dashed border-border bg-surface p-6 text-[15px] leading-relaxed">
           <p className="font-semibold">Ainda não há estratégias salvas neste aparelho.</p>
           <p className="mt-1.5 text-muted-foreground">
-            O painel aprende com o histórico: ao terminar um relatório, toque em <b>“Salvar no histórico”</b>. Cada
-            estratégia salva ensina o painel e a IA. Se você já tem estratégias em outro aparelho, use o{" "}
-            <b>backup</b> no fim desta página.
+            O painel aprende com o histórico: cada relatório que você gera (WhatsApp ou PDF) entra nele sozinho e
+            ensina o painel e a IA. Já enviou relatórios antes? Importe os PDFs e a IA reconstrói essas estratégias. Se
+            elas estão em outro aparelho, use o <b>backup</b> no fim desta página.
           </p>
-          <Button asChild variant="outline" size="sm" className="mt-4">
-            <Link href="/alunos/relatorio">Ir para o relatório</Link>
-          </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <HistoryDialog
+              startImport
+              trigger={
+                <Button size="sm">
+                  <FileUp className="size-4" /> Importar relatórios antigos
+                </Button>
+              }
+            />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/alunos/relatorio">Ir para o relatório</Link>
+            </Button>
+          </div>
         </div>
       )}
 
@@ -310,7 +321,7 @@ export function PainelView() {
 
       <Card
         title="Backup do aprendizado"
-        hint="Seus dados ficam só neste navegador. Para levar o histórico, os princípios e o aprendizado do PC para o celular (ou vice-versa), exporte aqui e importe no outro aparelho."
+        hint="Seus dados ficam só neste navegador. Para levar o histórico, os princípios e o aprendizado do PC para o celular (ou vice-versa), exporte aqui e importe no outro aparelho. Relatórios antigos que não estão no histórico podem entrar pelo PDF."
       >
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={onImport} />
         <div className="flex flex-wrap gap-2.5">
@@ -320,6 +331,14 @@ export function PainelView() {
           <Button variant="outline" onClick={() => fileRef.current?.click()}>
             <Upload className="size-4" /> Importar backup
           </Button>
+          <HistoryDialog
+            startImport
+            trigger={
+              <Button variant="outline">
+                <FileUp className="size-4" /> Importar relatórios antigos (PDF)
+              </Button>
+            }
+          />
         </div>
       </Card>
     </div>

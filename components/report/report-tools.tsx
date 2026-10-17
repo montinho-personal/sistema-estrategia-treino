@@ -5,14 +5,33 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MessageCircle, FileText, Copy, ArrowLeft } from "lucide-react";
 
-import { completion, reportWhatsapp } from "@/lib/domain";
+import { completion, reportWhatsapp, sameStrategy } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
-import { useHistoryStore, useStrategyStore } from "@/lib/store";
+import {
+  autoSaveStrategy,
+  replacePreviousVersion,
+  useHistoryStore,
+  useStrategyStore,
+  type AutoSaveResult,
+} from "@/lib/store";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Button } from "@/components/ui/button";
 import { MemoryDialog } from "@/components/memory/memory-dialog";
 import { BrandDialog } from "@/components/brand/brand-dialog";
 import { PremiumPreview } from "@/components/premium/premium-preview";
+
+const fmtData = (iso: string) =>
+  new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) +
+  " · " +
+  new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+/** O que o salvamento automático fez, para mostrar junto do aviso de cópia/PDF. */
+function saveNote(r: AutoSaveResult): string | undefined {
+  if (r.kind === "created") return "Estratégia salva automaticamente no histórico.";
+  if (r.kind === "updated") return "Histórico atualizado.";
+  if (r.kind === "version") return "Salva no histórico como nova versão — a anterior continua guardada.";
+  return undefined;
+}
 
 export function ReportTools({ state }: { state: StrategyState }) {
   const router = useRouter();
@@ -20,33 +39,65 @@ export function ReportTools({ state }: { state: StrategyState }) {
   const updateSnapshot = useHistoryStore((s) => s.updateSnapshot);
   const snapshots = useHistoryStore((s) => s.snapshots);
   const sourceId = useStrategyStore((s) => s.sourceId);
+  const sourceOwned = useStrategyStore((s) => s.sourceOwned);
+  const setSource = useStrategyStore((s) => s.setSource);
   const loaded = sourceId ? snapshots.find((s) => s.id === sourceId) : undefined;
+  const salva = loaded ? sameStrategy(loaded, state) : false;
   const [waOpen, setWaOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const comp = completion(state);
 
-  async function copyWhatsapp(feedback = true) {
+  /** Aviso de sucesso + o que foi salvo no histórico (com "desfazer" da nova versão). */
+  function notify(title: string, r: AutoSaveResult) {
+    toast.success(title, {
+      description: saveNote(r),
+      ...(r.kind === "version"
+        ? {
+            duration: 12000,
+            action: {
+              label: "Substituir a anterior",
+              onClick: () => {
+                const u = replacePreviousVersion(state, r);
+                toast.success(u ? `Versão anterior de ${u.nome} substituída.` : "A versão anterior não está mais no histórico.");
+              },
+            },
+          }
+        : {}),
+    });
+  }
+
+  async function copyWhatsapp() {
+    const r = autoSaveStrategy(state);
     const ok = await copyToClipboard(reportWhatsapp(state));
-    if (feedback) toast[ok ? "success" : "error"](ok ? "Texto do WhatsApp copiado." : "Não foi possível copiar.");
-    return ok;
+    if (ok) notify("Texto do WhatsApp copiado.", r);
+    else toast.error("Não foi possível copiar.", { description: saveNote(r) });
   }
   function openPremium() {
+    const r = autoSaveStrategy(state);
+    const note = saveNote(r);
+    if (r.kind === "version") notify("PDF Premium aberto.", r);
+    else if (note) toast.success(note);
     setPreviewOpen(true);
   }
   async function ambos() {
-    await copyWhatsapp(false);
-    toast.success("WhatsApp copiado.");
-    openPremium();
+    const r = autoSaveStrategy(state);
+    const ok = await copyToClipboard(reportWhatsapp(state));
+    if (ok) notify("WhatsApp copiado.", r);
+    else toast.error("Não foi possível copiar o WhatsApp.", { description: saveNote(r) });
+    setPreviewOpen(true);
   }
   function save() {
     const snap = saveSnapshot(state);
+    setSource(snap.id, true);
     toast.success(`Estratégia de ${snap.nome} salva no histórico.`);
   }
   function update() {
     if (!sourceId) return;
     const snap = updateSnapshot(sourceId, state);
-    if (snap) toast.success(`Relatório de ${snap.nome} atualizado no histórico.`);
-    else toast.error("Este relatório não está mais no histórico. Salve como novo.");
+    if (snap) {
+      setSource(snap.id, true);
+      toast.success(`Relatório de ${snap.nome} atualizado no histórico.`);
+    } else toast.error("Este relatório não está mais no histórico. Salve como novo.");
   }
 
   return (
@@ -69,7 +120,7 @@ export function ReportTools({ state }: { state: StrategyState }) {
           Qual versão deseja gerar?
         </h3>
         <div className="mt-3 grid gap-2.5">
-          <Button className="justify-start" onClick={() => copyWhatsapp()}>
+          <Button className="justify-start" onClick={copyWhatsapp}>
             <MessageCircle className="size-4" /> 1 · WhatsApp
           </Button>
           <Button variant="outline" className="justify-start" onClick={openPremium}>
@@ -96,6 +147,13 @@ export function ReportTools({ state }: { state: StrategyState }) {
           trigger={<Button variant="outline" className="mt-3 w-full">Ver estratégia completa</Button>}
         />
         <BrandDialog trigger={<Button variant="outline" className="mt-2.5 w-full">Configurar marca</Button>} />
+        <p className="mt-3 text-[12.5px] leading-snug text-muted-foreground">
+          {salva && loaded
+            ? `✓ Salva no histórico · ${fmtData(loaded.updatedAt ?? loaded.savedAt)}`
+            : loaded && !sourceOwned
+              ? "Você alterou uma estratégia aberta do histórico. Ao gerar o relatório, ela entra como nova versão (a anterior fica guardada) — ou toque em “Atualizar” para corrigir a anterior."
+              : "Ao gerar o WhatsApp ou o PDF, a estratégia é salva sozinha no histórico."}
+        </p>
         {loaded ? (
           <>
             <Button className="mt-2.5 w-full" onClick={update}>

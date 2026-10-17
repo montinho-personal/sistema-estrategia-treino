@@ -23,13 +23,21 @@ interface StrategyActions {
   setStep: (step: Step) => void;
   setCurrentQ: (id: string | null) => void;
   patch: (partial: Partial<StrategyState>) => void;
-  loadSnapshot: (data: StrategySnapshotData, sourceId?: string | null) => void;
+  /** owned = a entrada do histórico é desta estratégia (pode ser atualizada sozinha). */
+  loadSnapshot: (data: StrategySnapshotData, sourceId?: string | null, owned?: boolean) => void;
+  setSource: (sourceId: string | null, owned: boolean) => void;
   reset: () => void;
 }
 
 /** Id do snapshot atualmente carregado (para atualizar no histórico). */
 interface StrategyMeta {
   sourceId: string | null;
+  /**
+   * true quando a entrada do histórico foi criada a partir desta estratégia (ou
+   * o treinador escolheu "Atualizar") — o salvamento automático pode atualizá-la.
+   * false quando foi aberta do histórico: mudanças viram uma nova versão.
+   */
+  sourceOwned: boolean;
 }
 
 export type StrategyStore = StrategyState & StrategyMeta & StrategyActions;
@@ -41,6 +49,7 @@ export const useStrategyStore = create<StrategyStore>()(
     (set) => ({
       ...createStrategyState(),
       sourceId: null,
+      sourceOwned: false,
 
       setAnamnese: (field, value) =>
         set((s) => ({ anamnese: { ...s.anamnese, [field]: value }, updatedAt: stamp() })),
@@ -66,10 +75,13 @@ export const useStrategyStore = create<StrategyStore>()(
 
       patch: (partial) => set({ ...partial, updatedAt: stamp() }),
 
-      loadSnapshot: (data, sourceId = null) =>
+      setSource: (sourceId, sourceOwned) => set({ sourceId, sourceOwned }),
+
+      loadSnapshot: (data, sourceId = null, sourceOwned = false) =>
         set({
           ...createStrategyState(),
           sourceId,
+          sourceOwned,
           anamnese: data.anamnese ?? {},
           answers: data.answers ?? {},
           overrides: data.overrides ?? {},
@@ -78,7 +90,7 @@ export const useStrategyStore = create<StrategyStore>()(
           updatedAt: stamp(),
         }),
 
-      reset: () => set({ ...createStrategyState(), sourceId: null, updatedAt: stamp() }),
+      reset: () => set({ ...createStrategyState(), sourceId: null, sourceOwned: false, updatedAt: stamp() }),
     }),
     {
       name: "mts.strategy.v3",
@@ -94,6 +106,8 @@ export const useStrategyStore = create<StrategyStore>()(
         step: s.step,
         currentQ: s.currentQ,
         updatedAt: s.updatedAt,
+        sourceId: s.sourceId,
+        sourceOwned: s.sourceOwned,
       }),
     },
   ),
