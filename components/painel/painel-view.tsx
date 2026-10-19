@@ -5,7 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Download, FileUp, Loader2, Sparkles, Upload } from "lucide-react";
 
-import { analyzeHistory, type Count } from "@/lib/domain";
+import { analyzeHistory, memoryOverview, writingSamples, type Count } from "@/lib/domain";
 import { useAiStore, useDnaStore, useHistoryStore } from "@/lib/store";
 import { aiMethodologyReport, trainerMemory } from "@/lib/ai/anthropic";
 import { exportBackup, importBackup } from "@/lib/store/backup";
@@ -15,13 +15,26 @@ import { NoteList } from "@/components/common/notes";
 import { RichText } from "@/components/common/rich-text";
 import { HistoryDialog } from "@/components/history/history-dialog";
 import { CycleCompare } from "./cycle-compare";
+import { AiMemory } from "./ai-memory";
 
 const fmtData = (iso?: string) =>
   iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-function Card({ title, hint, children, className }: { title: string; hint?: string; children: ReactNode; className?: string }) {
+function Card({
+  title,
+  hint,
+  children,
+  className,
+  id,
+}: {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+  className?: string;
+  id?: string;
+}) {
   return (
-    <section className={`rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6 ${className ?? ""}`}>
+    <section id={id} className={`rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6 ${className ?? ""}`}>
       <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{title}</h2>
       {hint && <p className="mt-1.5 text-[13px] leading-snug text-muted-foreground">{hint}</p>}
       <div className="mt-4">{children}</div>
@@ -65,13 +78,13 @@ export function PainelView() {
   const principles = useDnaStore((s) => s.principles);
   const setPrinciples = useDnaStore((s) => s.setPrinciples);
   const analysis = useDnaStore((s) => s.analysis);
+  const styleSamples = useDnaStore((s) => s.samples);
   const setAnalysis = useDnaStore((s) => s.setAnalysis);
   const aiConfig = useAiStore((s) => s.config);
 
   const ins = useMemo(() => analyzeHistory(snapshots), [snapshots]);
   const [draft, setDraft] = useState(principles);
   const [loading, setLoading] = useState(false);
-  const [showMemory, setShowMemory] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const dirty = draft.trim() !== principles.trim();
@@ -111,7 +124,15 @@ export function PainelView() {
     }
   }
 
-  const memory = showMemory ? trainerMemory() : "";
+  const overview = useMemo(
+    () => memoryOverview(ins, principles, writingSamples(snapshots, styleSamples.map((x) => x.t))),
+    [ins, principles, snapshots, styleSamples],
+  );
+  const principiosRef = useRef<HTMLTextAreaElement>(null);
+  function editarPrincipios() {
+    document.getElementById("principios")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => principiosRef.current?.focus({ preventScroll: true }), 400);
+  }
   const temDados = ins.total > 0;
 
   return (
@@ -186,10 +207,13 @@ export function PainelView() {
       )}
 
       <Card
+        id="principios"
+        className="scroll-mt-[calc(var(--nav-h,64px)+16px)]"
         title="Seus princípios — a IA sempre segue"
         hint="Escreva do seu jeito: regras que você sempre segue, o que evita, sua filosofia, como gosta de explicar ao aluno. Tudo aqui vai junto em cada sugestão e texto da IA."
       >
         <Textarea
+          ref={principiosRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={
@@ -307,16 +331,9 @@ export function PainelView() {
 
       <Card
         title="O que a IA sabe sobre você"
-        hint="A IA não aprende sozinha: a cada pedido, o sistema envia junto esta memória — seus princípios, os padrões das estratégias salvas e exemplos da sua escrita."
+        hint="Esta é a memória que vai junto em cada pedido à IA: seus padrões de decisão, seus princípios e o seu jeito de escrever."
       >
-        <Button variant="outline" size="sm" onClick={() => setShowMemory((v) => !v)}>
-          {showMemory ? "Esconder" : "Ver o que é enviado para a IA"}
-        </Button>
-        {showMemory && (
-          <pre className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-border bg-bg p-4 font-sans text-[13px] leading-relaxed">
-            {memory || "Ainda vazia — salve estratégias no histórico ou escreva seus princípios."}
-          </pre>
-        )}
+        <AiMemory overview={overview} memoryText={trainerMemory} onEditPrinciples={editarPrincipios} />
       </Card>
 
       <Card
