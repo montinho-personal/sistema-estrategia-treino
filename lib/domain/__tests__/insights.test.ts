@@ -6,6 +6,8 @@ import {
   trainerMemoryText,
   writingSamples,
   insightsText,
+  memoryOverview,
+  patternStrength,
   type StrategyRecord,
 } from "../insights";
 
@@ -80,5 +82,34 @@ describe("painel do treinador / cruzamento das estratégias", () => {
     expect(vazio.total).toBe(0);
     expect(insightsText(vazio)).toBe("");
     expect(trainerMemoryText({ insights: vazio })).toBe("");
+  });
+});
+
+describe("o que a IA sabe sobre você (resumo visual)", () => {
+  const r = (answers: Record<string, string | string[]>): StrategyRecord => ({ anamnese: { nome: "x" }, answers });
+
+  it("classifica a força de cada padrão", () => {
+    expect(patternStrength(75, 8)).toBe("forte");
+    expect(patternStrength(100, 2)).toBe("tendencia"); // pouca base: ainda não é padrão forte
+    expect(patternStrength(45, 10)).toBe("tendencia");
+    expect(patternStrength(25, 8)).toBe("varia");
+  });
+
+  it("agrupa as decisões e lê princípios e nível", () => {
+    const ins = analyzeHistory([
+      r({ divisao_qual: "ABC", cardio_have: "Sim", objetivo_principal: "Hipertrofia" }),
+      r({ divisao_qual: "ABC", cardio_have: "Não" }),
+      r({ divisao_qual: "ABC", cardio_have: "Sim" }),
+      r({ divisao_qual: "Full Body", cardio_have: "Não" }),
+    ]);
+    const m = memoryOverview(ins, "- Sempre começo com adaptação\n\n• Iniciante não vai à falha\n", ["Texto de exemplo"]);
+    expect(m.padroes.forte.map((p) => [p.id, p.value, p.pct])).toEqual([["divisao_qual", "ABC", 75]]);
+    expect(m.padroes.tendencia.map((p) => p.id)).toEqual(["cardio_have"]);
+    // objetivo é do aluno, não uma decisão de método: vai para o perfil
+    expect(m.perfil.map((p) => [p.id, p.value])).toEqual([["objetivo_principal", "Hipertrofia"]]);
+    expect(Object.values(m.padroes).flat().some((p) => p.id === "objetivo_principal")).toBe(false);
+    expect(m.principios).toEqual(["Sempre começo com adaptação", "Iniciante não vai à falha"]);
+    expect(m.nivel).toEqual({ label: "Começando a te conhecer", pct: 20 });
+    expect(m.amostras).toHaveLength(1);
   });
 });

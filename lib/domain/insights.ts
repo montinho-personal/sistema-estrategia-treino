@@ -363,3 +363,76 @@ export function trainerMemoryText(opts: { insights: HistoryInsights; principios?
   }
   return parts.join("\n\n");
 }
+
+/* --------------------- "O que a IA sabe sobre você" --------------------- */
+
+/** Com quantas estratégias os padrões ficam confiáveis (meta do medidor). */
+export const META_ESTRATEGIAS = 20;
+
+/** forte: a IA segue · tendencia: ponto de partida · varia: decide pelo aluno. */
+export type PatternStrength = "forte" | "tendencia" | "varia";
+
+export interface DecisionPattern {
+  id: string;
+  label: string;
+  value: string;
+  pct: number;
+  count: number;
+  of: number;
+  forca: PatternStrength;
+}
+
+export interface MemoryOverview {
+  estrategias: number;
+  alunos: number;
+  nivel: { label: string; pct: number };
+  principios: string[];
+  /** Decisões do treinador, agrupadas pela força do padrão. */
+  padroes: Record<PatternStrength, DecisionPattern[]>;
+  /** O que depende do aluno (objetivos, prioridades) — perfil, não decisão. */
+  perfil: DecisionPattern[];
+  amostras: string[];
+}
+
+/** Perguntas que descrevem o aluno, e não uma escolha de método do treinador. */
+const PERFIL_IDS = new Set(["objetivo_principal", "objetivo_secundario", "objetivo_prioridade"]);
+
+/** Força do padrão: só é "forte" com base mínima (3 estratégias) e 60%+. */
+export function patternStrength(pct: number, of: number): PatternStrength {
+  if (pct >= 60 && of >= 3) return "forte";
+  if (pct >= 40) return "tendencia";
+  return "varia";
+}
+
+function nivelDe(total: number): string {
+  if (!total) return "Ainda não te conhece";
+  if (total < 5) return "Começando a te conhecer";
+  if (total < 15) return "Aprendendo o seu jeito";
+  return "Já conhece bem o seu jeito";
+}
+
+/** Resumo visual da memória enviada à IA (o mesmo conteúdo de trainerMemoryText). */
+export function memoryOverview(ins: HistoryInsights, principios = "", amostras: string[] = []): MemoryOverview {
+  const padroes: Record<PatternStrength, DecisionPattern[]> = { forte: [], tendencia: [], varia: [] };
+  const perfil: DecisionPattern[] = [];
+  for (const e of ins.escolhas) {
+    const top = e.top[0];
+    if (!top || !e.answered) continue;
+    const forca = patternStrength(top.pct, e.answered);
+    const p = { id: e.id, label: e.label, value: top.value, pct: top.pct, count: top.count, of: e.answered, forca };
+    if (PERFIL_IDS.has(e.id)) perfil.push(p);
+    else padroes[forca].push(p);
+  }
+  return {
+    estrategias: ins.total,
+    alunos: ins.alunos,
+    nivel: { label: nivelDe(ins.total), pct: Math.min(100, Math.round((ins.total / META_ESTRATEGIAS) * 100)) },
+    principios: principios
+      .split("\n")
+      .map((l) => l.replace(/^\s*(?:[-•*✓]|\d+[.)])\s*/, "").trim())
+      .filter(Boolean),
+    padroes,
+    perfil,
+    amostras: amostras.filter(Boolean),
+  };
+}
