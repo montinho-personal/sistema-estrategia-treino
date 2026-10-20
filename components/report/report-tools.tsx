@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MessageCircle, FileText, Copy, ArrowLeft, Smartphone, Download } from "lucide-react";
+import { MessageCircle, FileText, Copy, ArrowLeft, Send } from "lucide-react";
 
-import { appExport, completion, reportWhatsapp, sameStrategy, whatsappDigits, cleanEmail, birthDateIso } from "@/lib/domain";
+import { completion, exportarParaApp, nomeArquivoApp, reportWhatsapp, sameStrategy } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
 import {
   autoSaveStrategy,
@@ -86,32 +86,27 @@ export function ReportTools({ state }: { state: StrategyState }) {
     else toast.error("Não foi possível copiar o WhatsApp.", { description: saveNote(r) });
     setPreviewOpen(true);
   }
-  /** Aplicativo de treino: o pacote JSON da estratégia (com os dados do aluno). */
-  function appJson() {
-    autoSaveStrategy(state);
-    return JSON.stringify(appExport(state), null, 2);
+  /** Arquivo de dados para importar no app Montinho (cadastro do aluno). */
+  function enviarParaApp() {
+    const r = autoSaveStrategy(state);
+    const blob = new Blob([JSON.stringify(exportarParaApp(state), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivoApp(state);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    notify("Arquivo para o app Montinho baixado.", r);
   }
+  /** Mesmo conteúdo do arquivo, copiado: no celular é só colar no app (sem procurar arquivo). */
   async function copiarParaApp() {
-    const ok = await copyToClipboard(appJson());
-    toast[ok ? "success" : "error"](ok ? "Dados copiados — cole no aplicativo." : "Não foi possível copiar.");
+    const r = autoSaveStrategy(state);
+    const ok = await copyToClipboard(JSON.stringify(exportarParaApp(state)));
+    if (ok) notify("Estratégia copiada. No app Montinho, toque em “Colar do Strategy”.", r);
+    else toast.error("Não foi possível copiar.", { description: saveNote(r) });
   }
-  function baixarParaApp() {
-    const blob = new Blob([appJson()], { type: "application/json" });
-    const a = document.createElement("a");
-    const nome = String(state.anamnese.nome ?? "aluno").trim().toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-");
-    a.href = URL.createObjectURL(blob);
-    a.download = `estrategia-${nome || "aluno"}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast.success("Arquivo para o aplicativo baixado.");
-  }
-  const a = state.anamnese;
-  const faltaContato = [
-    !birthDateIso(a.dataNascimento) && "data de nascimento",
-    !cleanEmail(a.email) && "e-mail",
-    !whatsappDigits(a.whatsapp) && "WhatsApp",
-  ].filter(Boolean) as string[];
-
   function save() {
     const snap = saveSnapshot(state);
     setSource(snap.id, true);
@@ -159,6 +154,19 @@ export function ReportTools({ state }: { state: StrategyState }) {
         <Button variant="ghost" className="mt-2.5 w-full" onClick={() => setWaOpen((v) => !v)}>
           Prévia do WhatsApp
         </Button>
+        <div className="mt-3 border-t border-border pt-3">
+          <div className="grid gap-2">
+            <Button variant="outline" className="w-full justify-start" onClick={copiarParaApp}>
+              <Copy className="size-4" /> Copiar para o app Montinho
+            </Button>
+            <Button variant="ghost" className="w-full justify-start" onClick={enviarParaApp}>
+              <Send className="size-4" /> Baixar arquivo para o app
+            </Button>
+          </div>
+          <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground">
+            No celular, use “Copiar”: no app, em Alunos → Novo aluno (ou no perfil do aluno → Estratégia), toque em “Colar do Strategy”. No computador, pode baixar o arquivo e escolher no app. O app monta os dias da semana por músculo com as metas de séries.
+          </p>
+        </div>
         {waOpen && (
           <pre className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-[12px] border border-[#1f2c33] bg-[#0b141a] p-4 font-sans text-[13.5px] leading-relaxed text-[#e9edef]">
             {reportWhatsapp(state)}
@@ -194,26 +202,6 @@ export function ReportTools({ state }: { state: StrategyState }) {
             Salvar no histórico
           </Button>
         )}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
-        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          <Smartphone className="size-3.5" /> Aplicativo de treino
-        </h3>
-        <p className="mt-2 text-[13px] leading-snug text-muted-foreground">
-          Leva para o aplicativo os dados do aluno (nascimento, e-mail, WhatsApp) e todas as decisões da estratégia.
-        </p>
-        {faltaContato.length > 0 && (
-          <p className="mt-2 rounded-lg bg-gold-soft px-3 py-2 text-[12.5px] leading-snug">
-            Falta na anamnese: {faltaContato.join(", ")}.
-          </p>
-        )}
-        <Button variant="outline" className="mt-3 w-full" onClick={copiarParaApp}>
-          <Copy className="size-4" /> Copiar dados para o app
-        </Button>
-        <Button variant="ghost" className="mt-2 w-full" onClick={baixarParaApp}>
-          <Download className="size-4" /> Baixar arquivo para o app
-        </Button>
       </div>
 
       {previewOpen && <PremiumPreview state={state} onClose={() => setPreviewOpen(false)} />}

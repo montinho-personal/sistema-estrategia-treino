@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 
 import { ageFromBirth, birthDateIso, cleanEmail, whatsappDigits } from "../contact";
-import { appExport, APP_EXPORT_FORMAT } from "../app-export";
-import { makeState } from "./fixtures";
 
 describe("dados de contato do aluno", () => {
   it("normaliza a data de nascimento e calcula a idade", () => {
@@ -28,19 +26,15 @@ describe("dados de contato do aluno", () => {
   });
 });
 
-describe("pacote para o aplicativo", () => {
-  it("leva aluno, contato e decisões do plano", () => {
-    const s = makeState(
-      { nome: "Carol Zorzi", dataNascimento: "10/02/1979", email: "carol@email.com", whatsapp: "(11) 98888-7777", tituloPlano: "Missão Musa", diasSemana: "4", tempoSessao: "60" },
-      { divisao_qual: "ABC", intensidade_estrategia: ["Bi-set", "Rest-pause"], cardio_have: "Não", cardio_detalhe: ["Esteira"] },
+describe("contato no arquivo do app Montinho", () => {
+  it("leva nascimento, idade, e-mail e WhatsApp normalizados", async () => {
+    const { estrategiaParaApp } = await import("../export-app");
+    const { makeState } = await import("./fixtures");
+    const e = estrategiaParaApp(
+      makeState({ nome: "Carol Zorzi", dataNascimento: "10/02/1979", email: "Carol@Email.com", whatsapp: "(11) 98888-7777", sexo: "Feminino" }),
     );
-    s.volume = [{ grupo: "Glúteos", series: "16" }, { grupo: "", series: "4" }];
-    const x = appExport(s, new Date("2026-10-20T12:00:00Z"));
-    expect(x.formato).toBe(APP_EXPORT_FORMAT);
-    expect(x.aluno).toMatchObject({ nome: "Carol Zorzi", dataNascimento: "1979-02-10", email: "carol@email.com", whatsapp: "5511988887777" });
-    expect(x.aluno.idade).toBeGreaterThanOrEqual(46);
-    expect(x.plano).toMatchObject({ titulo: "Missão Musa", diasPorSemana: 4, minutosPorSessao: 60, divisao: "ABC", intensidade: ["Bi-set", "Rest-pause"], cardio: [] });
-    expect(x.plano.volumeSemanal).toEqual([{ grupo: "Glúteos", series: 16 }]);
-    expect(x.decisoes.find((d) => d.id === "divisao_qual")).toMatchObject({ tema: "Divisão do treinamento", resposta: "ABC" });
+    expect(e).toMatchObject({ aluno: "Carol Zorzi", dataNascimento: "1979-02-10", sexo: "Feminino", email: "carol@email.com", whatsapp: "5511988887777" });
+    expect(e.idade).toBeGreaterThanOrEqual(46);
+    expect(estrategiaParaApp(makeState({ nome: "X", idade: "30" }))).toMatchObject({ dataNascimento: null, idade: 30, email: null, whatsapp: null });
   });
 });

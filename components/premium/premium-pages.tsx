@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import { brandLogo, type Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotal, parseRichBlocks, inlineSegments } from "@/lib/domain";
+import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotalTexto, parseRichBlocks, inlineSegments } from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
 import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
 import { prioridadeGrupos } from "@/lib/domain/config";
@@ -158,7 +158,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
   const tec = Array.isArray(x.intensidade_tecnicas) ? x.intensidade_tecnicas : [];
   const steps = timelineSteps(x.periodizacao_fases);
   const vlines = volumeLines(state);
-  const vtot = volumeTotal(state);
+  const vtot = volumeTotalTexto(state);
   const grupos = prioridadeGrupos(x);
   const taticas = Array.isArray(x.prioridade_estrategias) ? x.prioridade_estrategias : [];
   return (
@@ -201,7 +201,7 @@ export function EstrategiaPage({ state, brand, n, total }: { state: StrategyStat
           {has(x.volume_frequencia) && <p className="pg-voltable__freq">Frequência: {val(x.volume_frequencia)}</p>}
           <table className="pg-vol">
             <thead>
-              <tr><th>Grupo muscular</th><th>Séries / semana</th><th>% do total</th></tr>
+              <tr><th>Grupo muscular</th><th>Séries / semana (meta)</th><th>% do total</th></tr>
             </thead>
             <tbody>
               {vlines.map((r, i) => (

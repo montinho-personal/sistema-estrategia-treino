@@ -371,7 +371,39 @@ export function volumeRows(state: StrategyState): VolumeRow[] {
   return state.volume.filter((r) => has(r.grupo) && has(r.series));
 }
 
-/** Total de séries por semana (soma dos valores numéricos), ou null se não houver. */
+/** Faixa da linha: mínimo e máximo (sem máximo → os dois iguais). */
+export function faixaDe(r: VolumeRow): { min: number; max: number } | null {
+  const min = parseInt(String(r.series ?? ""), 10);
+  if (!Number.isFinite(min)) return null;
+  const max = parseInt(String(r.max ?? ""), 10);
+  return { min, max: Number.isFinite(max) && max > min ? max : min };
+}
+
+/** "14–18" ou "16". */
+export function textoFaixa(f: { min: number; max: number }): string {
+  return f.max > f.min ? `${f.min}–${f.max}` : String(f.min);
+}
+
+/** Total semanal em faixa (soma dos mínimos e dos máximos), ou null. */
+export function volumeTotalFaixa(state: StrategyState): { min: number; max: number } | null {
+  let min = 0, max = 0, any = false;
+  for (const r of volumeRows(state)) {
+    const f = faixaDe(r);
+    if (!f) continue;
+    min += f.min;
+    max += f.max;
+    any = true;
+  }
+  return any ? { min, max } : null;
+}
+
+/** Total semanal em texto ("84–102" ou "98"), ou null. */
+export function volumeTotalTexto(state: StrategyState): string | null {
+  const t = volumeTotalFaixa(state);
+  return t ? textoFaixa(t) : null;
+}
+
+/** Total de séries por semana (soma dos mínimos), ou null se não houver. */
 export function volumeTotal(state: StrategyState): number | null {
   let sum = 0;
   let any = false;
@@ -397,12 +429,13 @@ export function parseVolumeText(text: string): VolumeRow[] {
     if (cells.length < 2) continue;
     const grupo = cells[0];
     let series = "";
+    let max = "";
     for (let i = 1; i < cells.length; i++) {
       if (/%/.test(cells[i])) continue; // ignora percentuais
-      const m = cells[i].match(/\d+/);
-      if (m) { series = m[0]; break; }
+      const m = cells[i].match(/(\d+)(?:\s*(?:[–—-]|a|até)\s*(\d+))?/);
+      if (m) { series = m[1]; max = m[2] ?? ""; break; }
     }
-    if (grupo && series) rows.push({ grupo, series });
+    if (grupo && series) rows.push(max ? { grupo, series, max } : { grupo, series });
   }
   return rows;
 }
@@ -413,8 +446,8 @@ export function mergeVolume(existing: VolumeRow[], incoming: VolumeRow[]): Volum
   for (const inc of incoming) {
     const key = inc.grupo.trim().toLowerCase();
     const idx = out.findIndex((r) => r.grupo.trim().toLowerCase() === key);
-    if (idx >= 0) out[idx] = { ...out[idx], series: inc.series };
-    else out.push({ grupo: inc.grupo, series: inc.series });
+    if (idx >= 0) out[idx] = { ...out[idx], series: inc.series, max: inc.max };
+    else out.push({ grupo: inc.grupo, series: inc.series, max: inc.max });
   }
   return out;
 }
@@ -428,11 +461,14 @@ export interface VolumeLine {
 
 /** Linhas de volume com o percentual de cada grupo no total semanal. */
 export function volumeLines(state: StrategyState): VolumeLine[] {
-  const total = volumeTotal(state);
+  // % pelo ponto médio da faixa (com número fixo, é o próprio número).
+  const meio = (f: { min: number; max: number }) => (f.min + f.max) / 2;
+  const t = volumeTotalFaixa(state);
+  const total = t ? meio(t) : null;
   return volumeRows(state).map((r) => {
-    const n = toInt(r.series);
-    const pct = total && n != null ? Math.round((n / total) * 100) : null;
-    return { grupo: r.grupo, series: r.series, pct };
+    const f = faixaDe(r);
+    const pct = total && f ? Math.round((meio(f) / total) * 100) : null;
+    return { grupo: r.grupo, series: f ? textoFaixa(f) : r.series, pct };
   });
 }
 
@@ -521,7 +557,7 @@ export function reportWhatsapp(state: StrategyState): string {
     for (const r of vlines) {
       lines.push(`• ${r.grupo}: ${r.series}${r.pct != null ? ` (${r.pct}%)` : ""}`);
     }
-    const tot = volumeTotal(state);
+    const tot = volumeTotalTexto(state);
     if (tot != null) lines.push(`_Total: ${tot} séries/semana_`);
   }
   lines.push("", "*Mensagem final*", toWhatsappText(reportClosing(state)), "", "_Vamos juntos! — Montinho Personal Trainer_");
