@@ -8,8 +8,17 @@ export const ANAMNESE_SECTIONS: AnamneseSectionDef[] = [
     fields: [
       { id: "tituloPlano", label: "Nome do treino", type: "text", placeholder: "Ex.: Operação Bumbum na Nuca" },
       { id: "nome", label: "Nome do aluno", type: "text", placeholder: "Ex.: Marina Souza" },
-      { id: "idade", label: "Idade", type: "number", placeholder: "Ex.: 34" },
+      {
+        id: "dataNascimento", label: "Data de nascimento", type: "text", placeholder: "DD/MM/AAAA",
+        extractHint: "no formato DD/MM/AAAA",
+      },
+      { id: "idade", label: "Idade", type: "number", placeholder: "Calculada pela data de nascimento" },
       { id: "sexo", label: "Sexo", type: "select", options: ["Masculino", "Feminino", "Prefiro não informar"] },
+      { id: "email", label: "E-mail", type: "email", placeholder: "Ex.: marina@email.com", contato: true, extractHint: "o e-mail do aluno, exatamente como escrito" },
+      {
+        id: "whatsapp", label: "WhatsApp", type: "tel", placeholder: "Ex.: (11) 99999-9999", contato: true,
+        extractHint: "o número de WhatsApp/celular do aluno, com DDD",
+      },
       { id: "modalidade", label: "Modalidade", type: "select", options: ["Presencial", "Online", "Híbrido"] },
     ],
   },

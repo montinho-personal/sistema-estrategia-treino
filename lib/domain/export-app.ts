@@ -8,6 +8,7 @@
  * Nada é inventado: campo não preenchido vai vazio (null / lista vazia).
  */
 import { prioridadeGrupos } from "./config";
+import { ageFromBirth, birthDateIso, cleanEmail, whatsappDigits } from "./contact";
 import { faixaDe, reportClosing, studentDiagnosisData, volumeRows } from "./report";
 import type { StrategyState } from "./schema";
 import { has, upperFirst, val } from "./util";
@@ -26,6 +27,12 @@ export interface VolumeApp { rotulo: string; series: number; max: number | null 
 export interface EstrategiaApp {
   versao: 1;
   aluno: string | null;
+  /** Cadastro do aluno no app (null quando não preenchido na anamnese). */
+  dataNascimento: string | null; // AAAA-MM-DD
+  idade: number | null;
+  sexo: string | null;
+  email: string | null;
+  whatsapp: string | null; // só dígitos, com DDI 55
   titulo: string | null;
   data: string | null;
   objetivo: string | null;
@@ -112,6 +119,11 @@ export function estrategiaParaApp(state: StrategyState): EstrategiaApp {
   return {
     versao: 1,
     aluno: txt(a.nome),
+    dataNascimento: birthDateIso(a.dataNascimento),
+    idade: ageFromBirth(a.dataNascimento) ?? inteiro(a.idade),
+    sexo: txt(a.sexo),
+    email: cleanEmail(a.email),
+    whatsapp: whatsappDigits(a.whatsapp),
     titulo: txt(a.tituloPlano),
     data: hojeISO(),
     objetivo: txt(x.objetivo_principal) ?? txt(a.objetivo),

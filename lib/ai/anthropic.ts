@@ -54,6 +54,7 @@ function anamneseText(state: StrategyState): string {
   const rows: string[] = [];
   for (const section of ANAMNESE_SECTIONS) {
     for (const field of section.fields) {
+      if (field.contato) continue; // e-mail e WhatsApp não vão para a IA
       const v = a[field.id];
       if (v != null && String(v).trim() !== "") rows.push(`- ${field.label}: ${v}`);
     }
