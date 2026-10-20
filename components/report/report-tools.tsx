@@ -100,6 +100,13 @@ export function ReportTools({ state }: { state: StrategyState }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     notify("Arquivo para o app Montinho baixado.", r);
   }
+  /** Mesmo conteúdo do arquivo, copiado: no celular é só colar no app (sem procurar arquivo). */
+  async function copiarParaApp() {
+    const r = autoSaveStrategy(state);
+    const ok = await copyToClipboard(JSON.stringify(exportarParaApp(state)));
+    if (ok) notify("Estratégia copiada. No app Montinho, toque em “Colar do Strategy”.", r);
+    else toast.error("Não foi possível copiar.", { description: saveNote(r) });
+  }
   function save() {
     const snap = saveSnapshot(state);
     setSource(snap.id, true);
@@ -148,11 +155,16 @@ export function ReportTools({ state }: { state: StrategyState }) {
           Prévia do WhatsApp
         </Button>
         <div className="mt-3 border-t border-border pt-3">
-          <Button variant="outline" className="w-full justify-start" onClick={enviarParaApp}>
-            <Send className="size-4" /> Enviar para o app Montinho
-          </Button>
+          <div className="grid gap-2">
+            <Button variant="outline" className="w-full justify-start" onClick={copiarParaApp}>
+              <Copy className="size-4" /> Copiar para o app Montinho
+            </Button>
+            <Button variant="ghost" className="w-full justify-start" onClick={enviarParaApp}>
+              <Send className="size-4" /> Baixar arquivo para o app
+            </Button>
+          </div>
           <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground">
-            Baixa um arquivo com a estratégia. No app, em Alunos → Novo aluno (ou no perfil do aluno), escolha esse arquivo: o app monta os dias da semana por músculo com as metas de séries.
+            No celular, use “Copiar”: no app, em Alunos → Novo aluno (ou no perfil do aluno → Estratégia), toque em “Colar do Strategy”. No computador, pode baixar o arquivo e escolher no app. O app monta os dias da semana por músculo com as metas de séries.
           </p>
         </div>
         {waOpen && (
