@@ -14,10 +14,14 @@ export const WORKSPACE_STEPS = [
 export const StepSchema = z.enum(WORKSPACE_STEPS);
 export type Step = z.infer<typeof StepSchema>;
 
-/** Uma linha da tabela de volume semanal: grupo muscular e nº de séries. */
+/**
+ * Uma linha da tabela de volume semanal: grupo muscular e nº de séries.
+ * `series` é o mínimo da meta; `max` (opcional) fecha a faixa — ex.: 14 a 18.
+ */
 export const VolumeRowSchema = z.object({
   grupo: z.string().default(""),
   series: z.string().default(""),
+  max: z.string().optional(),
 });
 export type VolumeRow = z.infer<typeof VolumeRowSchema>;
 

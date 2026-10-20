@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MessageCircle, FileText, Copy, ArrowLeft } from "lucide-react";
+import { MessageCircle, FileText, Copy, ArrowLeft, Send } from "lucide-react";
 
-import { completion, reportWhatsapp, sameStrategy } from "@/lib/domain";
+import { completion, exportarParaApp, nomeArquivoApp, reportWhatsapp, sameStrategy } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
 import {
   autoSaveStrategy,
@@ -86,6 +86,20 @@ export function ReportTools({ state }: { state: StrategyState }) {
     else toast.error("Não foi possível copiar o WhatsApp.", { description: saveNote(r) });
     setPreviewOpen(true);
   }
+  /** Arquivo de dados para importar no app Montinho (cadastro do aluno). */
+  function enviarParaApp() {
+    const r = autoSaveStrategy(state);
+    const blob = new Blob([JSON.stringify(exportarParaApp(state), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivoApp(state);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    notify("Arquivo para o app Montinho baixado.", r);
+  }
   function save() {
     const snap = saveSnapshot(state);
     setSource(snap.id, true);
@@ -133,6 +147,14 @@ export function ReportTools({ state }: { state: StrategyState }) {
         <Button variant="ghost" className="mt-2.5 w-full" onClick={() => setWaOpen((v) => !v)}>
           Prévia do WhatsApp
         </Button>
+        <div className="mt-3 border-t border-border pt-3">
+          <Button variant="outline" className="w-full justify-start" onClick={enviarParaApp}>
+            <Send className="size-4" /> Enviar para o app Montinho
+          </Button>
+          <p className="mt-1.5 text-[12px] leading-snug text-muted-foreground">
+            Baixa um arquivo com a estratégia. No app, em Alunos → Novo aluno (ou no perfil do aluno), escolha esse arquivo: o app monta os dias da semana por músculo com as metas de séries.
+          </p>
+        </div>
         {waOpen && (
           <pre className="mt-3 max-h-[420px] overflow-auto whitespace-pre-wrap rounded-[12px] border border-[#1f2c33] bg-[#0b141a] p-4 font-sans text-[13.5px] leading-relaxed text-[#e9edef]">
             {reportWhatsapp(state)}

@@ -19,12 +19,20 @@ const SUGESTOES = [
 
 const MAX_IMG_BYTES = 5 * 1024 * 1024; // 5 MB
 
+/** Ponto médio da faixa da linha (sem máximo → o próprio número). */
+function meio(r: VolumeRow): number | null {
+  const min = parseInt(r.series, 10);
+  if (Number.isNaN(min)) return null;
+  const max = parseInt(r.max ?? "", 10);
+  return !Number.isNaN(max) && max > min ? (min + max) / 2 : min;
+}
+
 function totalOf(rows: VolumeRow[]): number | null {
   let sum = 0;
   let any = false;
   for (const r of rows) {
-    const n = parseInt(r.series, 10);
-    if (!Number.isNaN(n)) {
+    const n = meio(r);
+    if (n != null) {
       sum += n;
       any = true;
     }
@@ -50,6 +58,18 @@ export function VolumeEditor() {
   const setVolume = useStrategyStore((s) => s.setVolume);
   const aiConfig = useAiStore((s) => s.config);
   const total = totalOf(volume);
+  const faixaTotal = (() => {
+    let min = 0, max = 0, any = false;
+    for (const r of volume) {
+      const a = parseInt(r.series, 10);
+      if (Number.isNaN(a)) continue;
+      const b = parseInt(r.max ?? "", 10);
+      min += a;
+      max += !Number.isNaN(b) && b > a ? b : a;
+      any = true;
+    }
+    return any ? (max > min ? `${min}–${max}` : String(min)) : null;
+  })();
 
   const [showPaste, setShowPaste] = useState(false);
   const [pasteText, setPasteText] = useState("");
@@ -68,9 +88,9 @@ export function VolumeEditor() {
     setVolume(next);
   };
 
-  const pctOf = (series: string): string => {
-    const n = parseInt(series, 10);
-    if (total == null || Number.isNaN(n) || total === 0) return "";
+  const pctOf = (r: VolumeRow): string => {
+    const n = meio(r);
+    if (total == null || n == null || total === 0) return "";
     return `${Math.round((n / total) * 100)}%`;
   };
 
@@ -140,8 +160,9 @@ export function VolumeEditor() {
         Volume semanal de séries
       </h3>
       <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-        Informe os grupos e o nº de séries por semana — digitando, colando a tabela ou enviando um
-        print. Aparece no relatório (PDF e WhatsApp).
+        Meta de séries por semana de cada grupo, em faixa (ex.: 14 a 18) — ou só o mínimo para
+        um número fixo. Aparece no relatório (PDF e WhatsApp) e vai para o app Montinho como meta
+        do montador.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -183,7 +204,7 @@ export function VolumeEditor() {
       {volume.length > 0 && (
         <div className="mt-3 space-y-2">
           {volume.map((r, i) => {
-            const pct = pctOf(r.series);
+            const pct = pctOf(r);
             return (
               <div
                 key={i}
@@ -196,11 +217,21 @@ export function VolumeEditor() {
                   onChange={(e) => update(i, { grupo: e.target.value })}
                 />
                 <Input
-                  className="w-20 sm:w-16"
+                  className="w-16 sm:w-14"
                   inputMode="numeric"
-                  placeholder="Séries"
+                  placeholder="Mín."
+                  aria-label="Séries por semana (mínimo)"
                   value={r.series}
                   onChange={(e) => update(i, { series: e.target.value })}
+                />
+                <span className="text-[12px] text-muted-foreground" aria-hidden>a</span>
+                <Input
+                  className="w-16 sm:w-14"
+                  inputMode="numeric"
+                  placeholder="Máx."
+                  aria-label="Séries por semana (máximo)"
+                  value={r.max ?? ""}
+                  onChange={(e) => update(i, { max: e.target.value })}
                 />
                 <span className="mr-auto w-9 shrink-0 text-right text-[12.5px] tabular-nums text-muted-foreground sm:mr-0">
                   {pct}
@@ -243,7 +274,7 @@ export function VolumeEditor() {
         </Button>
         {total != null && (
           <span className="ml-auto text-[13px] text-muted-foreground">
-            Total: <b className="text-foreground">{total}</b> séries/sem
+            Total: <b className="text-foreground">{faixaTotal}</b> séries/sem
           </span>
         )}
       </div>
