@@ -8,7 +8,10 @@ export const AnamneseSchema = z
   .object({
     tituloPlano: z.string(),
     nome: z.string(),
+    dataNascimento: z.string(),
     idade: z.string(),
+    email: z.string(),
+    whatsapp: z.string(),
     sexo: z.string(),
     modalidade: z.string(),
     objetivo: z.string(),

@@ -2,7 +2,7 @@ import type { Anamnese, AnamneseField } from "./schema/anamnese";
 import type { Answers } from "./schema/answers";
 
 /* ---- Anamnese (definição de formulário) ---- */
-export type FieldType = "text" | "number" | "textarea" | "select";
+export type FieldType = "text" | "number" | "textarea" | "select" | "email" | "tel";
 
 export interface AnamneseFieldDef {
   id: AnamneseField;
@@ -12,6 +12,8 @@ export interface AnamneseFieldDef {
   placeholder?: string;
   /** Instrução extra para a IA encontrar este campo ao importar um PDF. */
   extractHint?: string;
+  /** Dado de contato: vai para o aplicativo, mas não é enviado à IA nas sugestões. */
+  contato?: boolean;
 }
 
 export interface AnamneseSectionDef {

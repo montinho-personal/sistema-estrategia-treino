@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { AnamneseSchema, type Anamnese } from "@/lib/domain/schema/anamnese";
 import { ANAMNESE_SECTIONS } from "@/lib/domain/config";
+import { ageFromBirth } from "@/lib/domain/contact";
 import type { AnamneseFieldDef } from "@/lib/domain/types";
 import { useStrategyStore, useAiStore } from "@/lib/store";
 import { aiExtractAnamnese } from "@/lib/ai/anthropic";
@@ -29,16 +30,24 @@ export function AnamneseForm() {
     resolver: zodResolver(AnamneseSchema),
     defaultValues: initial,
   });
-  const { register, subscribe, reset, getValues } = form;
+  const { register, subscribe, reset, getValues, setValue } = form;
 
   // Autosave: cada alteração é persistida no store (fonte da verdade).
   useEffect(() => {
     const unsubscribe = subscribe({
       formState: { values: true },
-      callback: ({ values }) => patch({ anamnese: values }),
+      callback: ({ values }) => {
+        // idade calculada pela data de nascimento (quando a idade está vazia)
+        const idade = ageFromBirth(values.dataNascimento);
+        if (idade !== null && !String(values.idade ?? "").trim()) {
+          setValue("idade", String(idade));
+          return; // o setValue dispara de novo, já com a idade
+        }
+        patch({ anamnese: values });
+      },
     });
     return unsubscribe;
-  }, [subscribe, patch]);
+  }, [subscribe, patch, setValue]);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -71,6 +80,8 @@ export function AnamneseForm() {
         return;
       }
       const merged = { ...getValues(), ...extracted };
+      const idade = ageFromBirth(merged.dataNascimento);
+      if (idade !== null) merged.idade = String(idade);
       reset(merged); // atualiza os campos exibidos
       patch({ anamnese: merged }); // e o store (fonte da verdade)
       toast.success(`Anamnese preenchida: ${count} ${count === 1 ? "campo" : "campos"}.`, {
@@ -165,7 +176,7 @@ function Field({
       ) : (
         <Input
           id={id}
-          type={field.type === "number" ? "number" : "text"}
+          type={field.type === "number" ? "number" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}
           placeholder={field.placeholder}
           {...register(field.id)}
         />

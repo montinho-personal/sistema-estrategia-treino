@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MessageCircle, FileText, Copy, ArrowLeft } from "lucide-react";
+import { MessageCircle, FileText, Copy, ArrowLeft, Smartphone, Download } from "lucide-react";
 
-import { completion, reportWhatsapp, sameStrategy } from "@/lib/domain";
+import { appExport, completion, reportWhatsapp, sameStrategy, whatsappDigits, cleanEmail, birthDateIso } from "@/lib/domain";
 import type { StrategyState } from "@/lib/domain/schema";
 import {
   autoSaveStrategy,
@@ -86,6 +86,32 @@ export function ReportTools({ state }: { state: StrategyState }) {
     else toast.error("Não foi possível copiar o WhatsApp.", { description: saveNote(r) });
     setPreviewOpen(true);
   }
+  /** Aplicativo de treino: o pacote JSON da estratégia (com os dados do aluno). */
+  function appJson() {
+    autoSaveStrategy(state);
+    return JSON.stringify(appExport(state), null, 2);
+  }
+  async function copiarParaApp() {
+    const ok = await copyToClipboard(appJson());
+    toast[ok ? "success" : "error"](ok ? "Dados copiados — cole no aplicativo." : "Não foi possível copiar.");
+  }
+  function baixarParaApp() {
+    const blob = new Blob([appJson()], { type: "application/json" });
+    const a = document.createElement("a");
+    const nome = String(state.anamnese.nome ?? "aluno").trim().toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "-");
+    a.href = URL.createObjectURL(blob);
+    a.download = `estrategia-${nome || "aluno"}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast.success("Arquivo para o aplicativo baixado.");
+  }
+  const a = state.anamnese;
+  const faltaContato = [
+    !birthDateIso(a.dataNascimento) && "data de nascimento",
+    !cleanEmail(a.email) && "e-mail",
+    !whatsappDigits(a.whatsapp) && "WhatsApp",
+  ].filter(Boolean) as string[];
+
   function save() {
     const snap = saveSnapshot(state);
     setSource(snap.id, true);
@@ -168,6 +194,26 @@ export function ReportTools({ state }: { state: StrategyState }) {
             Salvar no histórico
           </Button>
         )}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <Smartphone className="size-3.5" /> Aplicativo de treino
+        </h3>
+        <p className="mt-2 text-[13px] leading-snug text-muted-foreground">
+          Leva para o aplicativo os dados do aluno (nascimento, e-mail, WhatsApp) e todas as decisões da estratégia.
+        </p>
+        {faltaContato.length > 0 && (
+          <p className="mt-2 rounded-lg bg-gold-soft px-3 py-2 text-[12.5px] leading-snug">
+            Falta na anamnese: {faltaContato.join(", ")}.
+          </p>
+        )}
+        <Button variant="outline" className="mt-3 w-full" onClick={copiarParaApp}>
+          <Copy className="size-4" /> Copiar dados para o app
+        </Button>
+        <Button variant="ghost" className="mt-2 w-full" onClick={baixarParaApp}>
+          <Download className="size-4" /> Baixar arquivo para o app
+        </Button>
       </div>
 
       {previewOpen && <PremiumPreview state={state} onClose={() => setPreviewOpen(false)} />}
