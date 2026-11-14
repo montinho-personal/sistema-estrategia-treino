@@ -278,7 +278,7 @@ function papelSection(state: StrategyState): ReportSection {
   const A = state.answers;
   const itens = Array.isArray(A.acompanhamento_info) ? A.acompanhamento_info : [];
   const p: string[] = [];
-  p.push("Os resultados vêm de um trabalho em equipe. A minha parte é montar e ajustar a sua estratégia; a sua é treinar com constância e me manter informado.");
+  p.push("Os resultados vêm de um trabalho em equipe. A minha parte é montar e ajustar a sua estratégia; a sua é treinar com constância e me contar como foi a semana.");
   if (itens.length) {
     p.push("Toda semana, o que eu preciso que você me envie:");
     p.push(itens.map((i) => `✓ ${i}`).join("\n"));
