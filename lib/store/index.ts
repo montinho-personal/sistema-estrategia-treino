@@ -18,3 +18,4 @@ export { useHydrated } from "./use-hydrated";
 
 export { autoSaveStrategy, replacePreviousVersion, hasUnsavedWork, unsavedWarning } from "./autosave";
 export type { AutoSaveResult } from "./autosave";
+export { usePhaseStore, phaseKey } from "./phase-store";
