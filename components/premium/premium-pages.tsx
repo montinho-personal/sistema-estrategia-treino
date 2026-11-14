@@ -2,9 +2,30 @@ import type { ReactNode } from "react";
 
 import type { StrategyState } from "@/lib/domain/schema";
 import { brandLogo, type Brand } from "@/lib/domain/schema/brand";
-import { reportClosing, reportIntro, reportSections, studentDiagnosisData, volumeLines, volumeTotalTexto, parseRichBlocks, inlineSegments } from "@/lib/domain";
+import {
+  careView,
+  divisionSessions,
+  goldenRules,
+  inlineSegments,
+  intensityTerms,
+  parseRichBlocks,
+  phaseSteps,
+  priorityTerms,
+  progressionTerms,
+  reportClosing,
+  reportIntro,
+  reportSections,
+  resourceTerms,
+  sessionMeaning,
+  studentDiagnosisData,
+  volumeBars,
+  volumeInsight,
+  volumeTotalTexto,
+  weekPlan,
+  type Term,
+} from "@/lib/domain";
 import type { ReportSection } from "@/lib/domain/report";
-import { val, has, upperFirst, lowerFirst } from "@/lib/domain/util";
+import { val, has, upperFirst, lowerFirst, firstName, toInt } from "@/lib/domain/util";
 import { prioridadeGrupos } from "@/lib/domain/config";
 import { whatsappLink, instagramLink } from "@/lib/premium/links";
 import { PgIcon, PgCheck } from "./premium-icons";
@@ -36,40 +57,6 @@ function Card({ icon, label, value }: { icon: Parameters<typeof PgIcon>[0]["name
       <div className="pg-card__val">{value || "—"}</div>
     </div>
   );
-}
-
-function Block({ title, icon, value, note, detail, extras, badges }: { title: string; icon: Parameters<typeof PgIcon>[0]["name"]; value: string; note?: string; detail?: string; extras?: { label: string; value: string }[]; badges?: string[] }) {
-  const extraRows = (extras ?? []).filter((e) => has(e.value));
-  return (
-    <div className="pg-block">
-      <div className="pg-block__h">
-        <span className="pg-block__ic"><PgIcon name={icon} /></span>
-        {title}
-      </div>
-      {has(value) && <div className="pg-block__v">{value}</div>}
-      {has(note) && <div className="pg-block__note">{note}</div>}
-      {has(detail) && <div className="pg-block__d">{detail}</div>}
-      {extraRows.map((e) => (
-        <div key={e.label} className="pg-block__x">
-          <span className="pg-block__xl">{e.label}:</span> {e.value}
-        </div>
-      ))}
-      {badges && badges.length > 0 && (
-        <div className="pg-badges">
-          {badges.map((b) => <span key={b} className="pg-badge">{b}</span>)}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function timelineSteps(fases: unknown): string[] {
-  const raw = String(fases ?? "")
-    .split(/;|→|\n|\.(?=\s*Fase)/i)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (raw.length >= 2) return raw.slice(0, 5);
-  return ["Adaptação e técnica", "Mais volume de treino", "Mais intensidade", "Técnicas avançadas"];
 }
 
 /* ------------------------------- páginas ------------------------------- */
@@ -108,164 +95,311 @@ export function CoverPage({ state, brand }: { state: StrategyState; brand: Brand
   );
 }
 
-export function DiagnosticoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
+/* -------- helpers das páginas (decisão + tradução + porquê, juntos) -------- */
+function Sec({ icon, title, children }: { icon: Parameters<typeof PgIcon>[0]["name"]; title: string; children: ReactNode }) {
+  return (
+    <div className="pg-sec">
+      <div className="pg-block__h">
+        <span className="pg-block__ic"><PgIcon name={icon} /></span>
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Why({ text, label = "Por quê" }: { text: unknown; label?: string }) {
+  if (!has(text)) return null;
+  return <p className="pg-why"><b>{label}:</b> {val(text)}</p>;
+}
+
+function Terms({ items }: { items: Term[] }) {
+  if (!items.length) return null;
+  return (
+    <div className="pg-terms">
+      {items.map((t) => (
+        <div key={t.nome} className="pg-term">
+          <b>{t.nome}</b>
+          {t.como && <span> — {lowerFirst(t.como)}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const Chips = ({ items }: { items: string[] }) => (
+  <div className="pg-check-inline">
+    {items.map((i) => <span key={i} className="pg-chip"><span className="pg-tick"><PgCheck /></span>{i}</span>)}
+  </div>
+);
+
+const lista = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : has(v) ? [val(v)] : []);
+
+/* ---------------------- 2 · Seu plano em 1 minuto ---------------------- */
+export function ResumoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const a = state.anamnese, x = state.answers;
-  const disp = [has(a.diasSemana) ? `${a.diasSemana} dias/semana` : "", has(a.tempoSessao) ? `${a.tempoSessao} min` : ""].filter(Boolean).join(" · ");
-  const d = studentDiagnosisData(state);
-  const fortes = d.fortes.length ? d.fortes : ["Ótima disposição para começar essa jornada"];
-  const atencao = d.atencao.length ? d.atencao : ["Nada crítico — vamos apenas construir consistência"];
+  const rotina = [has(a.diasSemana) ? `${a.diasSemana} treinos por semana` : "", has(a.tempoSessao) ? `${toInt(a.tempoSessao) || val(a.tempoSessao)} min cada` : ""].filter(Boolean).join(" · ");
+  const fases = phaseSteps(state);
+  const semanas = fases.reduce((s, f) => s + (f.semanas ?? 0), 0);
+  const prazo = val(x.objetivo_prazo) || (semanas ? `${semanas} semanas` : "");
+  const week = weekPlan(state);
+  const nome = firstName(a.nome);
   return (
     <section className="premium__page">
-      <h2 className="pg-h2">Diagnóstico Inicial</h2>
+      <h2 className="pg-h2">Seu plano em 1 minuto</h2>
+      <p className="pg-lead">
+        {nome === "aluno" ? "Este" : `${nome}, este`} é o seu plano em resumo. Nas próximas páginas eu explico o porquê de cada escolha.
+      </p>
       <div className="pg-grid4">
         <Card icon="target" label="Objetivo" value={val(x.objetivo_principal) || val(a.objetivo)} />
-        <Card icon="medal" label="Experiência" value={val(a.experiencia)} />
-        <Card icon="calendar" label="Disponibilidade" value={disp} />
-        <Card icon="star" label="Prioridades" value={val(x.objetivo_prioridade)} />
+        <Card icon="calendar" label="Duração deste ciclo" value={prazo} />
+        <Card icon="star" label="Prioridades" value={prioridadeGrupos(x).join(", ")} />
+        <Card icon="dumbbell" label="Sua rotina" value={rotina} />
       </div>
-      <div className="pg-2col">
-        <div className="pg-box">
-          <div className="pg-box__t">Pontos fortes</div>
-          <ul className="pg-check">
-            {fortes.map((f, i) => (
-              <li key={i}><span className="pg-tick"><PgCheck /></span>{upperFirst(f)}</li>
-            ))}
-          </ul>
-        </div>
-        <div className="pg-box">
-          <div className="pg-box__t">Pontos de atenção</div>
-          <ul className="pg-dot">
-            {atencao.map((t, i) => <li key={i}>{upperFirst(t)}</li>)}
-          </ul>
-        </div>
-      </div>
-      <div className="pg-highlight">
-        <div className="pg-highlight__t">Nossa filosofia</div>
-        <p>
-          {has(x.filosofia_frase) && <>&ldquo;{val(x.filosofia_frase)}&rdquo; </>}
-          Cada escolha do seu treino tem um motivo. Nada aqui é por acaso — este plano foi montado
-          para fazer sentido para você e para a sua realidade.
-        </p>
-      </div>
-      <PageFoot brand={brand} n={n} total={total} />
-    </section>
-  );
-}
 
-export function EstrategiaPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
-  const x = state.answers;
-  const reps = has(x.intensidade_reps) ? `Repetições: ${val(x.intensidade_reps)}` : "";
-  const tec = Array.isArray(x.intensidade_tecnicas) ? x.intensidade_tecnicas : [];
-  const steps = timelineSteps(x.periodizacao_fases);
-  const vlines = volumeLines(state);
-  const vtot = volumeTotalTexto(state);
-  const grupos = prioridadeGrupos(x);
-  const taticas = Array.isArray(x.prioridade_estrategias) ? x.prioridade_estrategias : [];
-  return (
-    <section className="premium__page">
-      <h2 className="pg-h2">Estratégia</h2>
-      <div className="pg-blocks">
-        {grupos.length > 0 && (
-          <Block
-            title="Prioridade muscular"
-            icon="star"
-            value={grupos.join(", ")}
-            detail={taticas.length ? "Como vamos priorizar esses grupos:" : undefined}
-            badges={taticas}
-          />
-        )}
-        <Block
-          title="Divisão semanal"
-          icon="calendar"
-          value={val(x.divisao_qual)}
-          detail={val(x.divisao_porque)}
-          extras={[
-            { label: "Vantagens", value: val(x.divisao_vantagens) },
-            { label: "Adaptações", value: val(x.divisao_adaptacoes) },
-          ]}
-        />
-        <Block title="Intensidade" icon="dumbbell" value={val(x.intensidade_estrategia)} note={reps} detail={val(x.intensidade_porque)} badges={tec} />
-        {(has(x.cardio_have) || has(x.cardio_detalhe)) && (
-          <Block
-            title="Cardio"
-            icon="pulse"
-            value={val(x.cardio_have) === "Não" ? "Sem cardio neste ciclo" : val(x.cardio_detalhe) || "Cardio incluído no plano"}
-            detail={val(x.cardio_porque)}
-            extras={[{ label: "Gasto energético", value: val(x.adapt_emagrecimento) }]}
-          />
-        )}
-      </div>
-      {vlines.length > 0 && (
-        <div className="pg-voltable">
-          <div className="pg-voltable__t">Volume semanal de séries</div>
-          {has(x.volume_frequencia) && <p className="pg-voltable__freq">Frequência: {val(x.volume_frequencia)}</p>}
-          <table className="pg-vol">
-            <thead>
-              <tr><th>Grupo muscular</th><th>Séries / semana (meta)</th><th>% do total</th></tr>
-            </thead>
-            <tbody>
-              {vlines.map((r, i) => (
-                <tr key={i}><td>{r.grupo}</td><td>{r.series}</td><td>{r.pct != null ? `${r.pct}%` : "—"}</td></tr>
-              ))}
-            </tbody>
-            {vtot != null && (
-              <tfoot>
-                <tr><td>Total</td><td>{vtot} séries</td><td>100%</td></tr>
-              </tfoot>
-            )}
-          </table>
+      {week.dias.length > 0 && (
+        <>
+          <h3 className="pg-h3">A sua semana</h3>
+          <div className={week.comDias ? "pg-week" : "pg-week pg-week--livre"}>
+            {week.dias.map((d) => (
+              <div key={d.dia} className={`pg-day ${d.treino ? "pg-day--on" : "pg-day--off"}`}>
+                <b>{week.comDias ? d.dia.slice(0, 3) : d.dia}</b>
+                <span>{d.treino ?? "Descanso"}</span>
+                {d.significado && <small>{d.significado}</small>}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {fases.length > 0 && (
+        <>
+          <h3 className="pg-h3">As fases do seu plano</h3>
+          <div className="pg-phases">
+            {fases.map((f) => (
+              <div key={f.numero} className="pg-phase">
+                <b>Fase {f.numero}{f.semanas ? ` · ${f.semanas} semanas` : ""}</b>
+                <span>{f.nome}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {has(x.filosofia_frase) && (
+        <div className="pg-highlight" style={{ marginTop: 26 }}>
+          <div className="pg-highlight__t">A ideia que guia o seu treino</div>
+          <p>&ldquo;{val(x.filosofia_frase).replace(/^[“"]|[”"]$/g, "")}&rdquo;</p>
         </div>
       )}
-      <div className="pg-timeline">
-        <div className="pg-timeline__t">A evolução do seu plano</div>
-        <div>
-          {steps.map((s, i) => (
-            <div key={i} className="pg-tl">
-              <span className="pg-tl__dot" />
-              <span className="pg-tl__lbl"><b>{i === 0 ? "Início" : `Etapa ${i + 1}`}</b>{s}</span>
-            </div>
-          ))}
-        </div>
-        {has(x.periodizacao_porque) && <p className="pg-timeline__why">{val(x.periodizacao_porque)}</p>}
-      </div>
       <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
 }
 
-export function EvolucaoPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
+/* ------------------------ 3 · De onde você parte ------------------------ */
+export function PartidaPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
   const x = state.answers;
-  const mobItens = Array.isArray(x.mobilidade_o_que) ? x.mobilidade_o_que.join(", ") : "";
-  const itens = Array.isArray(x.acompanhamento_info) ? x.acompanhamento_info : [];
+  const d = studentDiagnosisData(state);
+  const care = careView(state);
+  const fortes = d.fortes.length ? d.fortes : ["Ótima disposição para começar essa jornada"];
+  // o cuidado com dor/lesão aparece de forma específica abaixo; aqui ficam os demais
+  const atencao = d.atencao.filter((t) => !(care.contou.length && /incômodo/.test(t)));
+  const prep = lista(x.mobilidade_o_que);
+  const sec = lista(x.objetivo_secundario);
   return (
     <section className="premium__page">
-      <h2 className="pg-h2">Evolução</h2>
-      <div className="pg-2col">
-        <div className="pg-box">
-          <div className="pg-box__t"><span className="pg-ic"><PgIcon name="mobility" /></span> Mobilidade e preparação</div>
+      <h2 className="pg-h2">De onde você parte</h2>
+      <div className="pg-box" style={{ marginTop: 26 }}>
+        <div className="pg-box__t">O que joga a seu favor</div>
+        <ul className="pg-check">
+          {fortes.map((f, i) => (
+            <li key={i}><span className="pg-tick"><PgCheck /></span>{upperFirst(f)}</li>
+          ))}
+        </ul>
+      </div>
+
+      {(care.contou.length > 0 || care.plano.length > 0 || atencao.length > 0) && (
+        <div className="pg-box pg-box--warn" style={{ marginTop: 14 }}>
+          <div className="pg-box__t">O que vamos cuidar juntos</div>
+          {care.contou.length > 0 && (
+            <>
+              <div className="pg-mini">Você me contou</div>
+              <ul className="pg-dot">{care.contou.map((t, i) => <li key={i}>{upperFirst(t)}</li>)}</ul>
+            </>
+          )}
+          {(care.plano.length > 0 || atencao.length > 0) && (
+            <>
+              <div className="pg-mini" style={{ marginTop: care.contou.length ? 14 : 0 }}>O que o plano faz por isso</div>
+              <ul className="pg-check">
+                {[...care.plano, ...atencao].map((t, i) => (
+                  <li key={i}><span className="pg-tick"><PgCheck /></span>{upperFirst(t)}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+
+      {prep.length > 0 && (
+        <>
+          <h3 className="pg-h3">Antes de cada treino</h3>
+          <Chips items={prep} />
+          <p className="pg-muted">São poucos minutos que preparam o corpo e deixam o treino mais seguro.</p>
+        </>
+      )}
+
+      {(has(x.objetivo_porque) || sec.length > 0) && (
+        <div className="pg-highlight" style={{ marginTop: 26 }}>
+          <div className="pg-highlight__t">Por que este é o foco agora</div>
           <p>
-            {mobItens ? `Antes de cada treino: ${mobItens}. ` : ""}
-            {has(x.mobilidade_porque) ? val(x.mobilidade_porque) : "Poucos minutos que preparam o corpo e protegem você."}
+            {val(x.objetivo_porque) && <>{upperFirst(val(x.objetivo_porque))} </>}
+            {sec.length > 0 && <>De quebra, também vamos trabalhar: {sec.map(lowerFirst).join(", ")}.</>}
           </p>
         </div>
-        <div className="pg-box">
-          <div className="pg-box__t"><span className="pg-ic"><PgIcon name="trend" /></span> Regras de progressão</div>
-          <p>{has(x.progressao_como) ? val(x.progressao_como) : "Você avança quando domina a etapa atual — evolução segura e constante."}</p>
-          {has(x.progressao_porque) && <p className="pg-muted">{val(x.progressao_porque)}</p>}
-        </div>
-      </div>
-      <div className="pg-highlight">
-        <div className="pg-highlight__t">Seu papel no processo</div>
-        {itens.length > 0 && (
-          <>
-            <div className="pg-check-inline__lead">Toda semana, me envie:</div>
-            <div className="pg-check-inline">
-              {itens.map((i) => <span key={i} className="pg-chip"><span className="pg-tick"><PgCheck /></span>{i}</span>)}
+      )}
+      <PageFoot brand={brand} n={n} total={total} />
+    </section>
+  );
+}
+
+/* --------------------- 4 · Como o treino foi montado --------------------- */
+export function MontagemPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
+  const x = state.answers;
+  const grupos = prioridadeGrupos(x);
+  const sessoes = [...new Set(divisionSessions(x.divisao_qual))].map((s) => ({ nome: s, como: sessionMeaning(s) })).filter((s) => s.como);
+  const bars = volumeBars(state);
+  const tot = volumeTotalTexto(state);
+  const semCardio = val(x.cardio_have) === "Não";
+  const logica = lista(x.exercicios_logica);
+  return (
+    <section className="premium__page pg-flow">
+      <h2 className="pg-h2">Como o seu treino foi montado</h2>
+      <p className="pg-lead">Cada decisão, o que ela significa na prática e por que eu escolhi assim para você.</p>
+
+      {grupos.length > 0 && (
+        <Sec icon="star" title="Suas prioridades">
+          <div className="pg-sec__v">{grupos.join(" e ")}</div>
+          <Terms items={priorityTerms(state)} />
+        </Sec>
+      )}
+
+      {has(x.divisao_qual) && (
+        <Sec icon="calendar" title="Como os treinos se dividem">
+          <div className="pg-sec__v">{val(x.divisao_qual)}</div>
+          <Terms items={sessoes} />
+          <Why text={x.divisao_porque} />
+          <Why text={x.divisao_vantagens} label="Vantagem para você" />
+        </Sec>
+      )}
+
+      {bars.length > 0 && (
+        <Sec icon="trend" title="Quanto cada músculo trabalha por semana">
+          <p className="pg-sec__m">{volumeInsight(bars)}</p>
+          <div className="pg-bars">
+            {bars.map((b) => (
+              <div key={b.grupo} className={`pg-bar${b.prioritario ? " pg-bar--pri" : ""}`}>
+                <span className="pg-bar__g">{b.grupo}{b.prioritario && <i>prioridade</i>}</span>
+                <span className="pg-bar__t"><span style={{ width: `${Math.max(b.pct, 4)}%` }} /></span>
+                <span className="pg-bar__n">{b.texto} séries</span>
+              </div>
+            ))}
+          </div>
+          <p className="pg-muted">
+            Uma “série” é cada sequência de repetições de um exercício.
+            {tot != null && <> No total, são {tot} séries por semana.</>}
+            {has(x.volume_frequencia) && <> Frequência: {lowerFirst(val(x.volume_frequencia))}.</>}
+          </p>
+          <Why text={x.volume_porque} />
+        </Sec>
+      )}
+
+      {(has(x.intensidade_estrategia) || has(x.intensidade_reps)) && (
+        <Sec icon="dumbbell" title="Como vamos trabalhar o esforço">
+          {has(x.intensidade_reps) && <div className="pg-sec__v">Repetições: {val(x.intensidade_reps)}</div>}
+          <Terms items={[...intensityTerms(state), ...resourceTerms(state)]} />
+          <Why text={x.intensidade_porque} />
+        </Sec>
+      )}
+
+      {(logica.length > 0 || has(x.exercicios_obrigatorio)) && (
+        <Sec icon="medal" title="A escolha dos exercícios">
+          {logica.length > 0 && <ul className="pg-dot" style={{ marginTop: 12 }}>{logica.map((t) => <li key={t}>{t}</li>)}</ul>}
+          {has(x.exercicios_obrigatorio) && <p className="pg-sec__m"><b>Exercícios-chave do seu plano:</b> {val(x.exercicios_obrigatorio)}</p>}
+          <Why text={x.exercicios_porque} />
+        </Sec>
+      )}
+
+      {(has(x.cardio_have) || has(x.cardio_detalhe)) && (
+        <Sec icon="pulse" title="Cardio">
+          {semCardio ? (
+            <div className="pg-sec__v">Sem cardio neste ciclo</div>
+          ) : lista(x.cardio_detalhe).length ? (
+            <div style={{ marginTop: 12 }}><Chips items={lista(x.cardio_detalhe)} /></div>
+          ) : (
+            <div className="pg-sec__v">Cardio incluído no plano</div>
+          )}
+          <Why text={x.cardio_porque} />
+          <Why text={x.adapt_emagrecimento} label="Gasto energético" />
+        </Sec>
+      )}
+      <PageFoot brand={brand} n={n} total={total} />
+    </section>
+  );
+}
+
+/* --------------------- 5 · Sua jornada e o seu papel --------------------- */
+export function JornadaPage({ state, brand, n, total }: { state: StrategyState; brand: Brand; n: number; total: number }) {
+  const x = state.answers;
+  const fases = phaseSteps(state);
+  const prog = progressionTerms(state);
+  const itens = lista(x.acompanhamento_info);
+  return (
+    <section className="premium__page">
+      <h2 className="pg-h2">Sua jornada e o seu papel</h2>
+
+      {fases.length > 0 && (
+        <div className="pg-timeline" style={{ marginTop: 26 }}>
+          <div className="pg-timeline__t">O que esperar de cada fase</div>
+          {fases.map((f) => (
+            <div key={f.numero} className="pg-tl">
+              <span className="pg-tl__dot" />
+              <div className="pg-tl__lbl">
+                <b>Fase {f.numero}{f.semanas ? ` · ${f.semanas} semanas` : ""}</b>
+                <strong>{f.nome}</strong>
+                <span className="pg-tl__d">{f.esperar}</span>
+              </div>
             </div>
-          </>
-        )}
-        {has(x.acompanhamento_porque) && <p className="pg-muted">Isso me permite {lowerFirst(val(x.acompanhamento_porque))}</p>}
-      </div>
+          ))}
+          {has(x.periodizacao_porque) && <p className="pg-timeline__why">{upperFirst(val(x.periodizacao_porque))}</p>}
+          <p className="pg-timeline__why" style={{ borderTop: "none", paddingTop: 0, marginTop: 8 }}>
+            A cada troca de fase, você recebe um documento mostrando o que conquistou e o que muda.
+          </p>
+        </div>
+      )}
+
+      {prog.length > 0 && (
+        <>
+          <h3 className="pg-h3">Como você vai evoluir</h3>
+          <Terms items={prog} />
+          <Why text={x.progressao_porque} />
+        </>
+      )}
+
+      <h3 className="pg-h3">Regra de ouro: em todo treino</h3>
+      <ol className="pg-mission">{goldenRules(state).map((t, i) => <li key={i}>{t}</li>)}</ol>
+
+      {itens.length > 0 && (
+        <div className="pg-highlight" style={{ marginTop: 26 }}>
+          <div className="pg-highlight__t">Toda semana, me envie</div>
+          <Chips items={itens} />
+          <p className="pg-muted">
+            {has(x.acompanhamento_porque)
+              ? upperFirst(val(x.acompanhamento_porque))
+              : "Com isso eu ajusto o seu treino na hora certa. A minha parte é planejar e ajustar; a sua é treinar e me contar como foi."}
+          </p>
+        </div>
+      )}
       <PageFoot brand={brand} n={n} total={total} />
     </section>
   );
@@ -309,7 +443,7 @@ export function DetalhamentoPage({ state, brand, n, total }: { state: StrategySt
   const sections: ReportSection[] = reportSections(state);
   return (
     <section className="premium__page pg-flow">
-      <h2 className="pg-h2">Sua estratégia, em detalhes</h2>
+      <h2 className="pg-h2">Anexo: a estratégia por escrito</h2>
       {has(intro) && <div className="pg-report__lead">{renderBody(intro, "intro")}</div>}
       {sections.map((s) => (
         <div key={s.id} className="pg-report__sec">

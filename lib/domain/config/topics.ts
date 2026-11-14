@@ -17,6 +17,9 @@ export const SEM_PRIORIDADE = "Sem prioridade (equilíbrio geral)";
  * treinadores (Israetel/RP, Schoenfeld, Helms, Nuckols, Rambod/FST-7...).
  * A descrição é escrita para o aluno: aparece também no relatório.
  */
+/** Dias da semana, na ordem em que aparecem na semana do aluno. */
+export const DIAS_SEMANA = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"] as const;
+
 export const PRIORIDADE_ESTRATEGIAS: Record<string, string> = {
   "Mais volume de séries": "mais séries por semana para esses músculos",
   "Maior frequência semanal": "treinar esses músculos 2 a 3 vezes por semana",
@@ -108,6 +111,11 @@ export const TOPICS: Topic[] = [
           ABCDE: "5 treinos, um grupo por dia · cada grupo 1x/semana",
         },
         details: DIVISAO_DETAILS,
+      },
+      {
+        id: "divisao_dias", prompt: "Em quais dias da semana o aluno treina?", type: "multi", optional: true, inline: true, label: "Dias de treino",
+        hint: "Aparece no relatório como a semana do aluno, dia a dia.",
+        options: [...DIAS_SEMANA],
       },
       { id: "divisao_porque", prompt: "Por que escolheu essa divisão?", type: "textarea", why: true, optional: true },
       { id: "divisao_vantagens", prompt: "Quais vantagens ela oferece para este aluno?", type: "textarea", optional: true, label: "Vantagens para você" },

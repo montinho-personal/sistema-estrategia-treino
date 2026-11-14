@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { StrategyState } from "@/lib/domain/schema";
@@ -13,6 +13,7 @@ import { PremiumDocument } from "./premium-document";
 export function PremiumPreview({ state, onClose }: { state: StrategyState; onClose: () => void }) {
   const brand = useBrandStore((s) => s.brand);
   const ref = useRef<HTMLDivElement>(null);
+  const [anexo, setAnexo] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -71,11 +72,15 @@ export function PremiumPreview({ state, onClose }: { state: StrategyState; onClo
       <div className="premium-overlay">
         <div className="premium-toolbar">
           <span className="premium-toolbar__t">PDF Premium · pré-visualização</span>
+          <label className="premium-toolbar__opt">
+            <input type="checkbox" checked={anexo} onChange={(e) => setAnexo(e.target.checked)} />
+            Incluir texto completo no fim
+          </label>
           <Button variant="outline" size="sm" onClick={exportHtml}>Exportar HTML</Button>
           <Button size="sm" onClick={() => window.print()}>Imprimir / Salvar PDF</Button>
           <Button variant="ghost" size="sm" onClick={onClose}>Fechar</Button>
         </div>
-        <PremiumDocument state={state} brand={brand} containerRef={ref} />
+        <PremiumDocument state={state} brand={brand} containerRef={ref} anexo={anexo} />
       </div>
     </div>,
     document.body,
