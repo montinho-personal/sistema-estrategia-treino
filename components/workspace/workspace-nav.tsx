@@ -53,6 +53,9 @@ export function WorkspaceNav() {
           <Button asChild variant="ghost" size="sm">
             <Link href="/alunos/painel">Painel</Link>
           </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/alunos/fase">Troca de fase</Link>
+          </Button>
           <LibraryDialog trigger={<Button variant="ghost" size="sm">Biblioteca</Button>} />
           <DnaDialog trigger={<Button variant="ghost" size="sm">DNA</Button>} />
           <BrandDialog trigger={<Button variant="ghost" size="sm">Marca</Button>} />

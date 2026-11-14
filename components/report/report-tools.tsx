@@ -204,6 +204,16 @@ export function ReportTools({ state }: { state: StrategyState }) {
         )}
       </div>
 
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Continuação do protocolo</h3>
+        <p className="mt-2 text-[13px] leading-snug text-muted-foreground">
+          Chegou a hora de mudar de fase? Gere o documento que mostra ao aluno o que ele conquistou e o que muda agora.
+        </p>
+        <Button variant="outline" className="mt-3 w-full" onClick={() => router.push("/alunos/fase")}>
+          Criar documento de troca de fase
+        </Button>
+      </div>
+
       {previewOpen && <PremiumPreview state={state} onClose={() => setPreviewOpen(false)} />}
     </div>
   );
